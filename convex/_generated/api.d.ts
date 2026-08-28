@@ -11,6 +11,7 @@
 import type * as characters from "../characters.js";
 import type * as lib_characterSeed from "../lib/characterSeed.js";
 import type * as lib_constants from "../lib/constants.js";
+import type * as lib_date from "../lib/date.js";
 import type * as lib_errors from "../lib/errors.js";
 import type * as lib_pdca from "../lib/pdca.js";
 
@@ -24,6 +25,7 @@ declare const fullApi: ApiFromModules<{
   characters: typeof characters;
   "lib/characterSeed": typeof lib_characterSeed;
   "lib/constants": typeof lib_constants;
+  "lib/date": typeof lib_date;
   "lib/errors": typeof lib_errors;
   "lib/pdca": typeof lib_pdca;
 }>;
