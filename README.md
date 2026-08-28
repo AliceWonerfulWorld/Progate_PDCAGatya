@@ -418,6 +418,14 @@ React + Vite + TypeScript + Tailwind CSS によるフロントエンド基盤を
 - Mobile-first の Header / Main / Bottom Navigation
 - PDCAフロー用パスでは Bottom Navigation を非表示にできる App Shell 構造
 
+### Phase 1 — Convex Schema / Indexes: Complete
+
+Convex のローカル開発用 deployment と、MVPで使用する6テーブルの Schema を構築しました。
+
+- `users` / `goals` / `pdcaCycles` / `characters` / `inventories` / `gachaHistory`
+- `docs/data-model.md` に定義された全 Index
+- PDCA、ガチャ、ストリークに必要な enum・optional field・ID参照
+
 未着手の領域：
 
 - Convex / Clerk の接続
@@ -443,7 +451,9 @@ npm run lint
 npm run build
 ```
 
-現在、環境変数は不要です。Convex・Clerk・LLM を導入するフェーズで必要な値をここに追記します。
+`npx convex dev --once` を実行すると、ローカル Convex deployment 用の値が `.env.local` に自動作成されます。`.env.local` は Git 管理しません。
+
+Clerk・LLM 用の環境変数は、該当フェーズでここに追記します。
 
 ---
 
