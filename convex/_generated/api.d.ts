@@ -8,8 +8,11 @@
  * @module
  */
 
+import type * as characters from "../characters.js";
+import type * as lib_characterSeed from "../lib/characterSeed.js";
 import type * as lib_constants from "../lib/constants.js";
 import type * as lib_errors from "../lib/errors.js";
+import type * as lib_pdca from "../lib/pdca.js";
 
 import type {
   ApiFromModules,
@@ -18,8 +21,11 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  characters: typeof characters;
+  "lib/characterSeed": typeof lib_characterSeed;
   "lib/constants": typeof lib_constants;
   "lib/errors": typeof lib_errors;
+  "lib/pdca": typeof lib_pdca;
 }>;
 
 /**
