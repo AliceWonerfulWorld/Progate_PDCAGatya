@@ -407,11 +407,43 @@ https://github.com/AliceWonerfulWorld/Progate_PDCAGatya/issues
 
 ## Development Status
 
-現在は、仕様・技術設計・Acceptance Criteria・Issue分解までを先に整備し、実装を開始するためのハーネスを構築している段階です。
+### Phase 0 — Project Foundation: Complete
 
-リポジトリの実装基盤が作成され次第、ここにローカル開発・環境変数・起動手順を追記します。
+React + Vite + TypeScript + Tailwind CSS によるフロントエンド基盤を構築しました。
 
-> セットアップコマンドをREADME上で推測して記載せず、実際のProject Bootstrap完了後に確定した手順を記録します。
+現時点で利用できる画面・構成：
+
+- Home / Collection / History / Profile の基本ルーティング
+- Goal Detail 用 Route
+- Mobile-first の Header / Main / Bottom Navigation
+- PDCAフロー用パスでは Bottom Navigation を非表示にできる App Shell 構造
+
+未着手の領域：
+
+- Convex / Clerk の接続
+- Goal、PDCA、報酬、ガチャ、ストリークの業務ロジック
+- Guest Mode / Login Migration
+- PWA設定、AI PLAN、各画面の実データ連携
+
+### Local Development
+
+必要環境：Node.js 22 以降、npm 10 以降。
+
+```bash
+npm install
+npm run dev
+```
+
+Vite が表示するローカル URL をブラウザで開いてください。
+
+品質確認には以下を使用します。
+
+```bash
+npm run lint
+npm run build
+```
+
+現在、環境変数は不要です。Convex・Clerk・LLM を導入するフェーズで必要な値をここに追記します。
 
 ---
 
