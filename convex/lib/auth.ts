@@ -17,12 +17,27 @@ export async function getCurrentIdentity(ctx: AuthContext) {
   return identity
 }
 
-export async function requireCurrentUser(ctx: AuthContext): Promise<Doc<'users'>> {
-  const identity = await getCurrentIdentity(ctx)
+// tokenIdentifier is globally stable across authentication providers. Older
+// records used subject, so retain that lookup as a read-only compatibility path.
+async function findCurrentUser(ctx: AuthContext, identity: Awaited<ReturnType<typeof getCurrentIdentity>>) {
   const user = await ctx.db
+    .query('users')
+    .withIndex('by_clerk_user_id', (q) => q.eq('clerkUserId', identity.tokenIdentifier))
+    .unique()
+
+  if (user !== null || identity.subject === identity.tokenIdentifier) {
+    return user
+  }
+
+  return await ctx.db
     .query('users')
     .withIndex('by_clerk_user_id', (q) => q.eq('clerkUserId', identity.subject))
     .unique()
+}
+
+export async function requireCurrentUser(ctx: AuthContext): Promise<Doc<'users'>> {
+  const identity = await getCurrentIdentity(ctx)
+  const user = await findCurrentUser(ctx, identity)
 
   if (user === null) {
     throwAuthError(ERROR_CODES.USER_NOT_FOUND)
@@ -36,10 +51,7 @@ export async function getOrCreateCurrentUser(
   timezone: string,
 ): Promise<Doc<'users'>> {
   const identity = await getCurrentIdentity(ctx)
-  const existingUser = await ctx.db
-    .query('users')
-    .withIndex('by_clerk_user_id', (q) => q.eq('clerkUserId', identity.subject))
-    .unique()
+  const existingUser = await findCurrentUser(ctx, identity)
 
   if (existingUser !== null) {
     return existingUser
@@ -47,7 +59,7 @@ export async function getOrCreateCurrentUser(
 
   const now = Date.now()
   const userId = await ctx.db.insert('users', {
-    clerkUserId: identity.subject,
+    clerkUserId: identity.tokenIdentifier,
     playerXp: 0,
     playerLevel: 1,
     currentStreak: 0,
