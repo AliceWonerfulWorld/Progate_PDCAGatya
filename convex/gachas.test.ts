@@ -40,6 +40,7 @@ describe('seedGachas', () => {
 
     const progate = gachas.find((gacha) => gacha.key === 'progate')
     expect(progate?.characterIds).toHaveLength(15)
+    expect(progate?.imagePath).toBe('/gacha/progate.svg')
     expect(progate?.startAt).toEqual(expect.any(Number))
     expect(progate?.endAt).toEqual(expect.any(Number))
 
@@ -150,6 +151,7 @@ describe('listActiveGachas', () => {
         name: 'Progateガチャ',
         rates: { R: 1, SR: 0, SSR: 0 },
         characterIds: [charA],
+        imagePath: '/gacha/progate.svg',
         isActive: true,
         sortOrder: 2,
         startAt: now - 1000,
@@ -173,7 +175,9 @@ describe('listActiveGachas', () => {
     const result = await t.withIdentity({ subject: 'user_a' }).query(api.gachas.listActiveGachas, {})
 
     expect(result.map((gacha) => gacha.key)).toEqual(['standard', 'progate'])
+    expect(result[0].imagePath).toBeUndefined()
     expect(result[1].characterNames).toEqual(['キャラA'])
+    expect(result[1].imagePath).toBe('/gacha/progate.svg')
     expect(result[1].endAt).toBeGreaterThan(now)
   })
 })

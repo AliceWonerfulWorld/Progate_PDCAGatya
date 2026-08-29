@@ -114,6 +114,8 @@ export default defineSchema({
     rates: v.object({ R: v.number(), SR: v.number(), SSR: v.number() }),
     // 未指定 = 全active Characterが対象(恒常ガチャ相当)。
     characterIds: v.optional(v.array(v.id('characters'))),
+    // ガチャ選択画面のサムネイル画像。未指定ならテキストのみで表示する。
+    imagePath: v.optional(v.string()),
     isActive: v.boolean(),
     sortOrder: v.number(),
     // 期間限定ガチャの開始/終了時刻。両方未指定なら常設(恒常ガチャ)として扱う。
