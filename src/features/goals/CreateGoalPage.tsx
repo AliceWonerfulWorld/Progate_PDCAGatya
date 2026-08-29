@@ -5,6 +5,7 @@ import { useMutation } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { INPUT_LIMITS } from '../../../convex/lib/constants'
 import { SectionHeading } from '../../components/ui/SectionHeading'
+import { SignInPrompt } from '../../components/ui/SignInPrompt'
 import { isClerkConfigured } from '../../app/AppProviders'
 import { useCurrentUserInitialization } from './useCurrentUserInitialization'
 
@@ -36,7 +37,7 @@ function AuthenticatedCreateGoalPage() {
   }
 
   if (!isSignedIn) {
-    return <p className="text-sm text-slate-600">Goalを作成するにはログインしてください。</p>
+    return <SignInPrompt message="ログインすると、続けたいことをGoalとして保存できます。" />
   }
   if (hasError) {
     return <p className="text-sm text-rose-700">準備に失敗しました。もう一度試してください。</p>

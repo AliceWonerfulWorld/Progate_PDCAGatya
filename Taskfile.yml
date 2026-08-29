@@ -1,0 +1,98 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: '3'
+
+tasks:
+  default:
+    desc: タスク一覧を表示
+    cmds:
+      - task --list
+    silent: true
+
+  dev:
+    desc: 開発サーバーを起動（Convex + Vite）
+    deps: [dev:convex, dev:vite]
+
+  dev:convex:
+    desc: Convex バックエンドのみ起動
+    cmds:
+      - npx convex dev
+
+  dev:vite:
+    desc: Vite 開発サーバーのみ起動
+    cmds:
+      - npx vite
+
+  dashboard:
+    desc: Convex ダッシュボードを開く
+    cmds:
+      - npx convex dashboard
+
+  seed:
+    desc: Character マスタを投入（再実行しても増えない）
+    cmds:
+      - npx convex run characters:seedCharacters
+
+  test:
+    desc: テストを実行
+    cmds:
+      - npm run test
+
+  lint:
+    desc: Lint を実行
+    cmds:
+      - npx oxlint .
+
+  typecheck:
+    desc: 型チェックを実行
+    cmds:
+      - npx tsc -b
+
+  build:
+    desc: 本番ビルド
+    cmds:
+      - npm run build
+
+  check:
+    desc: typecheck / lint / test をまとめて実行
+    cmds:
+      - task: typecheck
+      - task: lint
+      - task: test
+
+  setup:
+    desc: 開発環境のセットアップ
+    cmds:
+      - task: setup:install
+      - task: setup:login
+      - task: setup:env
+      - task: setup:convex-env
+
+  setup:install:
+    desc: 依存パッケージをインストール
+    cmds:
+      - npm install
+
+  setup:login:
+    desc: Convex にログイン（ログイン済みなら何もしない）
+    status:
+      - npx convex login status
+    cmds:
+      - npx convex login
+
+  setup:env:
+    desc: .env.local を .env.example から生成（既存なら何もしない）
+    status:
+      - test -f .env.local
+    cmds:
+      - cp .env.example .env.local
+      - echo ".env.local を作成しました。各値を設定してください。"
+
+  setup:convex-env:
+    desc: Convex に CLERK_JWT_ISSUER_DOMAIN を設定（.env.local から読み込む）
+    dotenv: ['.env.local']
+    preconditions:
+      - sh: test -n "$CLERK_JWT_ISSUER_DOMAIN"
+        msg: ".env.local に CLERK_JWT_ISSUER_DOMAIN を設定してください（例: https://xxx.clerk.accounts.dev）"
+    cmds:
+      - npx convex env set CLERK_JWT_ISSUER_DOMAIN "$CLERK_JWT_ISSUER_DOMAIN"
