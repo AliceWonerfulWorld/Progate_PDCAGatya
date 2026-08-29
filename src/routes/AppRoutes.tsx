@@ -12,7 +12,6 @@ import { CompletePage } from '../features/pdca/CompletePage'
 import { DoPage } from '../features/pdca/DoPage'
 import { PlanPage } from '../features/pdca/PlanPage'
 import { ProfilePage } from '../features/profile/ProfilePage'
-import { RankingPage } from '../features/ranking/RankingPage'
 
 export function AppRoutes() {
   return (
@@ -21,7 +20,6 @@ export function AppRoutes() {
       <Route path="/collection" element={<CollectionPage />} />
       <Route path="/collection/:characterId" element={<CharacterDetailPage />} />
       <Route path="/history" element={<HistoryPage />} />
-      <Route path="/ranking" element={<RankingPage />} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/goals/new" element={<CreateGoalPage />} />
       <Route path="/goal/:goalId" element={<GoalDetailPage />} />
