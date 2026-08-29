@@ -1,6 +1,5 @@
-import { useQuery } from 'convex/react'
 import { Link } from 'react-router-dom'
-import { api } from '../../../convex/_generated/api'
+import type { Doc } from '../../../convex/_generated/dataModel'
 
 // status ごとの再開先。reload しても保存済み状態から続きを開ける（AC-PDCA-005）。
 const RESUME_PATHS = {
@@ -9,16 +8,18 @@ const RESUME_PATHS = {
   acting: 'act',
 } as const
 
-export function ActiveCycleCard({ isReady }: { isReady: boolean }) {
-  const active = useQuery(api.pdca.getActiveCycle, isReady ? {} : 'skip')
-  if (active === undefined || active === null) return null
+type ActiveCycle = { cycle: Doc<'pdcaCycles'>; goalName: string | null }
+
+// 進行中Cycleの取得はHomePage側に集約済み。ここは描画だけを持つ。
+export function ActiveCycleCard({ active }: { active: ActiveCycle | null }) {
+  if (active === null) return null
 
   const { cycle, goalName } = active
   const resumePath = RESUME_PATHS[cycle.status as keyof typeof RESUME_PATHS]
   if (resumePath === undefined) return null
 
   return (
-    <section aria-labelledby="active-cycle-heading" className="border-y border-border-subtle py-5">
+    <section aria-labelledby="active-cycle-heading" className="border border-primary-border bg-primary-subtle p-4">
       <p className="text-sm font-medium text-primary" id="active-cycle-heading">
         進行中
       </p>
