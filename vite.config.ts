@@ -1,7 +1,34 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      // 業務データ(Convexへのquery/mutation通信)はキャッシュ対象にしない。
+      // 静的アセット(HTML/CSS/JS/icons/character images)のみをprecacheする。
+      // docs/technical-design.md #59-61 (PWA Policy / Service Worker)
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,png,svg,webp,woff2}'],
+      },
+      manifest: {
+        name: 'PDCA GACHA',
+        short_name: 'PDCA GACHA',
+        description: '今日も1周だけ回そう。PDCAを継続するとキャラクターガチャが引ける習慣化アプリ。',
+        lang: 'ja',
+        start_url: '/',
+        display: 'standalone',
+        background_color: '#f7f7f5',
+        theme_color: '#f7f7f5',
+        icons: [
+          { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+        ],
+      },
+    }),
+  ],
 })
