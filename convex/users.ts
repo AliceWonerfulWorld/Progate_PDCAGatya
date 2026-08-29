@@ -1,7 +1,8 @@
-import { v } from 'convex/values'
+import { ConvexError, v } from 'convex/values'
 import { mutation, query } from './_generated/server'
 import { getOrCreateCurrentUser, requireCurrentUser } from './lib/auth'
 import { getLocalDateString } from './lib/date'
+import { ERROR_CODES } from './lib/errors'
 import { deriveStreakStatus, isRecoveryAvailable } from './lib/streak'
 
 export const ensureCurrentUser = mutation({
@@ -34,5 +35,32 @@ export const getStreakStatus = query({
       recoveryAvailable,
       currentStreak: user.currentStreak,
     }
+  },
+})
+
+// docs/ui-spec.md #23 (Character Detail) / AC-COLLECTION-004 / AC-COLLECTION-005。
+// 所持済み(inventories に該当行あり)のCharacterのみ相棒に設定できる。
+// 未所持IDを直接渡してもServer側で拒否する。
+export const setPartnerCharacter = mutation({
+  args: { characterId: v.id('characters') },
+  handler: async (ctx, args) => {
+    const user = await requireCurrentUser(ctx)
+    const inventory = await ctx.db
+      .query('inventories')
+      .withIndex('by_user_character', (q) =>
+        q.eq('userId', user._id).eq('characterId', args.characterId),
+      )
+      .unique()
+
+    if (inventory === null) {
+      throw new ConvexError({ code: ERROR_CODES.CHARACTER_NOT_OWNED })
+    }
+
+    await ctx.db.patch(user._id, {
+      partnerCharacterId: args.characterId,
+      updatedAt: Date.now(),
+    })
+
+    return { partnerCharacterId: args.characterId }
   },
 })

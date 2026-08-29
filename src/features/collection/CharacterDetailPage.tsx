@@ -1,0 +1,94 @@
+import { ArrowLeft } from 'lucide-react'
+import { useState } from 'react'
+import { useMutation, useQuery } from 'convex/react'
+import { Link, useParams } from 'react-router-dom'
+import { api } from '../../../convex/_generated/api'
+import type { Id } from '../../../convex/_generated/dataModel'
+import { isClerkConfigured } from '../../app/AppProviders'
+import { SectionHeading } from '../../components/ui/SectionHeading'
+import { SignInPrompt } from '../../components/ui/SignInPrompt'
+import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
+
+// docs/ui-spec.md #23 (Character Detail)。未所持は詳細を明かさずシルエットのみ。
+function AuthenticatedCharacterDetail({ characterId }: { characterId: string }) {
+  const { hasError, isReady, isSignedIn } = useCurrentUserInitialization()
+  const collection = useQuery(api.characters.listCollection, isReady ? {} : 'skip')
+  const setPartnerCharacter = useMutation(api.users.setPartnerCharacter)
+  const [error, setError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  if (!isSignedIn) return <SignInPrompt message="ログインすると、キャラクターの詳細を見られます。" />
+  if (hasError) return <p className="text-sm text-rose-700">読み込めませんでした。</p>
+  if (!isReady || collection === undefined) return <p className="text-sm text-slate-600">読み込んでいます。</p>
+
+  const entry = collection.find((item) => item.character._id === characterId)
+  if (!entry) return <p className="text-sm text-slate-600">キャラクターが見つかりませんでした。</p>
+
+  const { character, owned, fragmentCount, isPartner } = entry
+
+  if (!owned) {
+    return (
+      <div className="space-y-4 text-center">
+        <div className="mx-auto aspect-square w-40 bg-slate-300" />
+        <SectionHeading>???</SectionHeading>
+        <p className="text-sm text-slate-500">まだ出会っていないキャラクターです。</p>
+      </div>
+    )
+  }
+
+  async function handleSetPartner() {
+    setError(null)
+    setIsSubmitting(true)
+    try {
+      await setPartnerCharacter({ characterId: character._id as Id<'characters'> })
+    } catch {
+      setError('相棒に設定できませんでした。もう一度試してください。')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="space-y-6 text-center">
+      <p className="text-sm font-bold text-slate-500">{character.rarity}</p>
+      <img alt={character.name} className="mx-auto aspect-square w-40 bg-slate-100 object-cover" src={character.imagePath} />
+      <SectionHeading>{character.name}</SectionHeading>
+      <p className="text-sm leading-6 text-slate-600">{character.description}</p>
+      <p className="text-base font-bold text-slate-700">欠片 {fragmentCount}</p>
+
+      {error ? <p className="text-sm text-rose-700">{error}</p> : null}
+
+      {isPartner ? (
+        <p className="flex min-h-12 items-center justify-center bg-emerald-50 px-4 text-base font-bold text-emerald-700">
+          相棒に設定中
+        </p>
+      ) : (
+        <button
+          className="flex min-h-12 w-full items-center justify-center bg-emerald-700 px-4 text-base font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+          disabled={isSubmitting}
+          onClick={() => void handleSetPartner()}
+          type="button"
+        >
+          相棒にする
+        </button>
+      )}
+    </div>
+  )
+}
+
+export function CharacterDetailPage() {
+  const { characterId } = useParams()
+
+  return (
+    <div className="space-y-6">
+      <Link className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-slate-600" to="/collection">
+        <ArrowLeft aria-hidden="true" className="size-4" /> コレクション
+      </Link>
+      {isClerkConfigured && characterId ? (
+        <AuthenticatedCharacterDetail characterId={characterId} />
+      ) : (
+        <p className="text-sm text-slate-600">ログイン設定の完了後に詳細を見られます。</p>
+      )}
+    </div>
+  )
+}

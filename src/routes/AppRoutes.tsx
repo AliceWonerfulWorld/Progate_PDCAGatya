@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
+import { CharacterDetailPage } from '../features/collection/CharacterDetailPage'
 import { CollectionPage } from '../features/collection/CollectionPage'
 import { CreateGoalPage } from '../features/goals/CreateGoalPage'
 import { GoalDetailPage } from '../features/goals/GoalDetailPage'
@@ -17,6 +18,7 @@ export function AppRoutes() {
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/collection" element={<CollectionPage />} />
+      <Route path="/collection/:characterId" element={<CharacterDetailPage />} />
       <Route path="/history" element={<HistoryPage />} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/goals/new" element={<CreateGoalPage />} />
