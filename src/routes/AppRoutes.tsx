@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { CollectionPage } from '../features/collection/CollectionPage'
 import { CreateGoalPage } from '../features/goals/CreateGoalPage'
 import { GoalDetailPage } from '../features/goals/GoalDetailPage'
+import { GachaPage } from '../features/gacha/GachaPage'
 import { HistoryPage } from '../features/history/HistoryPage'
 import { HomePage } from '../features/home/HomePage'
 import { ActPage } from '../features/pdca/ActPage'
@@ -25,6 +26,7 @@ export function AppRoutes() {
       <Route path="/pdca/check/:cycleId" element={<CheckPage />} />
       <Route path="/pdca/act/:cycleId" element={<ActPage />} />
       <Route path="/pdca/complete/:cycleId" element={<CompletePage />} />
+      <Route path="/gacha" element={<GachaPage />} />
       <Route path="*" element={<Navigate replace to="/" />} />
     </Routes>
   )

@@ -81,10 +81,10 @@ export function CompletePage() {
       ) : null}
 
       <div className="space-y-3">
-        {/* TODO(#18): drawGacha実装後、ガチャ演出画面へ遷移させる。 */}
         <Link
           className="flex min-h-12 w-full items-center justify-center bg-emerald-700 px-4 text-base font-bold text-white"
-          to={`/goal/${goalId}`}
+          state={{ goalId }}
+          to="/gacha"
         >
           ガチャを回す
         </Link>
