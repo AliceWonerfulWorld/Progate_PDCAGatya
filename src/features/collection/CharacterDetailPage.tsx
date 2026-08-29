@@ -1,5 +1,5 @@
 import { ArrowLeft } from 'lucide-react'
-import { useState } from 'react'
+import { Suspense, lazy, useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { Link, useParams } from 'react-router-dom'
 import { api } from '../../../convex/_generated/api'
@@ -11,6 +11,11 @@ import { SectionHeading } from '../../components/ui/SectionHeading'
 import { SignInPrompt } from '../../components/ui/SignInPrompt'
 import { userFacingError } from '../../lib/userFacingError'
 import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
+
+// 詳細画面でだけ使う3Dビューア。重い依存(@google/model-viewer)を遅延ロードする。
+const Character3DViewer = lazy(() => import('./Character3DViewer'))
+
+const CHARACTER_IMAGE_CLASS = 'mx-auto aspect-square w-40 bg-surface-muted object-cover'
 
 // docs/ui-spec.md #23 (Character Detail)。未所持は詳細を明かさずシルエットのみ。
 function AuthenticatedCharacterDetail({ characterId }: { characterId: string }) {
@@ -54,7 +59,19 @@ function AuthenticatedCharacterDetail({ characterId }: { characterId: string }) 
   return (
     <div className="space-y-6 text-center">
       <p className="text-sm font-bold text-text-subtle">{character.rarity}</p>
-      <img alt={character.name} className="mx-auto aspect-square w-40 bg-surface-muted object-cover" src={character.imagePath} />
+      {character.modelPath ? (
+        <Suspense
+          fallback={<img alt={character.name} className={CHARACTER_IMAGE_CLASS} src={character.imagePath} />}
+        >
+          <Character3DViewer
+            modelPath={character.modelPath}
+            name={character.name}
+            posterSrc={character.imagePath}
+          />
+        </Suspense>
+      ) : (
+        <img alt={character.name} className={CHARACTER_IMAGE_CLASS} src={character.imagePath} />
+      )}
       <SectionHeading>{character.name}</SectionHeading>
       <p className="text-sm leading-6 text-text-muted">{character.description}</p>
       <p className="text-base font-bold text-text-body">欠片 {fragmentCount}</p>

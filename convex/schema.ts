@@ -132,6 +132,9 @@ export default defineSchema({
     rarity: characterRarity,
     description: v.string(),
     imagePath: v.string(),
+    // 詳細画面でのみ使う3Dモデル(.glb)のパス。未指定なら従来どおり imagePath の
+    // 2D画像を表示する。一覧/ガチャ演出/相棒表示は常に imagePath を使う。
+    modelPath: v.optional(v.string()),
     defaultMessage: v.optional(v.string()),
     // 同じrarity内での抽選重み。未指定は1として扱う(=全キャラ均等、従来と同じ挙動)。
     // 一般的なソシャゲのピックアップ演出のように、キャラごとに出やすさを変えたい場合に使う。
