@@ -1,7 +1,7 @@
 import { ArrowLeft } from 'lucide-react'
 import { useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
 import { INPUT_LIMITS } from '../../../convex/lib/constants'
@@ -20,6 +20,8 @@ const ADJUST_BUTTONS = [
 
 function AuthenticatedPlanPage({ goalId }: { goalId: string }) {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const isRecovery = searchParams.get('recovery') === '1'
   const { hasError, isReady, isSignedIn } = useCurrentUserInitialization()
   const detail = useQuery(
     api.goals.getGoalDetail,
@@ -61,10 +63,20 @@ function AuthenticatedPlanPage({ goalId }: { goalId: string }) {
     setIsSubmitting(true)
     try {
       // Cycle はここで初めて作成される（AC-PDCA-001 / AC-PDCA-002）。
-      const { cycleId } = await startPdcaCycle({ goalId: goal._id, planText: currentPlanText })
+      // isRecovery=true はServer側でAt Risk状態を再検証してから許可される
+      // （クエリパラメータはUIの導線に過ぎず、認可の根拠にはしない）。
+      const { cycleId } = await startPdcaCycle({
+        goalId: goal._id,
+        planText: currentPlanText,
+        isRecovery,
+      })
       navigate(`/pdca/do/${cycleId}`)
     } catch {
-      setError('PDCAを開始できませんでした。もう一度試してください。')
+      setError(
+        isRecovery
+          ? 'リカバリーを開始できませんでした。すでに利用済みか、対象外の可能性があります。'
+          : 'PDCAを開始できませんでした。もう一度試してください。',
+      )
       setIsSubmitting(false)
     }
   }
@@ -73,7 +85,10 @@ function AuthenticatedPlanPage({ goalId }: { goalId: string }) {
     <div className="space-y-7">
       <section className="space-y-3">
         <p className="text-sm font-medium text-slate-500">{goal.name}</p>
-        <SectionHeading>{isEditing ? '今日やること' : '今日これやる？'}</SectionHeading>
+        {isRecovery ? <p className="text-sm font-bold text-rose-600">リカバリー</p> : null}
+        <SectionHeading>
+          {isEditing ? '今日やること' : isRecovery ? '今日はこれだけやってみよう。' : '今日これやる？'}
+        </SectionHeading>
         {isEditing ? (
           <label className="block space-y-2" htmlFor="plan-text">
             <span className="text-sm text-slate-600">{editingHint ?? '最初にやることを決めよう。'}</span>

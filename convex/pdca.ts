@@ -7,7 +7,7 @@ import { getLocalDateString } from './lib/date'
 import { ERROR_CODES } from './lib/errors'
 import { assertValidPdcaTransition } from './lib/pdca'
 import { calculatePlayerLevel } from './lib/playerLevel'
-import { resolveStreakState } from './lib/streak'
+import { deriveStreakStatus, isRecoveryAvailable, resolveStreakState } from './lib/streak'
 
 const doResultValidator = v.union(
   v.literal('completed'),
@@ -50,13 +50,26 @@ export function validatePlanText(planText: string): string {
 }
 
 // PLAN確定時のみ呼び出す。PLAN候補の表示だけでは Cycle を作らない（AC-PDCA-002）。
+// isRecovery=true はClientからの自己申告を信用せず、Server側でAt Risk状態と
+// Recoveryの利用可否(rolling 7 days)を再検証してから許可する（AC-RECOVERY-001/002）。
 export const startPdcaCycle = mutation({
-  args: { goalId: v.id('goals'), planText: v.string() },
+  args: { goalId: v.id('goals'), planText: v.string(), isRecovery: v.optional(v.boolean()) },
   handler: async (ctx, args) => {
     const currentUser = await requireCurrentUser(ctx)
     const goal = await requireOwnedGoal(ctx, args.goalId, currentUser)
     if (goal.archivedAt !== undefined) {
       throw new ConvexError({ code: ERROR_CODES.GOAL_ARCHIVED })
+    }
+
+    const isRecovery = args.isRecovery ?? false
+    if (isRecovery) {
+      const today = getLocalDateString(Date.now(), currentUser.timezone)
+      const derived = deriveStreakStatus(currentUser.lastCompletedDate, today)
+      const eligible =
+        derived.streakStatus === 'atRisk' && isRecoveryAvailable(currentUser.lastRecoveryDate, today)
+      if (!eligible) {
+        throw new ConvexError({ code: ERROR_CODES.RECOVERY_NOT_AVAILABLE })
+      }
     }
 
     const planText = validatePlanText(args.planText)
@@ -66,8 +79,7 @@ export const startPdcaCycle = mutation({
       goalId: goal._id,
       planText,
       status: 'doing',
-      // Recovery 判定は Streak resolver (T014/T015) 側で扱うため、ここでは常に false。
-      isRecovery: false,
+      isRecovery,
       startedAt: now,
       createdAt: now,
       updatedAt: now,
