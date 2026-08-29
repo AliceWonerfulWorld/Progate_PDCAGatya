@@ -98,6 +98,53 @@ describe('listCollection', () => {
 
     expect(collection[0].isPartner).toBe(true)
   })
+
+  it('returns an empty eventNames list when no gachas are configured', async () => {
+    const t = convexTest(schema, modules)
+    await seedUser(t, 'user_a')
+    await seedCharacter(t, 'ノーガチャキャラ', 1)
+
+    const collection = await t.withIdentity({ subject: 'user_a' }).query(api.characters.listCollection, {})
+    expect(collection[0].eventNames).toEqual([])
+  })
+
+  it('tags a character as event-exclusive only when absent from the standard gacha pool', async () => {
+    const t = convexTest(schema, modules)
+    await seedUser(t, 'user_a')
+    const baseChar = await seedCharacter(t, 'ベースキャラ', 1)
+    const eventChar = await seedCharacter(t, 'イベント限定キャラ', 2)
+
+    await t.run(async (ctx) => {
+      const now = Date.now()
+      await ctx.db.insert('gachas', {
+        key: 'standard',
+        name: '恒常ガチャ',
+        rates: { R: 1, SR: 0, SSR: 0 },
+        characterIds: [baseChar],
+        isActive: true,
+        sortOrder: 1,
+        createdAt: now,
+        updatedAt: now,
+      })
+      await ctx.db.insert('gachas', {
+        key: 'progate',
+        name: 'Progateガチャ',
+        rates: { R: 1, SR: 0, SSR: 0 },
+        characterIds: [baseChar, eventChar],
+        isActive: true,
+        sortOrder: 2,
+        createdAt: now,
+        updatedAt: now,
+      })
+    })
+
+    const collection = await t.withIdentity({ subject: 'user_a' }).query(api.characters.listCollection, {})
+    const base = collection.find((entry) => entry.character._id === baseChar)
+    const event = collection.find((entry) => entry.character._id === eventChar)
+
+    expect(base?.eventNames).toEqual([])
+    expect(event?.eventNames).toEqual(['Progateガチャ'])
+  })
 })
 
 describe('setPartnerCharacter', () => {
