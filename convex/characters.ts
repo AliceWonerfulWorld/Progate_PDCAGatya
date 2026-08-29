@@ -35,6 +35,9 @@ export interface CollectionEntry {
   fragmentCount: number
   duplicateCount: number
   isPartner: boolean
+  // 恒常ガチャ(standard)の対象キャラには含めない。イベント限定ガチャ経由
+  // でのみ入手できるキャラにだけ、そのガチャ名が入る(絞り込みUI用)。
+  eventNames: string[]
 }
 
 // docs/ui-spec.md #22 (Collection画面) / AC-COLLECTION-001〜003。
@@ -53,6 +56,25 @@ export const listCollection = query({
       inventories.map((inventory) => [inventory.characterId, inventory]),
     )
 
+    const gachas = await ctx.db.query('gachas').collect()
+    const standardGacha = gachas.find((gacha) => gacha.key === 'standard')
+    const standardCharacterIds = standardGacha?.characterIds
+    // 恒常ガチャがcharacterIds未指定(=全active Character対象)の場合、
+    // どのキャラも恒常ガチャからも取れることになるため「イベント限定」は無い。
+    const isObtainableFromStandard = (characterId: Id<'characters'>) =>
+      standardCharacterIds === undefined || standardCharacterIds.includes(characterId)
+
+    const eventNamesByCharacter = new Map<Id<'characters'>, string[]>()
+    for (const gacha of gachas) {
+      if (gacha.key === 'standard' || gacha.characterIds === undefined) continue
+      for (const characterId of gacha.characterIds) {
+        if (isObtainableFromStandard(characterId)) continue
+        const names = eventNamesByCharacter.get(characterId) ?? []
+        names.push(gacha.name)
+        eventNamesByCharacter.set(characterId, names)
+      }
+    }
+
     // Array#toSorted() needs ES2023 lib, but this file is also typechecked via
     // tsconfig.app.json (ES2022) through convex/_generated/api.d.ts's import graph.
     const sortedCharacters = [...characters]
@@ -67,6 +89,7 @@ export const listCollection = query({
         fragmentCount: inventory?.fragmentCount ?? 0,
         duplicateCount: inventory?.duplicateCount ?? 0,
         isPartner: currentUser.partnerCharacterId === character._id,
+        eventNames: eventNamesByCharacter.get(character._id) ?? [],
       }
     })
   },
