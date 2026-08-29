@@ -16,7 +16,7 @@ export default defineConfig({
       // 静的アセット(HTML/CSS/JS/icons/character images)のみをprecacheする。
       // docs/technical-design.md #59-61 (PWA Policy / Service Worker)
       workbox: {
-        globPatterns: ['**/*.{js,css,html,png,svg,webp,woff2}'],
+        globPatterns: ['**/*.{js,css,html,png,svg,webp,woff2,riv}'],
       },
       manifest: {
         name: 'PDCA GACHA',
