@@ -1,14 +1,14 @@
-import { ArrowLeft } from 'lucide-react'
 import { useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
 import { isClerkConfigured } from '../../app/AppProviders'
+import { BackButton } from '../../components/ui/BackButton'
 import { LoadFailure } from '../../components/ui/LoadFailure'
 import { SectionHeading } from '../../components/ui/SectionHeading'
 import { useGuestState } from '../../hooks/useGuestState'
-import { PRIMARY_BUTTON_CLASS, SECONDARY_BUTTON_CLASS } from '../../lib/buttonStyles'
+import { choiceButtonClass, PRIMARY_BUTTON_CLASS } from '../../lib/buttonStyles'
 import type { GuestDoResult, GuestPdcaCycle } from '../../lib/guestStore'
 import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
 
@@ -34,6 +34,14 @@ function DoBody({
 }) {
   // ui-spec 11.2: 実行中はアプリが邪魔をせず、「振り返る」で結果選択へ進む。
   const [isReflecting, setIsReflecting] = useState(false)
+  // タップした結果をボタンの選択状態として一瞬見せてから次へ進む。
+  // 即座に画面が切り替わると「選んだ実感がないまま進んだ」と感じやすいため。
+  const [selected, setSelected] = useState<(typeof DO_RESULTS)[number]['value'] | null>(null)
+
+  function handleSelect(value: (typeof DO_RESULTS)[number]['value']) {
+    setSelected(value)
+    window.setTimeout(() => onSubmit(value), 200)
+  }
 
   return (
     <div className="space-y-7">
@@ -54,17 +62,29 @@ function DoBody({
 
       <div className="space-y-3">
         {isReflecting ? (
-          DO_RESULTS.map(({ value, label }) => (
-            <button
-              className={`min-h-12 w-full px-4 text-base font-semibold ${SECONDARY_BUTTON_CLASS}`}
-              disabled={isSubmitting}
-              key={value}
-              onClick={() => onSubmit(value)}
-              type="button"
-            >
-              {label}
-            </button>
-          ))
+          <>
+            {DO_RESULTS.map(({ value, label }) => (
+              <button
+                aria-pressed={selected === value}
+                className={`min-h-12 w-full px-4 text-base font-semibold ${choiceButtonClass(selected === value, 'emerald')}`}
+                disabled={isSubmitting || selected !== null}
+                key={value}
+                onClick={() => handleSelect(value)}
+                type="button"
+              >
+                {label}
+              </button>
+            ))}
+            {selected === null ? (
+              <button
+                className="text-sm font-semibold text-slate-500 underline-offset-2 hover:text-slate-700 hover:underline"
+                onClick={() => setIsReflecting(false)}
+                type="button"
+              >
+                戻る
+              </button>
+            ) : null}
+          </>
         ) : (
           <button
             className={`min-h-12 w-full px-4 text-base font-bold text-white ${PRIMARY_BUTTON_CLASS}`}
@@ -183,9 +203,7 @@ export function DoPage() {
 
   return (
     <div className="space-y-6">
-      <Link className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-slate-600" to="/">
-        <ArrowLeft aria-hidden="true" className="size-4" /> ホーム
-      </Link>
+      <BackButton />
       {isClerkConfigured && cycleId ? (
         <DoGate cycleId={cycleId} />
       ) : (

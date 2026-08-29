@@ -1,4 +1,3 @@
-import { ArrowLeft } from 'lucide-react'
 import { useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
@@ -6,6 +5,7 @@ import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
 import { INPUT_LIMITS } from '../../../convex/lib/constants'
 import { isClerkConfigured } from '../../app/AppProviders'
+import { BackButton } from '../../components/ui/BackButton'
 import { LoadFailure } from '../../components/ui/LoadFailure'
 import { SectionHeading } from '../../components/ui/SectionHeading'
 import { useGuestState } from '../../hooks/useGuestState'
@@ -63,6 +63,9 @@ function CheckBody({
   const [checkReason, setCheckReason] = useState<CheckReason | null>(null)
   const [checkMemo, setCheckMemo] = useState('')
   const [isMemoOpen, setIsMemoOpen] = useState(false)
+  // 深掘り不要な選択は即送信されるが、押した瞬間に画面が切り替わると選んだ
+  // 実感がないまま進んだように見える。選択状態を一瞬見せてから送信する。
+  const [isAutoAdvancing, setIsAutoAdvancing] = useState(false)
 
   function submit(load: CheckLoad, reason: CheckReason | null) {
     onSubmit({
@@ -73,13 +76,15 @@ function CheckBody({
   }
 
   function selectLoad(value: CheckLoad) {
+    if (isAutoAdvancing) return
     setCheckLoad(value)
     if (!needsReason(value, doResult)) {
       setCheckReason(null)
       // ui-spec 13.1: 深掘り不要 かつ メモを書いていなければ、選んだ瞬間に
       // 1タップでCHECKを完了できる。メモを書き始めている間は自動送信しない。
       if (!isMemoOpen) {
-        submit(value, null)
+        setIsAutoAdvancing(true)
+        window.setTimeout(() => submit(value, null), 200)
         return
       }
     }
@@ -100,7 +105,7 @@ function CheckBody({
           <button
             aria-pressed={checkLoad === value}
             className={`min-h-12 w-full px-4 text-base font-semibold ${choiceButtonClass(checkLoad === value, 'emerald')}`}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isAutoAdvancing}
             key={value}
             onClick={() => selectLoad(value)}
             type="button"
@@ -280,9 +285,7 @@ export function CheckPage() {
 
   return (
     <div className="space-y-6">
-      <Link className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-slate-600" to="/">
-        <ArrowLeft aria-hidden="true" className="size-4" /> ホーム
-      </Link>
+      <BackButton />
       {isClerkConfigured && cycleId ? (
         <CheckGate cycleId={cycleId} />
       ) : (

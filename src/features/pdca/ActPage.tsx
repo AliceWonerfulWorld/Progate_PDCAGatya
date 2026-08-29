@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRightLeft, Minus, Plus } from 'lucide-react'
+import { ArrowRightLeft, Minus, Plus } from 'lucide-react'
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { useMutation, useQuery } from 'convex/react'
@@ -11,6 +11,7 @@ import { BASE_PDCA_XP, INPUT_LIMITS } from '../../../convex/lib/constants'
 import { calculatePlayerLevel } from '../../../convex/lib/playerLevel'
 import type { CompletePdcaCycleResult } from '../../../convex/pdca'
 import { isClerkConfigured } from '../../app/AppProviders'
+import { BackButton } from '../../components/ui/BackButton'
 import { LoadFailure } from '../../components/ui/LoadFailure'
 import { SectionHeading } from '../../components/ui/SectionHeading'
 import { useGuestState } from '../../hooks/useGuestState'
@@ -74,18 +75,27 @@ function ActBody({
       <section className="space-y-2 border-y border-slate-200 py-5">
         <p className="text-sm font-medium text-slate-500">次回候補</p>
         {isAdjusting ? (
-          <label className="block space-y-2" htmlFor="next-plan-candidate">
-            <span className="sr-only">次回候補</span>
-            <input
-              autoFocus
-              className="min-h-12 w-full border border-slate-300 bg-white px-3 text-base outline-none focus:border-emerald-700"
-              id="next-plan-candidate"
-              maxLength={INPUT_LIMITS.nextPlanCandidate}
-              onChange={(event) => setNextPlanCandidate(event.target.value)}
-              placeholder="英単語を5個復習する"
-              value={nextPlanCandidate}
-            />
-          </label>
+          <>
+            <label className="block space-y-2" htmlFor="next-plan-candidate">
+              <span className="sr-only">次回候補</span>
+              <input
+                autoFocus
+                className="min-h-12 w-full border border-slate-300 bg-white px-3 text-base outline-none focus:border-emerald-700"
+                id="next-plan-candidate"
+                maxLength={INPUT_LIMITS.nextPlanCandidate}
+                onChange={(event) => setNextPlanCandidate(event.target.value)}
+                placeholder="英単語を5個復習する"
+                value={nextPlanCandidate}
+              />
+            </label>
+            <button
+              className="text-sm font-semibold text-slate-500 underline-offset-2 hover:text-slate-700 hover:underline"
+              onClick={() => setIsAdjusting(false)}
+              type="button"
+            >
+              戻る
+            </button>
+          </>
         ) : (
           <p className="text-base font-bold">{nextPlanCandidate}</p>
         )}
@@ -271,9 +281,7 @@ export function ActPage() {
 
   return (
     <div className="space-y-6">
-      <Link className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-slate-600" to="/">
-        <ArrowLeft aria-hidden="true" className="size-4" /> ホーム
-      </Link>
+      <BackButton />
       {isClerkConfigured && cycleId ? (
         <ActGate cycleId={cycleId} />
       ) : (
