@@ -17,6 +17,7 @@ import type * as lib_date from "../lib/date.js";
 import type * as lib_errors from "../lib/errors.js";
 import type * as lib_gacha from "../lib/gacha.js";
 import type * as lib_pdca from "../lib/pdca.js";
+import type * as lib_streak from "../lib/streak.js";
 import type * as users from "../users.js";
 
 import type {
@@ -35,6 +36,7 @@ declare const fullApi: ApiFromModules<{
   "lib/errors": typeof lib_errors;
   "lib/gacha": typeof lib_gacha;
   "lib/pdca": typeof lib_pdca;
+  "lib/streak": typeof lib_streak;
   users: typeof users;
 }>;
 
