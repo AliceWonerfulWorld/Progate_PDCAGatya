@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { daysBetweenLocalDates, getLocalDateString, isNextLocalDay } from './date'
+import { addDaysToLocalDate, daysBetweenLocalDates, getLocalDateString, isNextLocalDay } from './date'
 
 describe('getLocalDateString', () => {
   it('formats a timestamp as YYYY-MM-DD for the given IANA timezone', () => {
@@ -81,5 +81,27 @@ describe('isNextLocalDay', () => {
     expect(isNextLocalDay(beforeMidnightJst, afterMidnightJst, 'Asia/Tokyo')).toBe(true)
     // In UTC, both instants still fall on 2026-08-28, so it is not "the next day".
     expect(isNextLocalDay(beforeMidnightJst, afterMidnightJst, 'UTC')).toBe(false)
+  })
+})
+
+describe('addDaysToLocalDate', () => {
+  it('adds days within the same month', () => {
+    expect(addDaysToLocalDate('2026-08-27', 1)).toBe('2026-08-28')
+  })
+
+  it('handles month boundaries', () => {
+    expect(addDaysToLocalDate('2026-08-31', 1)).toBe('2026-09-01')
+  })
+
+  it('handles year boundaries', () => {
+    expect(addDaysToLocalDate('2026-12-31', 1)).toBe('2027-01-01')
+  })
+
+  it('supports subtracting days via a negative offset', () => {
+    expect(addDaysToLocalDate('2026-08-01', -1)).toBe('2026-07-31')
+  })
+
+  it('is the inverse of daysBetweenLocalDates', () => {
+    expect(daysBetweenLocalDates('2026-08-27', addDaysToLocalDate('2026-08-27', 5))).toBe(5)
   })
 })

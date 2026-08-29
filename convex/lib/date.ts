@@ -22,6 +22,14 @@ export function daysBetweenLocalDates(a: string, b: string): number {
   return Math.round((parseLocalDateToUtcMs(b) - parseLocalDateToUtcMs(a)) / MS_PER_DAY)
 }
 
+export function addDaysToLocalDate(date: string, days: number): string {
+  const shifted = new Date(parseLocalDateToUtcMs(date) + days * MS_PER_DAY)
+  const year = shifted.getUTCFullYear()
+  const month = String(shifted.getUTCMonth() + 1).padStart(2, '0')
+  const day = String(shifted.getUTCDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 export function isNextLocalDay(a: number, b: number, timezone: string): boolean {
   const dateA = getLocalDateString(a, timezone)
   const dateB = getLocalDateString(b, timezone)
