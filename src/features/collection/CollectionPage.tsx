@@ -11,6 +11,7 @@ import { SectionHeading } from '../../components/ui/SectionHeading'
 import { SignInPrompt } from '../../components/ui/SignInPrompt'
 import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
 import { choiceButtonClass, SECONDARY_BUTTON_CLASS } from '../../lib/buttonStyles'
+import { normalizeCollectionEntries } from './collectionData'
 
 const RARITY_FILTERS = ['All', 'R', 'SR', 'SSR'] as const
 type RarityFilter = (typeof RARITY_FILTERS)[number]
@@ -111,16 +112,17 @@ function AuthenticatedCollection() {
   if (hasError) return <LoadFailure message="コレクションを読み込めませんでした。" onRetry={retry} />
   if (!isReady || collection === undefined) return <LoadingState label="コレクションを読み込んでいます。" />
 
-  const ownedCount = collection.filter((entry) => entry.owned).length
-  const totalCount = collection.length
+  const collectionEntries = normalizeCollectionEntries(collection)
+  const ownedCount = collectionEntries.filter((entry) => entry.owned).length
+  const totalCount = collectionEntries.length
   const percent = totalCount === 0 ? 0 : Math.round((ownedCount / totalCount) * 100)
 
-  const eventOptions = [...new Set(collection.flatMap((entry) => entry.eventNames))]
+  const eventOptions = [...new Set(collectionEntries.flatMap((entry) => entry.eventNames))]
   const trimmedSearch = search.trim()
   const activeFilterCount =
     (rarityFilter === 'All' ? 0 : 1) + (eventFilter === EVENT_FILTER_ALL ? 0 : 1) + (trimmedSearch ? 1 : 0)
 
-  const filtered = collection.filter((entry) => {
+  const filtered = collectionEntries.filter((entry) => {
     if (rarityFilter !== 'All' && entry.character.rarity !== rarityFilter) return false
     if (eventFilter !== EVENT_FILTER_ALL && !entry.eventNames.includes(eventFilter)) return false
     // 未所持キャラは名前が伏せられているため、検索で名前を割り出せないようにする。
