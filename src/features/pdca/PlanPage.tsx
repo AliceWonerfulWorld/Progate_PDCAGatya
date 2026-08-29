@@ -132,12 +132,14 @@ function SignedInPlanPage({ goalId }: { goalId: string }) {
     api.goals.getGoalDetail,
     isReady ? { goalId: goalId as Id<'goals'> } : 'skip',
   )
+  const activeCycle = useQuery(api.pdca.getActiveCycle, isReady ? {} : 'skip')
   const startPdcaCycle = useMutation(api.pdca.startPdcaCycle)
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   if (hasError) return <LoadFailure message="PLANを読み込めませんでした。" onRetry={retry} />
-  if (!isReady || detail === undefined) return <LoadingState label="PLANを読み込んでいます。" />
+  if (!isReady || detail === undefined || activeCycle === undefined) return <LoadingState label="PLANを読み込んでいます。" />
+  if (activeCycle !== null) return <Navigate replace to="/" />
 
   const { goal } = detail
   if (goal.archivedAt !== undefined) {

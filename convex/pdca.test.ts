@@ -355,6 +355,38 @@ describe('completePdcaCycle', () => {
 })
 
 describe('startPdcaCycle - isRecovery', () => {
+  it.each(['doing', 'checking', 'acting'] as const)(
+    'AC-PDCA-011A: rejects a second PDCA while status is %s',
+    async (status) => {
+      const t = convexTest(schema, modules)
+      const userId = await seedUser(t, 'user_a')
+      const firstGoalId = await seedGoal(t, userId)
+      const secondGoalId = await t.run(async (ctx) => {
+        const now = Date.now()
+        return ctx.db.insert('goals', {
+          userId,
+          name: '筋トレ',
+          totalCycles: 0,
+          activeDays: 0,
+          createdAt: now,
+          updatedAt: now,
+        })
+      })
+      const asUser = t.withIdentity({ subject: 'user_a' })
+
+      const { cycleId } = await asUser.mutation(api.pdca.startPdcaCycle, {
+        goalId: firstGoalId,
+        planText: '英単語を5個復習する',
+      })
+      await t.run((ctx) => ctx.db.patch(cycleId, { status }))
+
+      await expectConvexErrorCode(
+        asUser.mutation(api.pdca.startPdcaCycle, { goalId: secondGoalId, planText: '腕立て10回' }),
+        'PDCA_ACTIVE_CYCLE_EXISTS',
+      )
+    },
+  )
+
   it('starts a normal cycle with isRecovery=false by default', async () => {
     const t = convexTest(schema, modules)
     const userId = await seedUser(t, 'user_a')

@@ -33,6 +33,6 @@ test.describe('Guest core flow', () => {
 
     await expect(page).toHaveURL(/\/pdca\/do\/guest$/)
     await expect(page.getByText(planText)).toBeVisible()
-    await expect(page.getByRole('button', { name: '振り返る' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'CHECKへ進む' })).toBeVisible()
   })
 })

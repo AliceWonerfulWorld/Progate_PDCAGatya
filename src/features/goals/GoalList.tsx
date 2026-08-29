@@ -5,14 +5,12 @@ import { GoalCard } from './GoalCard'
 
 // Homeで一度に出すGoalの上限。これを超えた分は「他N件」で畳む。
 // Goalを増やすほどHomeが縦に伸び続ける問題への対処（Issue #94）。
-const VISIBLE_LIMIT = 3
+const VISIBLE_LIMIT = 2
 
 export function GoalList({
   goals,
-  recoverable = false,
 }: {
   goals: Doc<'goals'>[]
-  recoverable?: boolean
 }) {
   const [expanded, setExpanded] = useState(false)
   const visible = expanded ? goals : goals.slice(0, VISIBLE_LIMIT)
@@ -20,15 +18,11 @@ export function GoalList({
 
   return (
     <div className="mt-3">
-      {visible.map((goal, index) => (
+      {visible.map((goal) => (
         <GoalCard
           goal={goal}
           key={goal._id}
-          recoverable={recoverable}
-          // 開始CTAは先頭Goalにだけ出す。同格のprimary CTAを並べると
-          // 「今日どれをやるか」の判断をユーザーに丸投げすることになる。
-          // 2件目以降はタップでGoal詳細へ行き、そこから開始できる。
-          showAction={index === 0}
+          showAction={false}
         />
       ))}
       {hiddenCount > 0 ? (

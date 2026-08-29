@@ -12,7 +12,7 @@ const GUEST_RESUME_PATHS = {
 
 // ログイン後(ActiveCycleCard)と同じ文言・現在地表示を使う（ui-spec #7.1 / #7.2）。
 const GUEST_RESUME_LABELS = {
-  doing: '振り返る',
+  doing: 'CHECKへ進む',
   checking: '結果を記録する',
   acting: '次のPLANを決める',
 } as const
@@ -63,11 +63,14 @@ export function GuestGoalSection() {
     return (
       <div className="mt-3 border-y border-border-subtle py-4">
         <div className="flex items-center justify-between gap-3">
-          <p className="text-sm font-medium text-primary">いま {PHASE_LABEL[cycle.status]}</p>
+          <p className="text-sm font-medium text-primary">いま取り組んでいるGoal</p>
           <PdcaPhaseIndicator status={cycle.status} />
         </div>
-        <p className="mt-3 text-sm text-text-subtle">{goal.name}</p>
-        <p className="mt-1 text-base font-bold">{cycle.planText}</p>
+        <p className="mt-3 text-xl font-bold">{goal.name}</p>
+        <div className="mt-4 border border-border-subtle bg-surface p-3">
+          <p className="text-sm font-medium text-primary">{cycle.status === 'doing' ? 'DO：いまやること' : `いま ${PHASE_LABEL[cycle.status]}`}</p>
+          <p className="mt-2 text-base font-bold">{cycle.planText}</p>
+        </div>
         <Link
           className="mt-4 flex min-h-12 items-center justify-center bg-primary px-4 text-base font-bold text-white"
           to={`/pdca/${resumePath}/guest`}

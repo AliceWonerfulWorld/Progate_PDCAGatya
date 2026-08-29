@@ -10,10 +10,10 @@ const RESUME_PATHS = {
 } as const
 
 // CTAは「今どこにいるか」ではなく「次に何をするか」を示す。
-// doing でHomeに戻ってきた人がDO画面でできるのは振り返りだけなので、
-// 遷移先のボタン文言（DoPageの「振り返る」）とそのまま揃える。
+// doing でHomeに戻ってきた人は、CHECKへ進む操作でDO結果を選ぶので、
+// 遷移先のボタン文言（DoPageの「CHECKへ進む」）とそのまま揃える。
 const RESUME_LABELS = {
-  doing: '振り返る',
+  doing: 'CHECKへ進む',
   checking: '結果を記録する',
   acting: '次のPLANを決める',
 } as const
@@ -31,16 +31,21 @@ export function ActiveCycleCard({ active }: { active: ActiveCycle | null }) {
   const { cycle, goalName } = active
   if (!isActiveStatus(cycle.status)) return null
 
+  const taskLabel = cycle.status === 'doing' ? 'DO：いまやること' : `いま ${PHASE_LABEL[cycle.status]}`
+
   return (
     <section aria-labelledby="active-cycle-heading" className="border border-primary-border bg-primary-subtle p-4">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-medium text-primary" id="active-cycle-heading">
-          いま {PHASE_LABEL[cycle.status]}
+          いま取り組んでいるGoal
         </p>
         <PdcaPhaseIndicator status={cycle.status} />
       </div>
-      {goalName ? <p className="mt-3 text-sm text-text-subtle">{goalName}</p> : null}
-      <p className="mt-1 text-base font-bold">{cycle.planText}</p>
+      {goalName ? <p className="mt-3 text-xl font-bold">{goalName}</p> : null}
+      <div className="mt-4 border border-border-subtle bg-surface p-3">
+        <p className="text-sm font-medium text-primary">{taskLabel}</p>
+        <p className="mt-2 text-base font-bold">{cycle.planText}</p>
+      </div>
       <Link
         className="mt-4 flex min-h-12 items-center justify-center bg-primary px-4 text-base font-bold text-white"
         to={`/pdca/${RESUME_PATHS[cycle.status]}/${cycle._id}`}

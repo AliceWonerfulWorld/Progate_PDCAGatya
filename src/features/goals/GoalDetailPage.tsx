@@ -20,6 +20,7 @@ function AuthenticatedGoalDetail({ goalId }: { goalId: string }) {
   const navigate = useNavigate()
   const { hasError, isReady, isSignedIn, retry } = useCurrentUserInitialization()
   const detail = useQuery(api.goals.getGoalDetail, isReady ? { goalId: goalId as never } : 'skip')
+  const activeCycle = useQuery(api.pdca.getActiveCycle, isReady ? {} : 'skip')
   const updateGoal = useMutation(api.goals.updateGoal)
   const archiveGoal = useMutation(api.goals.archiveGoal)
   const [isEditing, setIsEditing] = useState(false)
@@ -33,7 +34,7 @@ function AuthenticatedGoalDetail({ goalId }: { goalId: string }) {
 
   if (!isSignedIn) return <SignInPrompt message="ログインすると、Goalの詳細を確認できます。" />
   if (hasError) return <LoadFailure message="Goalを読み込めませんでした。" onRetry={retry} />
-  if (!isReady || detail === undefined) return <LoadingState label="Goalを読み込んでいます。" />
+  if (!isReady || detail === undefined || activeCycle === undefined) return <LoadingState label="Goalを読み込んでいます。" />
   const { goal, recentCycles } = detail
 
   async function handleUpdate() {
@@ -100,12 +101,19 @@ function AuthenticatedGoalDetail({ goalId }: { goalId: string }) {
       <section className="border-y border-border-subtle py-5">
         <p className="text-sm font-medium text-text-subtle">次の候補</p>
         <p className="mt-1 text-base font-bold">{goal.nextPlanCandidate ?? 'まだ決まっていません'}</p>
-        {goal.archivedAt === undefined ? (
+        {goal.archivedAt === undefined && activeCycle === null ? (
           <Link
             className="mt-4 flex min-h-12 items-center justify-center bg-primary px-4 text-base font-bold text-white"
             to={`/pdca/plan/${goal._id}`}
           >
             PDCAを回す
+          </Link>
+        ) : goal.archivedAt === undefined ? (
+          <Link
+            className="mt-4 flex min-h-12 items-center justify-center border border-border px-4 text-sm font-bold text-text-body"
+            to="/"
+          >
+            進行中のPDCAを確認する
           </Link>
         ) : (
           <p className="mt-4 text-sm text-text-muted">アーカイブしたGoalでは新しいPDCAを始められません。</p>
