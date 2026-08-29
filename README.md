@@ -439,6 +439,11 @@ Convex のローカル開発用 deployment と、MVPで使用する6テーブル
 - Server-side の入力検証と所有権確認
 - Home の Goal Card と Goal Detail の最近のPDCA表示
 
+### Phase 9 — E2E Test Foundation: Complete
+
+- Playwright による Guest happy path と reload/resume の E2E テスト
+- Clerk Testing Token を使うログイン済みフローと Guest migration の E2E テスト
+
 未着手の領域：
 
 - PDCA、報酬、ガチャ、ストリークの業務ロジック
@@ -461,7 +466,12 @@ Vite が表示するローカル URL をブラウザで開いてください。
 ```bash
 npm run lint
 npm run build
+npm run test:e2e
 ```
+
+`npm run test:e2e` は Guest フローを常時実行します。ログイン済みフローと
+Guest migration を実行するには、開発用 Clerk instance の `CLERK_SECRET_KEY` と
+`E2E_CLERK_USER_EMAIL` を `.env.local` に設定してください。
 
 `npx convex dev --once` を実行すると、ローカル Convex deployment 用の値が `.env.local` に自動作成されます。`.env.local` は Git 管理しません。
 

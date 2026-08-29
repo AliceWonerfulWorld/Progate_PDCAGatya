@@ -9,6 +9,7 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",
+    "test:e2e": "playwright test",
     "typecheck": "tsc -b && tsc -p convex/tsconfig.json --noEmit"
   },
   "dependencies": {
@@ -22,7 +23,9 @@
     "tailwindcss": "^4.1.0"
   },
   "devDependencies": {
+    "@clerk/testing": "^2.2.31",
     "@edge-runtime/vm": "^5.0.0",
+    "@playwright/test": "^1.62.1",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
