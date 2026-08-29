@@ -7,6 +7,7 @@ import type { Id } from '../../../convex/_generated/dataModel'
 import { INPUT_LIMITS } from '../../../convex/lib/constants'
 import { isClerkConfigured } from '../../app/AppProviders'
 import { SectionHeading } from '../../components/ui/SectionHeading'
+import { SignInPrompt } from '../../components/ui/SignInPrompt'
 import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
 
 // 「もっと軽く」「もう少しやる」も自分で変更と同じ入力欄を開く。
@@ -30,7 +31,7 @@ function AuthenticatedPlanPage({ goalId }: { goalId: string }) {
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  if (!isSignedIn) return <p className="text-sm text-slate-600">PLANを決めるにはログインしてください。</p>
+  if (!isSignedIn) return <SignInPrompt message="ログインすると、PLANを決めてPDCAを始められます。" />
   if (hasError) return <p className="text-sm text-rose-700">PLANを読み込めませんでした。</p>
   if (!isReady || detail === undefined) return <p className="text-sm text-slate-600">PLANを読み込んでいます。</p>
 

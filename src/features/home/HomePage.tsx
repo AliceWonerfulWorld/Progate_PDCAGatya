@@ -4,15 +4,29 @@ import { Link } from 'react-router-dom'
 import { api } from '../../../convex/_generated/api'
 import { isClerkConfigured } from '../../app/AppProviders'
 import { SectionHeading } from '../../components/ui/SectionHeading'
+import { SignInPrompt } from '../../components/ui/SignInPrompt'
 import { GoalCard } from '../goals/GoalCard'
 import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
 
+function CreateGoalLink() {
+  return (
+    <Link className="mt-4 inline-flex min-h-11 items-center gap-1 text-sm font-bold text-emerald-700" to="/goals/new">
+      <Plus aria-hidden="true" className="size-4" /> Goalを作る
+    </Link>
+  )
+}
+
+// 未ログイン時はログイン導線のみを出し、「Goalを作る」と二重にしない。
 function AuthenticatedGoalList() {
   const { hasError, isReady, isSignedIn } = useCurrentUserInitialization()
   const goals = useQuery(api.goals.listActiveGoals, isReady ? {} : 'skip')
 
   if (!isSignedIn) {
-    return <p className="mt-2 text-sm leading-6 text-slate-600">ログインするとGoalを保存できます。</p>
+    return (
+      <div className="mt-3">
+        <SignInPrompt message="ログインすると、Goalを保存して今日の1周を始められます。" />
+      </div>
+    )
   }
   if (hasError) {
     return <p className="mt-2 text-sm text-rose-700">Goalを読み込めませんでした。</p>
@@ -21,10 +35,20 @@ function AuthenticatedGoalList() {
     return <p className="mt-2 text-sm text-slate-600">Goalを読み込んでいます。</p>
   }
   if (goals.length === 0) {
-    return <p className="mt-2 text-sm leading-6 text-slate-600">小さな行動から始められます。</p>
+    return (
+      <>
+        <p className="mt-2 text-sm leading-6 text-slate-600">小さな行動から始められます。</p>
+        <CreateGoalLink />
+      </>
+    )
   }
 
-  return <div className="mt-3">{goals.map((goal) => <GoalCard goal={goal} key={goal._id} />)}</div>
+  return (
+    <>
+      <div className="mt-3">{goals.map((goal) => <GoalCard goal={goal} key={goal._id} />)}</div>
+      <CreateGoalLink />
+    </>
+  )
 }
 
 export function HomePage() {
@@ -45,11 +69,11 @@ export function HomePage() {
         {isClerkConfigured ? (
           <AuthenticatedGoalList />
         ) : (
-          <p className="mt-2 text-sm leading-6 text-slate-600">小さな行動から始められます。</p>
+          <>
+            <p className="mt-2 text-sm leading-6 text-slate-600">小さな行動から始められます。</p>
+            <CreateGoalLink />
+          </>
         )}
-        <Link className="mt-4 inline-flex min-h-11 items-center gap-1 text-sm font-bold text-emerald-700" to="/goals/new">
-          <Plus aria-hidden="true" className="size-4" /> Goalを作る
-        </Link>
       </section>
     </div>
   )

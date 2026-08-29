@@ -5,6 +5,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../../../convex/_generated/api'
 import { isClerkConfigured } from '../../app/AppProviders'
 import { SectionHeading } from '../../components/ui/SectionHeading'
+import { SignInPrompt } from '../../components/ui/SignInPrompt'
 import { useCurrentUserInitialization } from './useCurrentUserInitialization'
 
 function formatCompletedAt(timestamp: number | undefined): string {
@@ -22,7 +23,7 @@ function AuthenticatedGoalDetail({ goalId }: { goalId: string }) {
   const [name, setName] = useState('')
   const [error, setError] = useState<string | null>(null)
 
-  if (!isSignedIn) return <p className="text-sm text-slate-600">Goalを表示するにはログインしてください。</p>
+  if (!isSignedIn) return <SignInPrompt message="ログインすると、Goalの詳細を確認できます。" />
   if (hasError) return <p className="text-sm text-rose-700">Goalを読み込めませんでした。</p>
   if (!isReady || detail === undefined) return <p className="text-sm text-slate-600">Goalを読み込んでいます。</p>
   const { goal, recentCycles } = detail
