@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { api } from '../../../convex/_generated/api'
 import { isClerkConfigured } from '../../app/AppProviders'
 import { LoadFailure } from '../../components/ui/LoadFailure'
+import { LoadingState } from '../../components/ui/LoadingState'
 import { SectionHeading } from '../../components/ui/SectionHeading'
 import { GoalCard } from '../goals/GoalCard'
 import { GuestGoalSection } from '../goals/GuestGoalSection'
@@ -36,12 +37,12 @@ function AuthenticatedGoalList() {
     )
   }
   if (!isReady || goals === undefined) {
-    return <p className="mt-2 text-sm text-slate-600">Goalを読み込んでいます。</p>
+    return <div className="mt-2"><LoadingState label="Goalを読み込んでいます。" /></div>
   }
   if (goals.length === 0) {
     return (
       <>
-        <p className="mt-2 text-sm leading-6 text-slate-600">小さな行動から始められます。</p>
+        <p className="mt-2 text-sm leading-6 text-slate-600">まだGoalがありません。続けたいことを1つ作ってみよう。</p>
         <CreateGoalLink />
       </>
     )
@@ -106,7 +107,9 @@ export function HomePage() {
 
       <section aria-labelledby="home-goal-heading" className="border-y border-slate-200 py-5">
         <p className="text-sm font-medium text-slate-500">続けたいこと</p>
-        <h2 id="home-goal-heading" className="mt-1 text-lg font-bold">Goalを作って、最初の1周を始めよう</h2>
+        <h2 id="home-goal-heading" className="mt-1 text-lg font-bold leading-snug">
+          Goalを作って、<span className="block sm:inline">最初の1周を始めよう</span>
+        </h2>
         {isClerkConfigured ? (
           <GoalSection />
         ) : (

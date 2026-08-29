@@ -8,6 +8,7 @@ import { useGuestState } from '../../hooks/useGuestState'
 import { LoadFailure } from '../../components/ui/LoadFailure'
 import { SectionHeading } from '../../components/ui/SectionHeading'
 import { isClerkConfigured } from '../../app/AppProviders'
+import { userFacingError } from '../../lib/userFacingError'
 import { useCurrentUserInitialization } from './useCurrentUserInitialization'
 
 function GoalNameForm({
@@ -70,8 +71,8 @@ function SignedInCreateGoalPage() {
     try {
       const goalId = await createGoal({ name })
       navigate(`/goal/${goalId}`)
-    } catch {
-      setError('Goalを作成できませんでした。もう一度試してください。')
+    } catch (caughtError) {
+      setError(userFacingError(caughtError, 'Goalを作成できませんでした。もう一度試してください。'))
     } finally {
       setIsSubmitting(false)
     }

@@ -5,6 +5,8 @@ import { Link } from 'react-router-dom'
 import { api } from '../../../convex/_generated/api'
 import { isClerkConfigured } from '../../app/AppProviders'
 import { LoadFailure } from '../../components/ui/LoadFailure'
+import { EmptyState } from '../../components/ui/EmptyState'
+import { LoadingState } from '../../components/ui/LoadingState'
 import { SectionHeading } from '../../components/ui/SectionHeading'
 import { SignInPrompt } from '../../components/ui/SignInPrompt'
 import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
@@ -19,7 +21,7 @@ function AuthenticatedCollection() {
 
   if (!isSignedIn) return <SignInPrompt message="ログインすると、集めたキャラクターを確認できます。" />
   if (hasError) return <LoadFailure message="コレクションを読み込めませんでした。" onRetry={retry} />
-  if (!isReady || collection === undefined) return <p className="text-sm text-slate-600">読み込んでいます。</p>
+  if (!isReady || collection === undefined) return <LoadingState label="コレクションを読み込んでいます。" />
 
   const ownedCount = collection.filter((entry) => entry.owned).length
   const totalCount = collection.length
@@ -35,7 +37,11 @@ function AuthenticatedCollection() {
         <p className="text-sm font-semibold text-slate-500">{percent}%</p>
       </div>
 
-      <div className="flex gap-2">
+      {ownedCount === 0 ? (
+        <EmptyState title="まだ仲間がいません。" description="最初のPDCAを回して、精霊と出会おう。" />
+      ) : null}
+
+      <div className="flex gap-2 overflow-x-auto pb-1">
         {RARITY_FILTERS.map((value) => (
           <button
             aria-pressed={filter === value}
@@ -51,7 +57,7 @@ function AuthenticatedCollection() {
         ))}
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {filtered.map((entry) => (
           <Link
             className="space-y-1 border border-slate-200 p-2 text-center"

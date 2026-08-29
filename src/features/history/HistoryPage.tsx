@@ -1,12 +1,15 @@
 import { Flame, RotateCcw } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useQuery } from 'convex/react'
+import { Link } from 'react-router-dom'
 import { api } from '../../../convex/_generated/api'
 import type { Doc, Id } from '../../../convex/_generated/dataModel'
 import { ACT_TYPE_LABELS, CHECK_LOAD_LABELS, DO_RESULT_LABELS } from '../../../convex/lib/act'
 import type { ActType, CheckLoad, DoResult } from '../../../convex/lib/act'
 import { isClerkConfigured } from '../../app/AppProviders'
 import { LoadFailure } from '../../components/ui/LoadFailure'
+import { EmptyState } from '../../components/ui/EmptyState'
+import { LoadingState } from '../../components/ui/LoadingState'
 import { SectionHeading } from '../../components/ui/SectionHeading'
 import { SignInPrompt } from '../../components/ui/SignInPrompt'
 import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
@@ -35,7 +38,7 @@ function SummaryStats({
   ]
 
   return (
-    <div className="grid grid-cols-4 gap-2 border-y border-slate-200 py-4 text-center">
+    <div className="grid grid-cols-2 gap-x-3 gap-y-4 border-y border-slate-200 py-4 text-center sm:grid-cols-4">
       {items.map((item) => (
         <div className="space-y-1" key={item.label}>
           <p className="flex items-center justify-center gap-1 text-xs text-slate-500">
@@ -141,7 +144,7 @@ function AuthenticatedHistory() {
     return <LoadFailure message="履歴を読み込めませんでした。" onRetry={retry} />
   }
   if (!isReady || summary === undefined || goals === undefined || cycles === undefined) {
-    return <p className="text-sm text-slate-600">履歴を読み込んでいます。</p>
+    return <LoadingState label="履歴を読み込んでいます。" />
   }
 
   return (
@@ -151,9 +154,11 @@ function AuthenticatedHistory() {
         <GoalFilterTabs goals={goals} onSelect={setSelectedGoalId} selectedGoalId={selectedGoalId} />
       ) : null}
       {cycles.length === 0 ? (
-        <p className="py-8 text-center text-sm leading-6 text-slate-600">
-          まだ完了したPDCAがありません。最初の1周を回してみましょう。
-        </p>
+        <EmptyState
+          action={<Link className="inline-flex min-h-11 items-center justify-center bg-emerald-700 px-4 text-sm font-bold text-white" to="/">PDCAを回す</Link>}
+          description="最初の一周から始めよう。"
+          title="まだPDCA履歴がありません。"
+        />
       ) : (
         <ul className="space-y-0">
           {cycles.map(({ cycle, goalName }) => (

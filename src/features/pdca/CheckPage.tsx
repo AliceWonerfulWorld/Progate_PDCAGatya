@@ -7,9 +7,11 @@ import { INPUT_LIMITS } from '../../../convex/lib/constants'
 import { isClerkConfigured } from '../../app/AppProviders'
 import { BackButton } from '../../components/ui/BackButton'
 import { LoadFailure } from '../../components/ui/LoadFailure'
+import { LoadingState } from '../../components/ui/LoadingState'
 import { SectionHeading } from '../../components/ui/SectionHeading'
 import { useGuestState } from '../../hooks/useGuestState'
 import { choiceButtonClass, PRIMARY_BUTTON_CLASS, SECONDARY_BUTTON_CLASS } from '../../lib/buttonStyles'
+import { userFacingError } from '../../lib/userFacingError'
 import type { GuestCheckLoad, GuestCheckReason, GuestPdcaCycle } from '../../lib/guestStore'
 import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
 
@@ -124,6 +126,7 @@ function CheckBody({
               <button
                 aria-pressed={checkReason === value}
                 className={`min-h-12 w-full px-4 text-base font-semibold ${choiceButtonClass(checkReason === value, 'sky')}`}
+                disabled={isSubmitting}
                 key={value}
                 onClick={() => setCheckReason(checkReason === value ? null : value)}
                 type="button"
@@ -184,7 +187,7 @@ function SignedInCheckPage({ cycleId }: { cycleId: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   if (hasError) return <LoadFailure message="CHECKを読み込めませんでした。" onRetry={retry} />
-  if (!isReady || detail === undefined) return <p className="text-sm text-slate-600">CHECKを読み込んでいます。</p>
+  if (!isReady || detail === undefined) return <LoadingState label="CHECKを読み込んでいます。" />
 
   const { cycle, goalName } = detail
   if (cycle.status !== 'checking') {
@@ -209,8 +212,8 @@ function SignedInCheckPage({ cycleId }: { cycleId: string }) {
     try {
       await submitCheck({ cycleId: cycle._id, ...submission })
       navigate(`/pdca/act/${cycle._id}`)
-    } catch {
-      setError('CHECKを保存できませんでした。もう一度試してください。')
+    } catch (caughtError) {
+      setError(userFacingError(caughtError, 'CHECKを保存できませんでした。もう一度試してください。'))
       setIsSubmitting(false)
     }
   }

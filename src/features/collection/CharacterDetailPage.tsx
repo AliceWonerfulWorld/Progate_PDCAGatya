@@ -6,8 +6,10 @@ import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
 import { isClerkConfigured } from '../../app/AppProviders'
 import { LoadFailure } from '../../components/ui/LoadFailure'
+import { LoadingState } from '../../components/ui/LoadingState'
 import { SectionHeading } from '../../components/ui/SectionHeading'
 import { SignInPrompt } from '../../components/ui/SignInPrompt'
+import { userFacingError } from '../../lib/userFacingError'
 import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
 
 // docs/ui-spec.md #23 (Character Detail)。未所持は詳細を明かさずシルエットのみ。
@@ -20,7 +22,7 @@ function AuthenticatedCharacterDetail({ characterId }: { characterId: string }) 
 
   if (!isSignedIn) return <SignInPrompt message="ログインすると、キャラクターの詳細を見られます。" />
   if (hasError) return <LoadFailure message="読み込めませんでした。" onRetry={retry} />
-  if (!isReady || collection === undefined) return <p className="text-sm text-slate-600">読み込んでいます。</p>
+  if (!isReady || collection === undefined) return <LoadingState label="キャラクターを読み込んでいます。" />
 
   const entry = collection.find((item) => item.character._id === characterId)
   if (!entry) return <p className="text-sm text-slate-600">キャラクターが見つかりませんでした。</p>
@@ -42,8 +44,8 @@ function AuthenticatedCharacterDetail({ characterId }: { characterId: string }) 
     setIsSubmitting(true)
     try {
       await setPartnerCharacter({ characterId: character._id as Id<'characters'> })
-    } catch {
-      setError('相棒に設定できませんでした。もう一度試してください。')
+    } catch (caughtError) {
+      setError(userFacingError(caughtError, '相棒に設定できませんでした。もう一度試してください。'))
     } finally {
       setIsSubmitting(false)
     }

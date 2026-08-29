@@ -9,9 +9,11 @@ import { adjustPlanText, type PlanAdjustDirection } from '../../../convex/lib/pl
 import { isClerkConfigured } from '../../app/AppProviders'
 import { BackButton } from '../../components/ui/BackButton'
 import { LoadFailure } from '../../components/ui/LoadFailure'
+import { LoadingState } from '../../components/ui/LoadingState'
 import { SectionHeading } from '../../components/ui/SectionHeading'
 import { useGuestState } from '../../hooks/useGuestState'
 import { PRIMARY_BUTTON_CLASS, SECONDARY_BUTTON_CLASS } from '../../lib/buttonStyles'
+import { userFacingError } from '../../lib/userFacingError'
 import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
 
 const GUEST_RESUME_PATHS = { doing: 'do', checking: 'check', acting: 'act' } as const
@@ -135,7 +137,7 @@ function SignedInPlanPage({ goalId }: { goalId: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   if (hasError) return <LoadFailure message="PLANを読み込めませんでした。" onRetry={retry} />
-  if (!isReady || detail === undefined) return <p className="text-sm text-slate-600">PLANを読み込んでいます。</p>
+  if (!isReady || detail === undefined) return <LoadingState label="PLANを読み込んでいます。" />
 
   const { goal } = detail
   if (goal.archivedAt !== undefined) {
@@ -156,11 +158,11 @@ function SignedInPlanPage({ goalId }: { goalId: string }) {
       // （クエリパラメータはUIの導線に過ぎず、認可の根拠にはしない）。
       const { cycleId } = await startPdcaCycle({ goalId: goal._id, planText, isRecovery })
       navigate(`/pdca/do/${cycleId}`)
-    } catch {
+    } catch (caughtError) {
       setError(
         isRecovery
-          ? 'リカバリーを開始できませんでした。すでに利用済みか、対象外の可能性があります。'
-          : 'PDCAを開始できませんでした。もう一度試してください。',
+          ? userFacingError(caughtError, 'リカバリーを開始できませんでした。すでに利用済みか、対象外の可能性があります。')
+          : userFacingError(caughtError, 'PDCAを開始できませんでした。もう一度試してください。'),
       )
       setIsSubmitting(false)
     }

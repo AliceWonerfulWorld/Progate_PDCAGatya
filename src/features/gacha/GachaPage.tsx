@@ -7,10 +7,12 @@ import type { CharacterRarity } from '../../../convex/lib/constants'
 import { rollRarity } from '../../../convex/lib/gacha'
 import { isClerkConfigured } from '../../app/AppProviders'
 import { LoadFailure } from '../../components/ui/LoadFailure'
+import { LoadingState } from '../../components/ui/LoadingState'
 import { SectionHeading } from '../../components/ui/SectionHeading'
 import { SignInPrompt } from '../../components/ui/SignInPrompt'
 import { useGuestState } from '../../hooks/useGuestState'
 import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
+import { userFacingError } from '../../lib/userFacingError'
 
 interface GachaDrawResult {
   characterName: string
@@ -59,6 +61,9 @@ function GachaResultView({
           </p>
         )}
         <p className="text-xl font-bold text-slate-900">{result.characterName}</p>
+        {result.imagePath ? (
+          <img alt={result.characterName} className="mx-auto aspect-square w-40 border border-white/70 object-cover shadow-sm" src={result.imagePath} />
+        ) : null}
         {result.wasDuplicate ? (
           <>
             <p className="text-sm font-semibold text-slate-500">Already Owned</p>
@@ -108,7 +113,7 @@ function SignedInGacha() {
   const [error, setError] = useState<string | null>(null)
 
   if (hasError) return <LoadFailure message="ガチャを読み込めませんでした。" onRetry={retry} />
-  if (!isReady || currentUser === undefined) return <p className="text-sm text-slate-600">読み込んでいます。</p>
+  if (!isReady || currentUser === undefined) return <LoadingState label="ガチャを準備しています。" />
 
   async function handleDraw() {
     setError(null)
@@ -116,8 +121,8 @@ function SignedInGacha() {
     try {
       const [drawResult] = await Promise.all([drawGacha({}), sleep(MIN_DRAWING_MS)])
       setResult(drawResult)
-    } catch {
-      setError('ガチャを回せませんでした。もう一度試してください。')
+    } catch (caughtError) {
+      setError(userFacingError(caughtError, 'ガチャを回せませんでした。もう一度試してください。'))
     } finally {
       setIsDrawing(false)
     }
@@ -164,7 +169,7 @@ function SignedInGacha() {
         </p>
         {currentUser.availableGachaDraws <= 0 ? (
           <p className="text-sm leading-6 text-slate-500">
-            PDCAを1周完了すると、ガチャ権が1回もらえます。
+            ガチャは0回です。PDCAを1周すると、ガチャを1回回せます。
           </p>
         ) : null}
       </section>
@@ -174,7 +179,7 @@ function SignedInGacha() {
       <div className="space-y-3">
         <button
           className="flex min-h-12 w-full items-center justify-center bg-emerald-700 px-4 text-base font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
-          disabled={currentUser.availableGachaDraws <= 0}
+          disabled={currentUser.availableGachaDraws <= 0 || isDrawing}
           onClick={() => void handleDraw()}
           type="button"
         >
