@@ -2,5 +2,8 @@
   "categories": {
     "correctness": "error",
     "suspicious": "error"
+  },
+  "rules": {
+    "no-underscore-dangle": ["error", { "allow": ["_id"] }]
   }
 }
