@@ -103,7 +103,7 @@ function HomeMascot() {
       alt="にんじゃわんこ"
       artboard={asset.artboard}
       className="size-16 shrink-0"
-      fallbackSrc="/characters/progate_ninjawanko.png"
+      fallbackSrc={asset.fallbackSrc}
       src={asset.src}
       stateMachine={asset.stateMachine}
       tapTrigger={asset.tapTrigger}

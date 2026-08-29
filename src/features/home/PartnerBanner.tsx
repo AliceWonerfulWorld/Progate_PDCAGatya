@@ -23,7 +23,7 @@ export function PartnerBanner() {
           alt={partner.character.name}
           artboard={riveAsset.artboard}
           className="size-14 shrink-0 bg-slate-100 object-cover"
-          fallbackSrc={partner.character.imagePath}
+          fallbackSrc={riveAsset.fallbackSrc}
           src={riveAsset.src}
           stateMachine={riveAsset.stateMachine}
           tapTrigger={riveAsset.tapTrigger}

@@ -61,7 +61,7 @@ export function RiveAnimation({
   const showFallback = rive === null || hasFailed || prefersReducedMotion
 
   if (prefersReducedMotion || hasFailed) {
-    return <img alt={alt} className={className} src={fallbackSrc} />
+    return <img alt={alt} className={`object-contain ${className ?? ''}`} src={fallbackSrc} />
   }
 
   return (
@@ -71,7 +71,7 @@ export function RiveAnimation({
         style={{ width: '100%', height: '100%' }}
       />
       {showFallback ? (
-        <img alt="" aria-hidden="true" className="absolute inset-0 size-full object-cover" src={fallbackSrc} />
+        <img alt="" aria-hidden="true" className="absolute inset-0 size-full object-contain" src={fallbackSrc} />
       ) : null}
     </div>
   )
