@@ -1,0 +1,61 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: '3'
+
+tasks:
+  default:
+    desc: タスク一覧を表示
+    cmds:
+      - task --list
+    silent: true
+
+  dev:
+    desc: 開発サーバーを起動（Convex + Vite）
+    deps: [dev:convex, dev:vite]
+
+  dev:convex:
+    desc: Convex バックエンドのみ起動
+    cmds:
+      - npx convex dev
+
+  dev:vite:
+    desc: Vite 開発サーバーのみ起動
+    cmds:
+      - npx vite
+
+  dashboard:
+    desc: Convex ダッシュボードを開く
+    cmds:
+      - npx convex dashboard
+
+  seed:
+    desc: Character マスタを投入（再実行しても増えない）
+    cmds:
+      - npx convex run characters:seedCharacters
+
+  test:
+    desc: テストを実行
+    cmds:
+      - npm run test
+
+  lint:
+    desc: Lint を実行
+    cmds:
+      - npx oxlint .
+
+  typecheck:
+    desc: 型チェックを実行
+    cmds:
+      - npx tsc -b
+
+  build:
+    desc: 本番ビルド
+    cmds:
+      - npm run build
+
+  check:
+    desc: typecheck / lint / test をまとめて実行
+    cmds:
+      - task: typecheck
+      - task: lint
+      - task: test
