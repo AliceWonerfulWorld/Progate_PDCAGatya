@@ -1,12 +1,13 @@
-import { ArrowLeft, Minus, Pencil, Plus } from 'lucide-react'
+import { Minus, Pencil, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
-import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
 import { INPUT_LIMITS } from '../../../convex/lib/constants'
 import { adjustPlanText, type PlanAdjustDirection } from '../../../convex/lib/planAdjust'
 import { isClerkConfigured } from '../../app/AppProviders'
+import { BackButton } from '../../components/ui/BackButton'
 import { LoadFailure } from '../../components/ui/LoadFailure'
 import { SectionHeading } from '../../components/ui/SectionHeading'
 import { useGuestState } from '../../hooks/useGuestState'
@@ -50,6 +51,15 @@ function PlanEditor({
         <p className="text-sm font-medium text-slate-500">{goalName}</p>
         {isRecovery ? <p className="text-sm font-bold text-rose-600">リカバリー</p> : null}
         <SectionHeading>{isEditing ? '今日やること' : title}</SectionHeading>
+        {isEditing && hasCandidate ? (
+          <button
+            className="text-sm font-semibold text-slate-500 underline-offset-2 hover:text-slate-700 hover:underline"
+            onClick={() => setIsEditing(false)}
+            type="button"
+          >
+            候補の選択に戻る
+          </button>
+        ) : null}
         {isEditing ? (
           <label className="block space-y-2" htmlFor="plan-text">
             <span className="text-sm text-slate-600">
@@ -222,9 +232,7 @@ export function PlanPage() {
 
   return (
     <div className="space-y-6">
-      <Link className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-slate-600" to="/">
-        <ArrowLeft aria-hidden="true" className="size-4" /> ホーム
-      </Link>
+      <BackButton />
       {isClerkConfigured && goalId ? (
         <PlanGate goalId={goalId} />
       ) : (
