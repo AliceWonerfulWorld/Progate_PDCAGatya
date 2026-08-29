@@ -8,6 +8,8 @@
 // clearGuestState() はmigration成功後にFrontendから明示的に呼ぶための
 // エクスポートであり、このモジュール自身は自動で消去しない。
 
+import type { Id } from '../../convex/_generated/dataModel'
+
 const STORAGE_KEY = 'pdca-gacha:guest-state'
 
 export type GuestPdcaStatus = 'doing' | 'checking' | 'acting' | 'completed' | 'cancelled'
@@ -35,7 +37,7 @@ export interface GuestPdcaCycle {
 }
 
 export interface GuestGachaResult {
-  characterId: string
+  characterId: Id<'characters'>
   characterName: string
   rarity: GuestCharacterRarity
 }

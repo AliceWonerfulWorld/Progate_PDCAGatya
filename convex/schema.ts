@@ -58,6 +58,8 @@ export default defineSchema({
     totalCycles: v.number(),
     totalGachaDraws: v.number(),
     availableGachaDraws: v.number(),
+    // Guest→Login migration の冪等性キー(docs/technical-design.md #58)。
+    lastMigratedGuestSessionId: v.optional(v.string()),
     timezone: v.string(),
     createdAt: v.number(),
     updatedAt: v.number(),

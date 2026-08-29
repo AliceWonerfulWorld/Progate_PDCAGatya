@@ -9,20 +9,20 @@ import { assertValidPdcaTransition } from './lib/pdca'
 import { calculatePlayerLevel } from './lib/playerLevel'
 import { deriveStreakStatus, isRecoveryAvailable, resolveStreakState } from './lib/streak'
 
-const doResultValidator = v.union(
+export const doResultValidator = v.union(
   v.literal('completed'),
   v.literal('partial'),
   v.literal('notCompleted'),
 )
 
-const checkLoadValidator = v.union(
+export const checkLoadValidator = v.union(
   v.literal('easy'),
   v.literal('justRight'),
   v.literal('slightlyHeavy'),
   v.literal('tooHeavy'),
 )
 
-const checkReasonValidator = v.union(
+export const checkReasonValidator = v.union(
   v.literal('noTime'),
   v.literal('tooLarge'),
   v.literal('tooDifficult'),
@@ -31,11 +31,19 @@ const checkReasonValidator = v.union(
   v.literal('other'),
 )
 
-const actTypeValidator = v.union(
+export const actTypeValidator = v.union(
   v.literal('lighter'),
   v.literal('same'),
   v.literal('heavier'),
   v.literal('changeApproach'),
+)
+
+export const pdcaStatusValidator = v.union(
+  v.literal('doing'),
+  v.literal('checking'),
+  v.literal('acting'),
+  v.literal('completed'),
+  v.literal('cancelled'),
 )
 
 // 進行中Cycleを探す順序。1ユーザーが同時に持つ進行中Cycleは1件を想定する。
