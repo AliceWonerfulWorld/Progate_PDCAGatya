@@ -41,9 +41,9 @@ function AuthenticatedDoPage({ cycleId }: { cycleId: string }) {
         <p className="text-sm text-slate-600">このPDCAはDOを記録済みです。</p>
         <Link
           className="flex min-h-12 items-center justify-center bg-emerald-700 px-4 text-base font-bold text-white"
-          to={`/goal/${cycle.goalId}`}
+          to={cycle.status === 'checking' ? `/pdca/check/${cycle._id}` : `/goal/${cycle.goalId}`}
         >
-          Goalへ戻る
+          {cycle.status === 'checking' ? 'CHECKへ進む' : 'Goalへ戻る'}
         </Link>
       </div>
     )
@@ -54,8 +54,7 @@ function AuthenticatedDoPage({ cycleId }: { cycleId: string }) {
     setIsSubmitting(true)
     try {
       await submitDoResult({ cycleId: cycle._id, doResult })
-      // TODO: CHECK画面は T009 で実装するため、確定後は一旦 Goal詳細へ戻す。
-      navigate(`/goal/${cycle.goalId}`)
+      navigate(`/pdca/check/${cycle._id}`)
     } catch {
       setError('DO結果を保存できませんでした。もう一度試してください。')
       setIsSubmitting(false)
