@@ -2,18 +2,19 @@ import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { requiredXpForLevel } from '../../../convex/lib/playerLevel'
 import { isClerkConfigured } from '../../app/AppProviders'
+import { LoadFailure } from '../../components/ui/LoadFailure'
 import { SectionHeading } from '../../components/ui/SectionHeading'
 import { SignInPrompt } from '../../components/ui/SignInPrompt'
 import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
 
 // docs/ui-spec.md #25 (Profile画面) / AC-PROFILE-001。
 function AuthenticatedProfile() {
-  const { hasError, isReady, isSignedIn } = useCurrentUserInitialization()
+  const { hasError, isReady, isSignedIn, retry } = useCurrentUserInitialization()
   const currentUser = useQuery(api.users.currentUser, isReady ? {} : 'skip')
   const collection = useQuery(api.characters.listCollection, isReady ? {} : 'skip')
 
   if (!isSignedIn) return <SignInPrompt message="ログインすると、あなたのPDCAの積み重ねを確認できます。" />
-  if (hasError) return <p className="text-sm text-rose-700">プロフィールを読み込めませんでした。</p>
+  if (hasError) return <LoadFailure message="プロフィールを読み込めませんでした。" onRetry={retry} />
   if (!isReady || currentUser === undefined || collection === undefined) {
     return <p className="text-sm text-slate-600">読み込んでいます。</p>
   }

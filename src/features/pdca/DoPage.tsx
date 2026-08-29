@@ -1,12 +1,15 @@
 import { ArrowLeft } from 'lucide-react'
 import { useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
 import { isClerkConfigured } from '../../app/AppProviders'
+import { LoadFailure } from '../../components/ui/LoadFailure'
 import { SectionHeading } from '../../components/ui/SectionHeading'
-import { SignInPrompt } from '../../components/ui/SignInPrompt'
+import { useGuestState } from '../../hooks/useGuestState'
+import { PRIMARY_BUTTON_CLASS, SECONDARY_BUTTON_CLASS } from '../../lib/buttonStyles'
+import type { GuestDoResult, GuestPdcaCycle } from '../../lib/guestStore'
 import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
 
 // ui-spec 12.2: どの選択肢も同じCHECKへ進むため、見た目に差をつけない。
@@ -16,21 +19,78 @@ const DO_RESULTS = [
   { value: 'notCompleted', label: 'できなかった' },
 ] as const
 
-function AuthenticatedDoPage({ cycleId }: { cycleId: string }) {
+function DoBody({
+  goalName,
+  planText,
+  isSubmitting,
+  error,
+  onSubmit,
+}: {
+  goalName: string | null
+  planText: string
+  isSubmitting: boolean
+  error: string | null
+  onSubmit: (doResult: (typeof DO_RESULTS)[number]['value']) => void
+}) {
+  // ui-spec 11.2: 実行中はアプリが邪魔をせず、「振り返る」で結果選択へ進む。
+  const [isReflecting, setIsReflecting] = useState(false)
+
+  return (
+    <div className="space-y-7">
+      <section className="space-y-3">
+        {goalName ? <p className="text-sm font-medium text-slate-500">{goalName}</p> : null}
+        <SectionHeading>{isReflecting ? 'どうだった？' : '今日やること'}</SectionHeading>
+        <p className="text-lg font-bold">{planText}</p>
+        {isReflecting ? null : (
+          <p className="text-sm leading-6 text-slate-600">
+            終わったら戻ってきてください。
+            <br />
+            アプリは閉じても大丈夫です。
+          </p>
+        )}
+      </section>
+
+      {error ? <p className="text-sm text-rose-700">{error}</p> : null}
+
+      <div className="space-y-3">
+        {isReflecting ? (
+          DO_RESULTS.map(({ value, label }) => (
+            <button
+              className={`min-h-12 w-full px-4 text-base font-semibold ${SECONDARY_BUTTON_CLASS}`}
+              disabled={isSubmitting}
+              key={value}
+              onClick={() => onSubmit(value)}
+              type="button"
+            >
+              {label}
+            </button>
+          ))
+        ) : (
+          <button
+            className={`min-h-12 w-full px-4 text-base font-bold text-white ${PRIMARY_BUTTON_CLASS}`}
+            onClick={() => setIsReflecting(true)}
+            type="button"
+          >
+            振り返る
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function SignedInDoPage({ cycleId }: { cycleId: string }) {
   const navigate = useNavigate()
-  const { hasError, isReady, isSignedIn } = useCurrentUserInitialization()
+  const { hasError, isReady, retry } = useCurrentUserInitialization()
   const detail = useQuery(
     api.pdca.getCycle,
     isReady ? { cycleId: cycleId as Id<'pdcaCycles'> } : 'skip',
   )
   const submitDoResult = useMutation(api.pdca.submitDoResult)
-  // ui-spec 11.2: 実行中はアプリが邪魔をせず、「振り返る」で結果選択へ進む。
-  const [isReflecting, setIsReflecting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  if (!isSignedIn) return <SignInPrompt message="ログインすると、今日のDOを記録できます。" />
-  if (hasError) return <p className="text-sm text-rose-700">DOを読み込めませんでした。</p>
+  if (hasError) return <LoadFailure message="DOを読み込めませんでした。" onRetry={retry} />
   if (!isReady || detail === undefined) return <p className="text-sm text-slate-600">DOを読み込んでいます。</p>
 
   const { cycle, goalName } = detail
@@ -40,7 +100,7 @@ function AuthenticatedDoPage({ cycleId }: { cycleId: string }) {
       <div className="space-y-4">
         <p className="text-sm text-slate-600">このPDCAはDOを記録済みです。</p>
         <Link
-          className="flex min-h-12 items-center justify-center bg-emerald-700 px-4 text-base font-bold text-white"
+          className={`flex min-h-12 items-center justify-center px-4 text-base font-bold text-white ${PRIMARY_BUTTON_CLASS}`}
           to={cycle.status === 'checking' ? `/pdca/check/${cycle._id}` : `/goal/${cycle.goalId}`}
         >
           {cycle.status === 'checking' ? 'CHECKへ進む' : 'Goalへ戻る'}
@@ -62,47 +122,60 @@ function AuthenticatedDoPage({ cycleId }: { cycleId: string }) {
   }
 
   return (
-    <div className="space-y-7">
-      <section className="space-y-3">
-        {goalName ? <p className="text-sm font-medium text-slate-500">{goalName}</p> : null}
-        <SectionHeading>{isReflecting ? 'どうだった？' : '今日やること'}</SectionHeading>
-        <p className="text-lg font-bold">{cycle.planText}</p>
-        {isReflecting ? null : (
-          <p className="text-sm leading-6 text-slate-600">
-            終わったら戻ってきてください。
-            <br />
-            アプリは閉じても大丈夫です。
-          </p>
-        )}
-      </section>
-
-      {error ? <p className="text-sm text-rose-700">{error}</p> : null}
-
-      <div className="space-y-3">
-        {isReflecting ? (
-          DO_RESULTS.map(({ value, label }) => (
-            <button
-              className="min-h-12 w-full border border-slate-300 px-4 text-base font-semibold text-slate-700 disabled:cursor-not-allowed disabled:text-slate-400"
-              disabled={isSubmitting}
-              key={value}
-              onClick={() => handleSubmit(value)}
-              type="button"
-            >
-              {label}
-            </button>
-          ))
-        ) : (
-          <button
-            className="min-h-12 w-full bg-emerald-700 px-4 text-base font-bold text-white"
-            onClick={() => setIsReflecting(true)}
-            type="button"
-          >
-            振り返る
-          </button>
-        )}
-      </div>
-    </div>
+    <DoBody
+      error={error}
+      goalName={goalName}
+      isSubmitting={isSubmitting}
+      onSubmit={(value) => void handleSubmit(value)}
+      planText={cycle.planText}
+    />
   )
+}
+
+function GuestDoPage() {
+  const navigate = useNavigate()
+  const { state, setCycle } = useGuestState()
+  const cycle = state.cycle
+
+  if (!cycle) return <Navigate replace to="/pdca/plan/guest" />
+  if (cycle.status !== 'doing') {
+    return (
+      <div className="space-y-4">
+        <p className="text-sm text-slate-600">このPDCAはDOを記録済みです。</p>
+        <Link
+          className={`flex min-h-12 items-center justify-center px-4 text-base font-bold text-white ${PRIMARY_BUTTON_CLASS}`}
+          to={cycle.status === 'checking' ? '/pdca/check/guest' : '/'}
+        >
+          {cycle.status === 'checking' ? 'CHECKへ進む' : 'ホームへ戻る'}
+        </Link>
+      </div>
+    )
+  }
+
+  // TSの制御フロー絞り込みは、この後のネストした関数(handleSubmit)まで
+  // 保持されないことがあるため、絞り込み済みの型を明示した変数に置き直す。
+  const activeCycle: GuestPdcaCycle = cycle
+
+  function handleSubmit(doResult: GuestDoResult) {
+    setCycle({ ...activeCycle, doResult, status: 'checking' })
+    navigate('/pdca/check/guest')
+  }
+
+  return (
+    <DoBody
+      error={null}
+      goalName={state.goal?.name ?? null}
+      isSubmitting={false}
+      onSubmit={handleSubmit}
+      planText={activeCycle.planText}
+    />
+  )
+}
+
+function DoGate({ cycleId }: { cycleId: string }) {
+  const { isSignedIn } = useCurrentUserInitialization()
+  if (cycleId === 'guest') return <GuestDoPage />
+  return isSignedIn ? <SignedInDoPage cycleId={cycleId} /> : <Navigate replace to="/" />
 }
 
 export function DoPage() {
@@ -114,7 +187,7 @@ export function DoPage() {
         <ArrowLeft aria-hidden="true" className="size-4" /> ホーム
       </Link>
       {isClerkConfigured && cycleId ? (
-        <AuthenticatedDoPage cycleId={cycleId} />
+        <DoGate cycleId={cycleId} />
       ) : (
         <p className="text-sm text-slate-600">ログイン設定の完了後にDOを記録できます。</p>
       )}

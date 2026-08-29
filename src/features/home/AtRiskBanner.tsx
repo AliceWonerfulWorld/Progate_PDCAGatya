@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from 'convex/react'
+import { Link } from 'react-router-dom'
 import { api } from '../../../convex/_generated/api'
 import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
 
@@ -8,9 +9,18 @@ export function AtRiskBanner() {
   const { isReady, isSignedIn } = useCurrentUserInitialization()
   const [dismissed, setDismissed] = useState(false)
   const streakStatus = useQuery(api.users.getStreakStatus, isSignedIn && isReady ? {} : 'skip')
+  // どのGoalで回してもリカバリーは成立するため、先頭のGoalへ直接ジャンプする
+  // （旧実装はGoal一覧へのアンカースクロールのみで、そこから対象カードを
+  // 自分で探させていた）。
+  const goals = useQuery(
+    api.goals.listActiveGoals,
+    isSignedIn && isReady && streakStatus?.streakStatus === 'atRisk' ? {} : 'skip',
+  )
 
   if (!isSignedIn || !isReady || streakStatus === undefined) return null
   if (streakStatus.streakStatus !== 'atRisk' || dismissed) return null
+
+  const primaryGoal = goals?.[0]
 
   return (
     <div className="space-y-3 border border-rose-300 bg-rose-50 p-4">
@@ -20,12 +30,21 @@ export function AtRiskBanner() {
       </p>
       {streakStatus.recoveryAvailable ? (
         <div className="flex gap-3">
-          <a
-            className="flex min-h-11 flex-1 items-center justify-center bg-rose-600 px-4 text-sm font-bold text-white"
-            href="#home-goal-heading"
-          >
-            リカバリーする
-          </a>
+          {primaryGoal ? (
+            <Link
+              className="flex min-h-11 flex-1 items-center justify-center bg-rose-600 px-4 text-sm font-bold text-white"
+              to={`/pdca/plan/${primaryGoal._id}?recovery=1`}
+            >
+              リカバリーする
+            </Link>
+          ) : (
+            <a
+              className="flex min-h-11 flex-1 items-center justify-center bg-rose-600 px-4 text-sm font-bold text-white"
+              href="#home-goal-heading"
+            >
+              リカバリーする
+            </a>
+          )}
           <button
             className="flex min-h-11 flex-1 items-center justify-center border border-rose-300 px-4 text-sm font-semibold text-rose-700"
             onClick={() => setDismissed(true)}

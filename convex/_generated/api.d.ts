@@ -21,6 +21,7 @@ import type * as lib_date from "../lib/date.js";
 import type * as lib_errors from "../lib/errors.js";
 import type * as lib_gacha from "../lib/gacha.js";
 import type * as lib_pdca from "../lib/pdca.js";
+import type * as lib_planAdjust from "../lib/planAdjust.js";
 import type * as lib_planFallback from "../lib/planFallback.js";
 import type * as lib_playerLevel from "../lib/playerLevel.js";
 import type * as lib_streak from "../lib/streak.js";
@@ -48,6 +49,7 @@ declare const fullApi: ApiFromModules<{
   "lib/errors": typeof lib_errors;
   "lib/gacha": typeof lib_gacha;
   "lib/pdca": typeof lib_pdca;
+  "lib/planAdjust": typeof lib_planAdjust;
   "lib/planFallback": typeof lib_planFallback;
   "lib/playerLevel": typeof lib_playerLevel;
   "lib/streak": typeof lib_streak;

@@ -11,6 +11,9 @@ export function useCurrentUserInitialization() {
   const ensureCurrentUser = useMutation(api.users.ensureCurrentUser)
   const [isInitialized, setIsInitialized] = useState(false)
   const [hasError, setHasError] = useState(false)
+  // docs/ui-spec.md #34.2: エラー時は再試行できるようにする。値を変えるだけで
+  // 下のeffectを再実行させるためのトークン。
+  const [retryToken, setRetryToken] = useState(0)
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -19,6 +22,7 @@ export function useCurrentUserInitialization() {
     }
 
     let isActive = true
+    setHasError(false)
     void ensureCurrentUser({ timezone: getBrowserTimezone() })
       .then(() => {
         if (isActive) setIsInitialized(true)
@@ -30,12 +34,13 @@ export function useCurrentUserInitialization() {
     return () => {
       isActive = false
     }
-  }, [ensureCurrentUser, isAuthenticated])
+  }, [ensureCurrentUser, isAuthenticated, retryToken])
 
   return {
     isReady: isAuthenticated && isInitialized,
     isLoading: isLoading || (isAuthenticated && !isInitialized),
     isSignedIn: isAuthenticated,
     hasError,
+    retry: () => setRetryToken((token) => token + 1),
   }
 }

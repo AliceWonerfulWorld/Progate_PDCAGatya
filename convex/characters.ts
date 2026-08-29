@@ -2,6 +2,7 @@ import type { Doc, Id } from './_generated/dataModel'
 import { internalMutation, query } from './_generated/server'
 import { requireCurrentUser } from './lib/auth'
 import { CHARACTER_SEED_DATA, selectUnseededCharacters } from './lib/characterSeed'
+import type { CharacterRarity } from './lib/constants'
 
 // npx convex run characters:seedCharacters で実行する。
 // 既存 name と重複する Character は再作成しない（再実行してもレコードが増えない）。
@@ -68,5 +69,35 @@ export const listCollection = query({
         isPartner: currentUser.partnerCharacterId === character._id,
       }
     })
+  },
+})
+
+export interface GachaCharacterPreview {
+  _id: Id<'characters'>
+  name: string
+  rarity: CharacterRarity
+  imagePath: string
+  description: string
+  defaultMessage: string | undefined
+}
+
+// docs/tech-stack.md #8 / docs/user-flow.md #1: Guestは未ログインでも初回ガチャを
+// 体験できる。この初回ガチャは Inventory へ何も書き込まないため認可不要であり、
+// requireCurrentUser を呼ばない唯一の公開Query。個人情報を含まない
+// Character masterの最小情報のみを返す。
+export const listActiveForGuestGacha = query({
+  args: {},
+  handler: async (ctx): Promise<GachaCharacterPreview[]> => {
+    const characters = await ctx.db.query('characters').collect()
+    return characters
+      .filter((character) => character.isActive)
+      .map((character) => ({
+        _id: character._id,
+        name: character.name,
+        rarity: character.rarity,
+        imagePath: character.imagePath,
+        description: character.description,
+        defaultMessage: character.defaultMessage,
+      }))
   },
 })

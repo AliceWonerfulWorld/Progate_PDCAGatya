@@ -3,13 +3,16 @@ import { useQuery } from 'convex/react'
 import { Link } from 'react-router-dom'
 import { api } from '../../../convex/_generated/api'
 import { isClerkConfigured } from '../../app/AppProviders'
+import { LoadFailure } from '../../components/ui/LoadFailure'
 import { SectionHeading } from '../../components/ui/SectionHeading'
-import { SignInPrompt } from '../../components/ui/SignInPrompt'
 import { GoalCard } from '../goals/GoalCard'
+import { GuestGoalSection } from '../goals/GuestGoalSection'
 import { ActiveCycleCard } from '../pdca/ActiveCycleCard'
 import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
 import { AtRiskBanner } from './AtRiskBanner'
 import { DailyMissionCard } from './DailyMissionCard'
+import { GachaTicketCard } from './GachaTicketCard'
+import { PartnerBanner } from './PartnerBanner'
 
 function CreateGoalLink() {
   return (
@@ -19,22 +22,18 @@ function CreateGoalLink() {
   )
 }
 
-// 未ログイン時はログイン導線のみを出し、「Goalを作る」と二重にしない。
 function AuthenticatedGoalList() {
-  const { hasError, isReady, isSignedIn } = useCurrentUserInitialization()
+  const { hasError, isReady, retry } = useCurrentUserInitialization()
   const goals = useQuery(api.goals.listActiveGoals, isReady ? {} : 'skip')
   const streakStatus = useQuery(api.users.getStreakStatus, isReady ? {} : 'skip')
   const recoverable = streakStatus?.streakStatus === 'atRisk' && streakStatus.recoveryAvailable
 
-  if (!isSignedIn) {
+  if (hasError) {
     return (
-      <div className="mt-3">
-        <SignInPrompt message="ログインすると、Goalを保存して今日の1周を始められます。" />
+      <div className="mt-2">
+        <LoadFailure message="Goalを読み込めませんでした。" onRetry={retry} />
       </div>
     )
-  }
-  if (hasError) {
-    return <p className="mt-2 text-sm text-rose-700">Goalを読み込めませんでした。</p>
   }
   if (!isReady || goals === undefined) {
     return <p className="mt-2 text-sm text-slate-600">Goalを読み込んでいます。</p>
@@ -58,17 +57,27 @@ function AuthenticatedGoalList() {
   )
 }
 
-// 進行中PDCAはGoal一覧より上に表示する（ui-spec 7）。
+// ログイン中はConvexの実データを、未ログイン中はlocalStorageのGuest状態を出す
+// （docs/user-flow.md #0: 最初のPDCA・ガチャ体験より前にログインを要求しない）。
+function GoalSection() {
+  const { isSignedIn } = useCurrentUserInitialization()
+  return isSignedIn ? <AuthenticatedGoalList /> : <GuestGoalSection />
+}
+
+// 進行中PDCAはGoal一覧より上に表示する（ui-spec 7）。未ログイン中は
+// GuestGoalSection側が同じ役割を兼ねるため、ここでは何も出さない。
 function AuthenticatedActiveCycle() {
   const { isReady, isSignedIn } = useCurrentUserInitialization()
   if (!isSignedIn) return null
   return <ActiveCycleCard isReady={isReady} />
 }
 
-// Streak/今日の周回数はServer側の実データを表示する。未ログイン時は0のまま。
+// Streak/今日の周回数はServer側の実データを表示する。ログイン前は
+// 何も達成していないのに「0」を見せてしまうため、この節ごと出さない。
 function TodaySummary() {
   const { isReady, isSignedIn } = useCurrentUserInitialization()
   const summary = useQuery(api.history.getHistorySummary, isSignedIn && isReady ? {} : 'skip')
+  if (!isSignedIn) return null
   const currentStreak = summary?.currentStreak ?? 0
   const todayCycles = summary?.todayCycles ?? 0
 
@@ -86,19 +95,20 @@ export function HomePage() {
       <section className="space-y-3">
         <p className="text-sm font-medium text-emerald-700">今日の一歩</p>
         <SectionHeading>今日も1周だけ回そう。</SectionHeading>
-        <TodaySummary />
+        {isClerkConfigured ? <TodaySummary /> : null}
       </section>
 
+      {/* ui-spec #6.2: 進行中PDCA(1) → ストリーク危機(2) → 今日のミッション(3) の順に出す。 */}
+      {isClerkConfigured ? <PartnerBanner /> : null}
+      {isClerkConfigured ? <AuthenticatedActiveCycle /> : null}
       {isClerkConfigured ? <AtRiskBanner /> : null}
       {isClerkConfigured ? <DailyMissionCard /> : null}
-
-      {isClerkConfigured ? <AuthenticatedActiveCycle /> : null}
 
       <section aria-labelledby="home-goal-heading" className="border-y border-slate-200 py-5">
         <p className="text-sm font-medium text-slate-500">続けたいこと</p>
         <h2 id="home-goal-heading" className="mt-1 text-lg font-bold">Goalを作って、最初の1周を始めよう</h2>
         {isClerkConfigured ? (
-          <AuthenticatedGoalList />
+          <GoalSection />
         ) : (
           <>
             <p className="mt-2 text-sm leading-6 text-slate-600">小さな行動から始められます。</p>
@@ -106,6 +116,8 @@ export function HomePage() {
           </>
         )}
       </section>
+
+      {isClerkConfigured ? <GachaTicketCard /> : null}
     </div>
   )
 }
