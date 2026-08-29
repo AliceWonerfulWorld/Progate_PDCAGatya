@@ -79,6 +79,7 @@ export interface GachaCharacterPreview {
   imagePath: string
   description: string
   defaultMessage: string | undefined
+  weight: number | undefined
 }
 
 // docs/tech-stack.md #8 / docs/user-flow.md #1: Guestは未ログインでも初回ガチャを
@@ -98,6 +99,7 @@ export const listActiveForGuestGacha = query({
         imagePath: character.imagePath,
         description: character.description,
         defaultMessage: character.defaultMessage,
+        weight: character.weight,
       }))
   },
 })

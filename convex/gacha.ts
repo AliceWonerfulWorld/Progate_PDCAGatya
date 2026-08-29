@@ -32,7 +32,17 @@ export const drawGacha = mutation({
       throw new ConvexError({ code: ERROR_CODES.GACHA_NO_DRAW_AVAILABLE })
     }
 
-    const rarity = rollRarity(Math.random())
+    // 排出率はgachasテーブル(convex/lib/gachaSeed.ts)から読む。
+    // 未seedやisActive=falseの場合はDB更新を一切行わず拒否する。
+    const gachaConfig = await ctx.db
+      .query('gachas')
+      .withIndex('by_key', (q) => q.eq('key', 'standard'))
+      .unique()
+    if (gachaConfig === null || !gachaConfig.isActive) {
+      throw new ConvexError({ code: ERROR_CODES.GACHA_NOT_CONFIGURED })
+    }
+
+    const rarity = rollRarity(Math.random(), gachaConfig.rates)
     const candidates = await ctx.db
       .query('characters')
       .withIndex('by_rarity', (q) => q.eq('rarity', rarity))

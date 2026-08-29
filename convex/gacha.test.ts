@@ -62,6 +62,28 @@ async function seedCharacter(
   })
 }
 
+async function seedGacha(
+  t: TestConvex,
+  overrides: Partial<{
+    key: string
+    rates: { R: number; SR: number; SSR: number }
+    isActive: boolean
+  }> = {},
+): Promise<void> {
+  await t.run(async (ctx) => {
+    const now = Date.now()
+    await ctx.db.insert('gachas', {
+      key: overrides.key ?? 'standard',
+      name: '恒常ガチャ',
+      rates: overrides.rates ?? { R: 0.7, SR: 0.25, SSR: 0.05 },
+      isActive: overrides.isActive ?? true,
+      sortOrder: 1,
+      createdAt: now,
+      updatedAt: now,
+    })
+  })
+}
+
 // randomValue1: rollRarity用, randomValue2: selectCharacterForRarity用。
 function mockRandom(...values: number[]) {
   const spy = vi.spyOn(Math, 'random')
@@ -78,6 +100,7 @@ afterEach(() => {
 describe('drawGacha', () => {
   it('AC-GACHA-003: succeeds once and consumes exactly one draw', async () => {
     const t = convexTest(schema, modules)
+    await seedGacha(t)
     const userId = await seedUser(t, 'user_a', { availableGachaDraws: 1 })
     await seedCharacter(t, { rarity: 'R', name: 'R-1' })
     mockRandom(0.1, 0)
@@ -104,6 +127,7 @@ describe('drawGacha', () => {
 
   it('AC-GACHA-004: rejects when no draws are available and changes nothing', async () => {
     const t = convexTest(schema, modules)
+    await seedGacha(t)
     const userId = await seedUser(t, 'user_a', { availableGachaDraws: 0 })
     await seedCharacter(t)
 
@@ -129,6 +153,7 @@ describe('drawGacha', () => {
 
   it('AC-GACHA-007: never draws an inactive Character', async () => {
     const t = convexTest(schema, modules)
+    await seedGacha(t)
     await seedUser(t, 'user_a', { availableGachaDraws: 1 })
     await seedCharacter(t, { rarity: 'R', name: 'inactive', isActive: false })
     await seedCharacter(t, { rarity: 'R', name: 'active', isActive: true, sortOrder: 2 })
@@ -141,6 +166,7 @@ describe('drawGacha', () => {
 
   it('AC-GACHA-008: first draw of a Character creates a fresh Inventory row', async () => {
     const t = convexTest(schema, modules)
+    await seedGacha(t)
     const userId = await seedUser(t, 'user_a', { availableGachaDraws: 1 })
     const characterId = await seedCharacter(t, { rarity: 'SSR', name: 'new-char' })
     mockRandom(0.99, 0)
@@ -162,6 +188,7 @@ describe('drawGacha', () => {
 
   it('AC-GACHA-009 / AC-GACHA-010: duplicate draws add fragments without a second Inventory row', async () => {
     const t = convexTest(schema, modules)
+    await seedGacha(t)
     const userId = await seedUser(t, 'user_a', { availableGachaDraws: 2 })
     const characterId = await seedCharacter(t, { rarity: 'SR', name: 'dup-char' })
     const asUser = t.withIdentity({ subject: 'user_a' })
@@ -186,6 +213,7 @@ describe('drawGacha', () => {
 
   it('AC-GACHA-012: drawSequence increases 1, 2, 3, ...', async () => {
     const t = convexTest(schema, modules)
+    await seedGacha(t)
     await seedUser(t, 'user_a', { availableGachaDraws: 3 })
     await seedCharacter(t, { rarity: 'R' })
     const asUser = t.withIdentity({ subject: 'user_a' })
@@ -202,6 +230,7 @@ describe('drawGacha', () => {
 
   it('throws GACHA_NO_ACTIVE_CHARACTER when the rolled rarity has no active candidates', async () => {
     const t = convexTest(schema, modules)
+    await seedGacha(t)
     const userId = await seedUser(t, 'user_a', { availableGachaDraws: 1 })
     await seedCharacter(t, { rarity: 'SSR', isActive: false })
     mockRandom(0.99, 0)
@@ -218,5 +247,55 @@ describe('drawGacha', () => {
 
     const user = await t.run((ctx) => ctx.db.get(userId))
     expect(user?.availableGachaDraws).toBe(1)
+  })
+
+  it('throws GACHA_NOT_CONFIGURED when no active "standard" gacha row exists', async () => {
+    const t = convexTest(schema, modules)
+    const userId = await seedUser(t, 'user_a', { availableGachaDraws: 1 })
+    await seedCharacter(t, { rarity: 'R' })
+    // seedGacha(t)を呼ばない = gachasテーブルが空の状態。
+
+    try {
+      await t.withIdentity({ subject: 'user_a' }).mutation(api.gacha.drawGacha, {})
+      throw new Error('expected drawGacha to throw')
+    } catch (error) {
+      expect(error).toBeInstanceOf(ConvexError)
+      expect((error as ConvexError<{ code: string }>).data.code).toBe(
+        ERROR_CODES.GACHA_NOT_CONFIGURED,
+      )
+    }
+
+    const user = await t.run((ctx) => ctx.db.get(userId))
+    expect(user?.availableGachaDraws).toBe(1)
+  })
+
+  it('throws GACHA_NOT_CONFIGURED when the "standard" gacha row is inactive', async () => {
+    const t = convexTest(schema, modules)
+    await seedUser(t, 'user_a', { availableGachaDraws: 1 })
+    await seedCharacter(t, { rarity: 'R' })
+    await seedGacha(t, { isActive: false })
+
+    try {
+      await t.withIdentity({ subject: 'user_a' }).mutation(api.gacha.drawGacha, {})
+      throw new Error('expected drawGacha to throw')
+    } catch (error) {
+      expect(error).toBeInstanceOf(ConvexError)
+      expect((error as ConvexError<{ code: string }>).data.code).toBe(
+        ERROR_CODES.GACHA_NOT_CONFIGURED,
+      )
+    }
+  })
+
+  it('uses the rates stored on the "standard" gacha row, not a hardcoded default', async () => {
+    const t = convexTest(schema, modules)
+    await seedUser(t, 'user_a', { availableGachaDraws: 1 })
+    await seedCharacter(t, { rarity: 'SSR', name: 'ssr-char' })
+    // rates.R + rates.SR = 0.1, so randomValue=0.5 would normally be SSR-only
+    // territory even under a much smaller rarity roll than the standard table.
+    await seedGacha(t, { rates: { R: 0.05, SR: 0.05, SSR: 0.9 } })
+    mockRandom(0.2, 0)
+
+    const result = await t.withIdentity({ subject: 'user_a' }).mutation(api.gacha.drawGacha, {})
+    expect(result.rarity).toBe('SSR')
   })
 })
