@@ -4,7 +4,7 @@ import { AppRoutes } from '../routes/AppRoutes'
 
 function App() {
   const { pathname } = useLocation()
-  const isPdcaFlow = pathname.startsWith('/pdca/')
+  const isPdcaFlow = pathname.startsWith('/pdca/') || pathname === '/gacha'
 
   return (
     <AppShell showBottomNavigation={!isPdcaFlow}>
