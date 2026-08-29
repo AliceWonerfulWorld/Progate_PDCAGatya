@@ -5,6 +5,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../../../convex/_generated/api'
 import { isClerkConfigured } from '../../app/AppProviders'
 import { SectionHeading } from '../../components/ui/SectionHeading'
+import { SignInPrompt } from '../../components/ui/SignInPrompt'
 import { useCurrentUserInitialization } from './useCurrentUserInitialization'
 
 function formatCompletedAt(timestamp: number | undefined): string {
@@ -22,7 +23,7 @@ function AuthenticatedGoalDetail({ goalId }: { goalId: string }) {
   const [name, setName] = useState('')
   const [error, setError] = useState<string | null>(null)
 
-  if (!isSignedIn) return <p className="text-sm text-slate-600">Goalを表示するにはログインしてください。</p>
+  if (!isSignedIn) return <SignInPrompt message="ログインすると、Goalの詳細を確認できます。" />
   if (hasError) return <p className="text-sm text-rose-700">Goalを読み込めませんでした。</p>
   if (!isReady || detail === undefined) return <p className="text-sm text-slate-600">Goalを読み込んでいます。</p>
   const { goal, recentCycles } = detail
@@ -85,6 +86,16 @@ function AuthenticatedGoalDetail({ goalId }: { goalId: string }) {
       <section className="border-y border-slate-200 py-5">
         <p className="text-sm font-medium text-slate-500">次の候補</p>
         <p className="mt-1 text-base font-bold">{goal.nextPlanCandidate ?? 'まだ決まっていません'}</p>
+        {goal.archivedAt === undefined ? (
+          <Link
+            className="mt-4 flex min-h-12 items-center justify-center bg-emerald-700 px-4 text-base font-bold text-white"
+            to={`/pdca/plan/${goal._id}`}
+          >
+            PDCAを回す
+          </Link>
+        ) : (
+          <p className="mt-4 text-sm text-slate-600">アーカイブしたGoalでは新しいPDCAを始められません。</p>
+        )}
       </section>
 
       <section>
