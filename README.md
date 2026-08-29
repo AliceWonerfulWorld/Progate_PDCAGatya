@@ -426,10 +426,22 @@ Convex のローカル開発用 deployment と、MVPで使用する6テーブル
 - `docs/data-model.md` に定義された全 Index
 - PDCA、ガチャ、ストリークに必要な enum・optional field・ID参照
 
+### Phase 2 — Authentication Foundation: Complete
+
+- Clerk + Convex の認証 Provider
+- Clerk identity から Current User を解決する server-side helper
+- Goal / PDCA Cycle の共通所有権 helper
+- 初回ログイン時の `users` レコード初期化
+
+### Phase 3 — Goal: Complete
+
+- Goal の作成・編集・一覧・詳細・Archive
+- Server-side の入力検証と所有権確認
+- Home の Goal Card と Goal Detail の最近のPDCA表示
+
 未着手の領域：
 
-- Convex / Clerk の接続
-- Goal、PDCA、報酬、ガチャ、ストリークの業務ロジック
+- PDCA、報酬、ガチャ、ストリークの業務ロジック
 - Guest Mode / Login Migration
 - PWA設定、AI PLAN、各画面の実データ連携
 

@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { CollectionPage } from '../features/collection/CollectionPage'
+import { CreateGoalPage } from '../features/goals/CreateGoalPage'
 import { GoalDetailPage } from '../features/goals/GoalDetailPage'
 import { HistoryPage } from '../features/history/HistoryPage'
 import { HomePage } from '../features/home/HomePage'
@@ -12,6 +13,7 @@ export function AppRoutes() {
       <Route path="/collection" element={<CollectionPage />} />
       <Route path="/history" element={<HistoryPage />} />
       <Route path="/profile" element={<ProfilePage />} />
+      <Route path="/goals/new" element={<CreateGoalPage />} />
       <Route path="/goal/:goalId" element={<GoalDetailPage />} />
       <Route path="*" element={<Navigate replace to="/" />} />
     </Routes>
