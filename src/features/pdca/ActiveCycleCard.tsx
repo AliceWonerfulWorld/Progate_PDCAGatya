@@ -6,8 +6,7 @@ import { api } from '../../../convex/_generated/api'
 const RESUME_PATHS = {
   doing: 'do',
   checking: 'check',
-  // TODO: ACT画面は T010 で実装する。
-  acting: 'check',
+  acting: 'act',
 } as const
 
 export function ActiveCycleCard({ isReady }: { isReady: boolean }) {

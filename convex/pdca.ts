@@ -27,6 +27,13 @@ const checkReasonValidator = v.union(
   v.literal('other'),
 )
 
+const actTypeValidator = v.union(
+  v.literal('lighter'),
+  v.literal('same'),
+  v.literal('heavier'),
+  v.literal('changeApproach'),
+)
+
 // 進行中Cycleを探す順序。1ユーザーが同時に持つ進行中Cycleは1件を想定する。
 const ACTIVE_PDCA_STATUSES = ['doing', 'checking', 'acting'] as const
 
@@ -149,5 +156,46 @@ export const submitCheck = mutation({
     })
 
     return { cycleId: cycle._id, status: 'acting' as const }
+  },
+})
+
+export function validateNextPlanCandidate(nextPlanCandidate: string | undefined): string | undefined {
+  if (nextPlanCandidate === undefined) return undefined
+  const normalizedCandidate = nextPlanCandidate.trim()
+  // 次回候補は任意。空文字は「未設定」として扱う。
+  if (!normalizedCandidate) return undefined
+  if (normalizedCandidate.length > INPUT_LIMITS.nextPlanCandidate) {
+    throw new ConvexError({ code: ERROR_CODES.VALIDATION_ERROR })
+  }
+  return normalizedCandidate
+}
+
+// ACT保存時点ではXP / Gacha等の報酬を付与しない（AC-PDCA-009）。
+// 報酬確定は completePdcaCycle (T011) の責務。
+export const submitAct = mutation({
+  args: {
+    cycleId: v.id('pdcaCycles'),
+    actType: actTypeValidator,
+    nextPlanCandidate: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const currentUser = await requireCurrentUser(ctx)
+    const cycle = await requireOwnedCycle(ctx, args.cycleId, currentUser)
+    // acting 以外の Cycle は更新しない。status はここでは進めない。
+    if (cycle.status !== 'acting') {
+      throw new ConvexError({
+        code: ERROR_CODES.PDCA_INVALID_STATUS,
+        message: `submitAct requires status=acting, got ${cycle.status}`,
+      })
+    }
+
+    const nextPlanCandidate = validateNextPlanCandidate(args.nextPlanCandidate)
+    await ctx.db.patch(cycle._id, {
+      actType: args.actType,
+      nextPlanCandidate,
+      updatedAt: Date.now(),
+    })
+
+    return { cycleId: cycle._id, actType: args.actType, nextPlanCandidate }
   },
 })

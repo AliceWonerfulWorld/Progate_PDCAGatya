@@ -63,9 +63,9 @@ function AuthenticatedCheckPage({ cycleId }: { cycleId: string }) {
         </p>
         <Link
           className="flex min-h-12 items-center justify-center bg-emerald-700 px-4 text-base font-bold text-white"
-          to={cycle.status === 'doing' ? `/pdca/do/${cycle._id}` : `/goal/${cycle.goalId}`}
+          to={cycle.status === 'doing' ? `/pdca/do/${cycle._id}` : cycle.status === 'acting' ? `/pdca/act/${cycle._id}` : `/goal/${cycle.goalId}`}
         >
-          {cycle.status === 'doing' ? 'DOへ戻る' : 'Goalへ戻る'}
+          {cycle.status === 'doing' ? 'DOへ戻る' : cycle.status === 'acting' ? 'ACTへ進む' : 'Goalへ戻る'}
         </Link>
       </div>
     )
@@ -84,8 +84,7 @@ function AuthenticatedCheckPage({ cycleId }: { cycleId: string }) {
         checkReason: checkReason ?? undefined,
         checkMemo: checkMemo.trim() || undefined,
       })
-      // TODO: ACT画面は T010 で実装するため、確定後は一旦 Goal詳細へ戻す。
-      navigate(`/goal/${cycle.goalId}`)
+      navigate(`/pdca/act/${cycle._id}`)
     } catch {
       setError('CHECKを保存できませんでした。もう一度試してください。')
       setIsSubmitting(false)
