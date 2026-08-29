@@ -5,20 +5,21 @@ import { Link, useParams } from 'react-router-dom'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
 import { isClerkConfigured } from '../../app/AppProviders'
+import { LoadFailure } from '../../components/ui/LoadFailure'
 import { SectionHeading } from '../../components/ui/SectionHeading'
 import { SignInPrompt } from '../../components/ui/SignInPrompt'
 import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
 
 // docs/ui-spec.md #23 (Character Detail)。未所持は詳細を明かさずシルエットのみ。
 function AuthenticatedCharacterDetail({ characterId }: { characterId: string }) {
-  const { hasError, isReady, isSignedIn } = useCurrentUserInitialization()
+  const { hasError, isReady, isSignedIn, retry } = useCurrentUserInitialization()
   const collection = useQuery(api.characters.listCollection, isReady ? {} : 'skip')
   const setPartnerCharacter = useMutation(api.users.setPartnerCharacter)
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   if (!isSignedIn) return <SignInPrompt message="ログインすると、キャラクターの詳細を見られます。" />
-  if (hasError) return <p className="text-sm text-rose-700">読み込めませんでした。</p>
+  if (hasError) return <LoadFailure message="読み込めませんでした。" onRetry={retry} />
   if (!isReady || collection === undefined) return <p className="text-sm text-slate-600">読み込んでいます。</p>
 
   const entry = collection.find((item) => item.character._id === characterId)

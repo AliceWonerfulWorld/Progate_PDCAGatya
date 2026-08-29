@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../../../convex/_generated/api'
 import { isClerkConfigured } from '../../app/AppProviders'
+import { LoadFailure } from '../../components/ui/LoadFailure'
 import { SectionHeading } from '../../components/ui/SectionHeading'
 import { SignInPrompt } from '../../components/ui/SignInPrompt'
 import { useCurrentUserInitialization } from './useCurrentUserInitialization'
@@ -15,16 +16,19 @@ function formatCompletedAt(timestamp: number | undefined): string {
 
 function AuthenticatedGoalDetail({ goalId }: { goalId: string }) {
   const navigate = useNavigate()
-  const { hasError, isReady, isSignedIn } = useCurrentUserInitialization()
+  const { hasError, isReady, isSignedIn, retry } = useCurrentUserInitialization()
   const detail = useQuery(api.goals.getGoalDetail, isReady ? { goalId: goalId as never } : 'skip')
   const updateGoal = useMutation(api.goals.updateGoal)
   const archiveGoal = useMutation(api.goals.archiveGoal)
   const [isEditing, setIsEditing] = useState(false)
   const [name, setName] = useState('')
   const [error, setError] = useState<string | null>(null)
+  // ui-spec #35: 削除/アーカイブは確認を挟む。ネイティブのwindow.confirm()は
+  // アプリの見た目・トーンから外れるため、他画面と同じ見た目のパネルで確認する。
+  const [isConfirmingArchive, setIsConfirmingArchive] = useState(false)
 
   if (!isSignedIn) return <SignInPrompt message="ログインすると、Goalの詳細を確認できます。" />
-  if (hasError) return <p className="text-sm text-rose-700">Goalを読み込めませんでした。</p>
+  if (hasError) return <LoadFailure message="Goalを読み込めませんでした。" onRetry={retry} />
   if (!isReady || detail === undefined) return <p className="text-sm text-slate-600">Goalを読み込んでいます。</p>
   const { goal, recentCycles } = detail
 
@@ -39,12 +43,12 @@ function AuthenticatedGoalDetail({ goalId }: { goalId: string }) {
   }
 
   async function handleArchive() {
-    if (!window.confirm('このGoalをアーカイブしますか？過去の履歴は残ります。')) return
     try {
       await archiveGoal({ goalId: goal._id })
       navigate('/')
     } catch {
       setError('Goalをアーカイブできませんでした。')
+      setIsConfirmingArchive(false)
     }
   }
 
@@ -116,9 +120,36 @@ function AuthenticatedGoalDetail({ goalId }: { goalId: string }) {
       </section>
 
       {error ? <p className="text-sm text-rose-700">{error}</p> : null}
-      <button className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-slate-600" onClick={handleArchive} type="button">
-        <Archive aria-hidden="true" className="size-4" /> アーカイブ
-      </button>
+
+      {isConfirmingArchive ? (
+        <div className="space-y-3 border border-slate-300 bg-slate-50 p-4">
+          <p className="text-sm leading-6 text-slate-700">このGoalをアーカイブしますか？過去の履歴は残ります。</p>
+          <div className="flex gap-3">
+            <button
+              className="flex min-h-11 flex-1 items-center justify-center bg-slate-700 px-4 text-sm font-bold text-white"
+              onClick={() => void handleArchive()}
+              type="button"
+            >
+              アーカイブする
+            </button>
+            <button
+              className="flex min-h-11 flex-1 items-center justify-center border border-slate-300 px-4 text-sm font-semibold text-slate-700"
+              onClick={() => setIsConfirmingArchive(false)}
+              type="button"
+            >
+              キャンセル
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-slate-600"
+          onClick={() => setIsConfirmingArchive(true)}
+          type="button"
+        >
+          <Archive aria-hidden="true" className="size-4" /> アーカイブ
+        </button>
+      )}
     </div>
   )
 }

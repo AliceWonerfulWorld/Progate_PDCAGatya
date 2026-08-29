@@ -1,13 +1,15 @@
 import { ArrowLeft } from 'lucide-react'
 import { useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
 import { INPUT_LIMITS } from '../../../convex/lib/constants'
 import { isClerkConfigured } from '../../app/AppProviders'
+import { LoadFailure } from '../../components/ui/LoadFailure'
 import { SectionHeading } from '../../components/ui/SectionHeading'
-import { SignInPrompt } from '../../components/ui/SignInPrompt'
+import { useGuestState } from '../../hooks/useGuestState'
+import type { GuestCheckLoad, GuestCheckReason, GuestPdcaCycle } from '../../lib/guestStore'
 import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
 
 // ui-spec 13.1: 最短1タップでCHECKを終えられる。
@@ -30,75 +32,66 @@ const CHECK_REASONS = [
 type CheckLoad = (typeof CHECK_LOADS)[number]['value']
 type CheckReason = (typeof CHECK_REASONS)[number]['value']
 
+export interface CheckSubmission {
+  checkLoad: CheckLoad
+  checkReason: CheckReason | undefined
+  checkMemo: string | undefined
+}
+
 // ui-spec 13.2: 重かった / できなかった場合のみ原因を深掘りする。
 function needsReason(checkLoad: CheckLoad, doResult: string | undefined): boolean {
   return checkLoad === 'slightlyHeavy' || checkLoad === 'tooHeavy' || doResult === 'notCompleted'
 }
 
-function AuthenticatedCheckPage({ cycleId }: { cycleId: string }) {
-  const navigate = useNavigate()
-  const { hasError, isReady, isSignedIn } = useCurrentUserInitialization()
-  const detail = useQuery(
-    api.pdca.getCycle,
-    isReady ? { cycleId: cycleId as Id<'pdcaCycles'> } : 'skip',
-  )
-  const submitCheck = useMutation(api.pdca.submitCheck)
+function CheckBody({
+  goalName,
+  planText,
+  doResult,
+  isSubmitting,
+  error,
+  onSubmit,
+}: {
+  goalName: string | null
+  planText: string
+  doResult: string | undefined
+  isSubmitting: boolean
+  error: string | null
+  onSubmit: (submission: CheckSubmission) => void
+}) {
   const [checkLoad, setCheckLoad] = useState<CheckLoad | null>(null)
   const [checkReason, setCheckReason] = useState<CheckReason | null>(null)
   const [checkMemo, setCheckMemo] = useState('')
   const [isMemoOpen, setIsMemoOpen] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  if (!isSignedIn) return <SignInPrompt message="ログインすると、CHECKを記録できます。" />
-  if (hasError) return <p className="text-sm text-rose-700">CHECKを読み込めませんでした。</p>
-  if (!isReady || detail === undefined) return <p className="text-sm text-slate-600">CHECKを読み込んでいます。</p>
-
-  const { cycle, goalName } = detail
-  if (cycle.status !== 'checking') {
-    return (
-      <div className="space-y-4">
-        <p className="text-sm text-slate-600">
-          {cycle.status === 'doing' ? 'まずDOの結果を記録してください。' : 'このPDCAはCHECKを記録済みです。'}
-        </p>
-        <Link
-          className="flex min-h-12 items-center justify-center bg-emerald-700 px-4 text-base font-bold text-white"
-          to={cycle.status === 'doing' ? `/pdca/do/${cycle._id}` : cycle.status === 'acting' ? `/pdca/act/${cycle._id}` : `/goal/${cycle.goalId}`}
-        >
-          {cycle.status === 'doing' ? 'DOへ戻る' : cycle.status === 'acting' ? 'ACTへ進む' : 'Goalへ戻る'}
-        </Link>
-      </div>
-    )
+  function submit(load: CheckLoad, reason: CheckReason | null) {
+    onSubmit({
+      checkLoad: load,
+      checkReason: reason ?? undefined,
+      checkMemo: checkMemo.trim() || undefined,
+    })
   }
 
-  async function handleSubmit() {
-    if (checkLoad === null) return
-
-    setError(null)
-    setIsSubmitting(true)
-    try {
-      await submitCheck({
-        cycleId: cycle._id,
-        checkLoad,
-        // Reason / Memo は未入力のままでも進める。
-        checkReason: checkReason ?? undefined,
-        checkMemo: checkMemo.trim() || undefined,
-      })
-      navigate(`/pdca/act/${cycle._id}`)
-    } catch {
-      setError('CHECKを保存できませんでした。もう一度試してください。')
-      setIsSubmitting(false)
+  function selectLoad(value: CheckLoad) {
+    setCheckLoad(value)
+    if (!needsReason(value, doResult)) {
+      setCheckReason(null)
+      // ui-spec 13.1: 深掘り不要 かつ メモを書いていなければ、選んだ瞬間に
+      // 1タップでCHECKを完了できる。メモを書き始めている間は自動送信しない。
+      if (!isMemoOpen) {
+        submit(value, null)
+        return
+      }
     }
   }
 
-  const showReason = checkLoad !== null && needsReason(checkLoad, cycle.doResult)
+  const showReason = checkLoad !== null && needsReason(checkLoad, doResult)
 
   return (
     <div className="space-y-7">
       <section className="space-y-3">
         {goalName ? <p className="text-sm font-medium text-slate-500">{goalName}</p> : null}
         <SectionHeading>今回どうだった？</SectionHeading>
-        <p className="text-sm text-slate-600">{cycle.planText}</p>
+        <p className="text-sm text-slate-600">{planText}</p>
       </section>
 
       <div className="space-y-3">
@@ -110,12 +103,9 @@ function AuthenticatedCheckPage({ cycleId }: { cycleId: string }) {
                 ? 'border-emerald-700 bg-emerald-50 text-emerald-800'
                 : 'border-slate-300 text-slate-700'
             }`}
+            disabled={isSubmitting}
             key={value}
-            onClick={() => {
-              setCheckLoad(value)
-              // 深掘りが不要になった選択では原因をリセットする。
-              if (!needsReason(value, cycle.doResult)) setCheckReason(null)
-            }}
+            onClick={() => selectLoad(value)}
             type="button"
           >
             {label}
@@ -170,16 +160,126 @@ function AuthenticatedCheckPage({ cycleId }: { cycleId: string }) {
 
       {error ? <p className="text-sm text-rose-700">{error}</p> : null}
 
-      <button
-        className="min-h-12 w-full bg-emerald-700 px-4 text-base font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
-        disabled={checkLoad === null || isSubmitting}
-        onClick={handleSubmit}
-        type="button"
-      >
-        次へ
-      </button>
+      {showReason || isMemoOpen ? (
+        <button
+          className="min-h-12 w-full bg-emerald-700 px-4 text-base font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+          disabled={checkLoad === null || isSubmitting}
+          onClick={() => checkLoad !== null && submit(checkLoad, checkReason)}
+          type="button"
+        >
+          次へ
+        </button>
+      ) : null}
     </div>
   )
+}
+
+function SignedInCheckPage({ cycleId }: { cycleId: string }) {
+  const navigate = useNavigate()
+  const { hasError, isReady, retry } = useCurrentUserInitialization()
+  const detail = useQuery(
+    api.pdca.getCycle,
+    isReady ? { cycleId: cycleId as Id<'pdcaCycles'> } : 'skip',
+  )
+  const submitCheck = useMutation(api.pdca.submitCheck)
+  const [error, setError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  if (hasError) return <LoadFailure message="CHECKを読み込めませんでした。" onRetry={retry} />
+  if (!isReady || detail === undefined) return <p className="text-sm text-slate-600">CHECKを読み込んでいます。</p>
+
+  const { cycle, goalName } = detail
+  if (cycle.status !== 'checking') {
+    return (
+      <div className="space-y-4">
+        <p className="text-sm text-slate-600">
+          {cycle.status === 'doing' ? 'まずDOの結果を記録してください。' : 'このPDCAはCHECKを記録済みです。'}
+        </p>
+        <Link
+          className="flex min-h-12 items-center justify-center bg-emerald-700 px-4 text-base font-bold text-white"
+          to={cycle.status === 'doing' ? `/pdca/do/${cycle._id}` : cycle.status === 'acting' ? `/pdca/act/${cycle._id}` : `/goal/${cycle.goalId}`}
+        >
+          {cycle.status === 'doing' ? 'DOへ戻る' : cycle.status === 'acting' ? 'ACTへ進む' : 'Goalへ戻る'}
+        </Link>
+      </div>
+    )
+  }
+
+  async function handleSubmit(submission: CheckSubmission) {
+    setError(null)
+    setIsSubmitting(true)
+    try {
+      await submitCheck({ cycleId: cycle._id, ...submission })
+      navigate(`/pdca/act/${cycle._id}`)
+    } catch {
+      setError('CHECKを保存できませんでした。もう一度試してください。')
+      setIsSubmitting(false)
+    }
+  }
+
+  return (
+    <CheckBody
+      doResult={cycle.doResult}
+      error={error}
+      goalName={goalName}
+      isSubmitting={isSubmitting}
+      onSubmit={(submission) => void handleSubmit(submission)}
+      planText={cycle.planText}
+    />
+  )
+}
+
+function GuestCheckPage() {
+  const navigate = useNavigate()
+  const { state, setCycle } = useGuestState()
+  const cycle = state.cycle
+
+  if (!cycle) return <Navigate replace to="/pdca/plan/guest" />
+  if (cycle.status !== 'checking') {
+    return (
+      <div className="space-y-4">
+        <p className="text-sm text-slate-600">
+          {cycle.status === 'doing' ? 'まずDOの結果を記録してください。' : 'このPDCAはCHECKを記録済みです。'}
+        </p>
+        <Link
+          className="flex min-h-12 items-center justify-center bg-emerald-700 px-4 text-base font-bold text-white"
+          to={cycle.status === 'doing' ? '/pdca/do/guest' : cycle.status === 'acting' ? '/pdca/act/guest' : '/'}
+        >
+          {cycle.status === 'doing' ? 'DOへ戻る' : cycle.status === 'acting' ? 'ACTへ進む' : 'ホームへ戻る'}
+        </Link>
+      </div>
+    )
+  }
+
+  const activeCycle: GuestPdcaCycle = cycle
+
+  function handleSubmit(submission: CheckSubmission) {
+    setCycle({
+      ...activeCycle,
+      checkLoad: submission.checkLoad as GuestCheckLoad,
+      checkReason: submission.checkReason as GuestCheckReason | undefined,
+      checkMemo: submission.checkMemo,
+      status: 'acting',
+    })
+    navigate('/pdca/act/guest')
+  }
+
+  return (
+    <CheckBody
+      doResult={activeCycle.doResult}
+      error={null}
+      goalName={state.goal?.name ?? null}
+      isSubmitting={false}
+      onSubmit={handleSubmit}
+      planText={activeCycle.planText}
+    />
+  )
+}
+
+function CheckGate({ cycleId }: { cycleId: string }) {
+  const { isSignedIn } = useCurrentUserInitialization()
+  if (cycleId === 'guest') return <GuestCheckPage />
+  return isSignedIn ? <SignedInCheckPage cycleId={cycleId} /> : <Navigate replace to="/" />
 }
 
 export function CheckPage() {
@@ -191,7 +291,7 @@ export function CheckPage() {
         <ArrowLeft aria-hidden="true" className="size-4" /> ホーム
       </Link>
       {isClerkConfigured && cycleId ? (
-        <AuthenticatedCheckPage cycleId={cycleId} />
+        <CheckGate cycleId={cycleId} />
       ) : (
         <p className="text-sm text-slate-600">ログイン設定の完了後にCHECKを記録できます。</p>
       )}

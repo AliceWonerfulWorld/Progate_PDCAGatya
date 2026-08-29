@@ -6,6 +6,7 @@ import type { Doc, Id } from '../../../convex/_generated/dataModel'
 import { ACT_TYPE_LABELS, CHECK_LOAD_LABELS, DO_RESULT_LABELS } from '../../../convex/lib/act'
 import type { ActType, CheckLoad, DoResult } from '../../../convex/lib/act'
 import { isClerkConfigured } from '../../app/AppProviders'
+import { LoadFailure } from '../../components/ui/LoadFailure'
 import { SectionHeading } from '../../components/ui/SectionHeading'
 import { SignInPrompt } from '../../components/ui/SignInPrompt'
 import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
@@ -120,7 +121,7 @@ function HistoryCard({
 }
 
 function AuthenticatedHistory() {
-  const { hasError, isReady, isSignedIn } = useCurrentUserInitialization()
+  const { hasError, isReady, isSignedIn, retry } = useCurrentUserInitialization()
   const [selectedGoalId, setSelectedGoalId] = useState<Id<'goals'> | null>(null)
 
   const summary = useQuery(api.history.getHistorySummary, isReady ? {} : 'skip')
@@ -137,7 +138,7 @@ function AuthenticatedHistory() {
     return <SignInPrompt message="ログインすると、これまでのPDCAを振り返れます。" />
   }
   if (hasError) {
-    return <p className="text-sm text-rose-700">履歴を読み込めませんでした。</p>
+    return <LoadFailure message="履歴を読み込めませんでした。" onRetry={retry} />
   }
   if (!isReady || summary === undefined || goals === undefined || cycles === undefined) {
     return <p className="text-sm text-slate-600">履歴を読み込んでいます。</p>

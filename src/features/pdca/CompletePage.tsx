@@ -90,7 +90,7 @@ export function CompletePage() {
         </Link>
         <Link
           className="flex min-h-12 w-full items-center justify-center border border-slate-300 px-4 text-base font-semibold text-slate-700"
-          to={`/goal/${goalId}`}
+          to={goalId === 'guest' ? '/' : `/goal/${goalId}`}
         >
           あとで
         </Link>

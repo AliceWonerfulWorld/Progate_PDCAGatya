@@ -4,6 +4,7 @@ import { useQuery } from 'convex/react'
 import { Link } from 'react-router-dom'
 import { api } from '../../../convex/_generated/api'
 import { isClerkConfigured } from '../../app/AppProviders'
+import { LoadFailure } from '../../components/ui/LoadFailure'
 import { SectionHeading } from '../../components/ui/SectionHeading'
 import { SignInPrompt } from '../../components/ui/SignInPrompt'
 import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
@@ -12,12 +13,12 @@ const RARITY_FILTERS = ['All', 'R', 'SR', 'SSR'] as const
 type RarityFilter = (typeof RARITY_FILTERS)[number]
 
 function AuthenticatedCollection() {
-  const { hasError, isReady, isSignedIn } = useCurrentUserInitialization()
+  const { hasError, isReady, isSignedIn, retry } = useCurrentUserInitialization()
   const collection = useQuery(api.characters.listCollection, isReady ? {} : 'skip')
   const [filter, setFilter] = useState<RarityFilter>('All')
 
   if (!isSignedIn) return <SignInPrompt message="ログインすると、集めたキャラクターを確認できます。" />
-  if (hasError) return <p className="text-sm text-rose-700">コレクションを読み込めませんでした。</p>
+  if (hasError) return <LoadFailure message="コレクションを読み込めませんでした。" onRetry={retry} />
   if (!isReady || collection === undefined) return <p className="text-sm text-slate-600">読み込んでいます。</p>
 
   const ownedCount = collection.filter((entry) => entry.owned).length
