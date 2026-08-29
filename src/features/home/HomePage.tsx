@@ -21,7 +21,7 @@ function CreateGoalLink() {
   )
 }
 
-function AuthenticatedGoalList({ hasActiveCycle }: { hasActiveCycle: boolean }) {
+function AuthenticatedGoalList() {
   const { hasError, isReady, retry } = useCurrentUserInitialization()
   const goals = useQuery(api.goals.listActiveGoals, isReady ? {} : 'skip')
   const streakStatus = useQuery(api.users.getStreakStatus, isReady ? {} : 'skip')
@@ -48,7 +48,7 @@ function AuthenticatedGoalList({ hasActiveCycle }: { hasActiveCycle: boolean }) 
 
   return (
     <>
-      <GoalList goals={goals} hasActiveCycle={hasActiveCycle} recoverable={recoverable} />
+      <GoalList goals={goals} recoverable={recoverable} />
       <CreateGoalLink />
     </>
   )
@@ -56,13 +56,15 @@ function AuthenticatedGoalList({ hasActiveCycle }: { hasActiveCycle: boolean }) 
 
 // ログイン中はConvexの実データを、未ログイン中はlocalStorageのGuest状態を出す
 // （docs/user-flow.md #0: 最初のPDCA・ガチャ体験より前にログインを要求しない）。
-function GoalSection({ hasActiveCycle }: { hasActiveCycle: boolean }) {
+function GoalSection() {
   const { isSignedIn } = useCurrentUserInitialization()
-  return isSignedIn ? <AuthenticatedGoalList hasActiveCycle={hasActiveCycle} /> : <GuestGoalSection />
+  return isSignedIn ? <AuthenticatedGoalList /> : <GuestGoalSection />
 }
 
-// 進行中PDCAの有無はGoalセクションの見せ方も変える（進行中は開始CTAを出さない）
-// ため、HomePage側で一度だけ判定して下に配る。
+// 進行中PDCAの有無は見出し文言を変えるため、HomePage側で一度だけ判定する。
+// MVPは複数同時進行を許可する（ui-spec #7 は「1つを推奨」であって禁止ではなく、
+// startPdcaCycle 側にも既存Cycleのチェックは無い）ため、進行中があっても
+// Goalの開始CTAは残す。
 function useActiveCycle() {
   const { isReady, isSignedIn } = useCurrentUserInitialization()
   const active = useQuery(api.pdca.getActiveCycle, isSignedIn && isReady ? {} : 'skip')
@@ -86,7 +88,7 @@ function AuthenticatedHome() {
         <h2 id="home-goal-heading" className="mt-1 text-lg font-bold leading-snug">
           {hasActiveCycle ? '他のGoal' : '今日の1周を始めよう'}
         </h2>
-        <GoalSection hasActiveCycle={hasActiveCycle} />
+        <GoalSection />
       </section>
 
       <RewardStatusBar />
@@ -95,6 +97,7 @@ function AuthenticatedHome() {
 }
 
 // Clerk未設定のローカル環境向け。Convexを一切叩かず、Guest導線だけを出す。
+
 
 function GuestHome() {
   return (

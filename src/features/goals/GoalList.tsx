@@ -7,16 +7,12 @@ import { GoalCard } from './GoalCard'
 // Goalを増やすほどHomeが縦に伸び続ける問題への対処（Issue #94）。
 const VISIBLE_LIMIT = 3
 
-// hasActiveCycle=true の間は、どのGoalにも開始CTAを出さない。
-// 進行中の1周に集中させるための降格（AC-HOME-001）。
 export function GoalList({
   goals,
   recoverable = false,
-  hasActiveCycle = false,
 }: {
   goals: Doc<'goals'>[]
   recoverable?: boolean
-  hasActiveCycle?: boolean
 }) {
   const [expanded, setExpanded] = useState(false)
   const visible = expanded ? goals : goals.slice(0, VISIBLE_LIMIT)
@@ -31,7 +27,8 @@ export function GoalList({
           recoverable={recoverable}
           // 開始CTAは先頭Goalにだけ出す。同格のprimary CTAを並べると
           // 「今日どれをやるか」の判断をユーザーに丸投げすることになる。
-          showAction={!hasActiveCycle && index === 0}
+          // 2件目以降はタップでGoal詳細へ行き、そこから開始できる。
+          showAction={index === 0}
         />
       ))}
       {hiddenCount > 0 ? (

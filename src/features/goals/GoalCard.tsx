@@ -3,9 +3,8 @@ import { Link } from 'react-router-dom'
 import type { Doc } from '../../../convex/_generated/dataModel'
 
 // showAction=false のときはタップで詳細へ飛ぶだけの薄い行にする。
-// Goalが増えても縦が伸び続けないようにするための降格形態で、
-// 進行中Cycleがある間は全Goalがこの形になる（AC-HOME-001: 新規開始CTAより
-// 再開導線を優先する）。
+// Goalが増えても縦が伸び続けないようにするための降格形態（Issue #94）。
+// この形のGoalも、詳細画面からPDCAを開始できる。
 // recoverable=true の間は「PDCAを回す」の代わりに「リカバリーする」を出し、
 // isRecovery=true でCycleを開始できるようにする（ui-spec #8 / #28-31）。
 export function GoalCard({
