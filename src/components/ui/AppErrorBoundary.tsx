@@ -27,11 +27,11 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
         <main className="mx-auto flex min-h-dvh w-full max-w-2xl items-center px-4 py-6">
           <div className="space-y-3">
             <h1 className="text-xl font-bold">画面を読み込めませんでした</h1>
-            <p className="text-sm leading-6 text-slate-600">
+            <p className="text-sm leading-6 text-text-muted">
               ログイン状態または通信を確認して、もう一度読み込んでください。
             </p>
             <button
-              className="min-h-11 border border-rose-300 px-4 text-sm font-bold text-rose-700"
+              className="min-h-11 border border-attention-border px-4 text-sm font-bold text-attention-body"
               onClick={() => window.location.reload()}
               type="button"
             >

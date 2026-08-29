@@ -48,11 +48,11 @@ function DoBody({
   return (
     <div className="space-y-7">
       <section className="space-y-3">
-        {goalName ? <p className="text-sm font-medium text-slate-500">{goalName}</p> : null}
+        {goalName ? <p className="text-sm font-medium text-text-subtle">{goalName}</p> : null}
         <SectionHeading>{isReflecting ? 'どうだった？' : '今日やること'}</SectionHeading>
         <p className="text-lg font-bold">{planText}</p>
         {isReflecting ? null : (
-          <p className="text-sm leading-6 text-slate-600">
+          <p className="text-sm leading-6 text-text-muted">
             終わったら戻ってきてください。
             <br />
             アプリは閉じても大丈夫です。
@@ -60,7 +60,7 @@ function DoBody({
         )}
       </section>
 
-      {error ? <p className="text-sm text-rose-700">{error}</p> : null}
+      {error ? <p className="text-sm text-attention-body">{error}</p> : null}
 
       <div className="space-y-3">
         {isReflecting ? (
@@ -68,7 +68,7 @@ function DoBody({
             {DO_RESULTS.map(({ value, label }) => (
               <button
                 aria-pressed={selected === value}
-                className={`min-h-12 w-full px-4 text-base font-semibold ${choiceButtonClass(selected === value, 'emerald')}`}
+                className={`min-h-12 w-full px-4 text-base font-semibold ${choiceButtonClass(selected === value, 'primary')}`}
                 disabled={isSubmitting || selected !== null}
                 key={value}
                 onClick={() => handleSelect(value)}
@@ -79,7 +79,7 @@ function DoBody({
             ))}
             {selected === null ? (
               <button
-                className="text-sm font-semibold text-slate-500 underline-offset-2 hover:text-slate-700 hover:underline"
+                className="text-sm font-semibold text-text-subtle underline-offset-2 hover:text-text-body hover:underline"
                 onClick={() => setIsReflecting(false)}
                 type="button"
               >
@@ -120,7 +120,7 @@ function SignedInDoPage({ cycleId }: { cycleId: string }) {
   if (cycle.status !== 'doing') {
     return (
       <div className="space-y-4">
-        <p className="text-sm text-slate-600">このPDCAはDOを記録済みです。</p>
+        <p className="text-sm text-text-muted">このPDCAはDOを記録済みです。</p>
         <Link
           className={`flex min-h-12 items-center justify-center px-4 text-base font-bold text-white ${PRIMARY_BUTTON_CLASS}`}
           to={cycle.status === 'checking' ? `/pdca/check/${cycle._id}` : `/goal/${cycle.goalId}`}
@@ -163,7 +163,7 @@ function GuestDoPage() {
   if (cycle.status !== 'doing') {
     return (
       <div className="space-y-4">
-        <p className="text-sm text-slate-600">このPDCAはDOを記録済みです。</p>
+        <p className="text-sm text-text-muted">このPDCAはDOを記録済みです。</p>
         <Link
           className={`flex min-h-12 items-center justify-center px-4 text-base font-bold text-white ${PRIMARY_BUTTON_CLASS}`}
           to={cycle.status === 'checking' ? '/pdca/check/guest' : '/'}
@@ -209,7 +209,7 @@ export function DoPage() {
       {isClerkConfigured && cycleId ? (
         <DoGate cycleId={cycleId} />
       ) : (
-        <p className="text-sm text-slate-600">ログイン設定の完了後にDOを記録できます。</p>
+        <p className="text-sm text-text-muted">ログイン設定の完了後にDOを記録できます。</p>
       )}
     </div>
   )

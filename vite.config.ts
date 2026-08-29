@@ -25,8 +25,10 @@ export default defineConfig({
         lang: 'ja',
         start_url: '/',
         display: 'standalone',
-        background_color: '#f7f7f5',
-        theme_color: '#f7f7f5',
+        // src/index.css の --color-background と同値に保つこと
+        // (manifest は CSS 変数を参照できないため hex で二重管理になる)。
+        background_color: '#fafaf9',
+        theme_color: '#fafaf9',
         icons: [
           { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },

@@ -7,10 +7,10 @@ import { LogIn } from 'lucide-react'
 export function SignInPrompt({ message }: { message: string }) {
   return (
     <div className="space-y-4">
-      <p className="text-sm leading-6 text-slate-600">{message}</p>
+      <p className="text-sm leading-6 text-text-muted">{message}</p>
       <SignInButton>
         <button
-          className="inline-flex min-h-12 items-center justify-center gap-2 bg-emerald-700 px-5 text-base font-bold text-white"
+          className="inline-flex min-h-12 items-center justify-center gap-2 bg-primary px-5 text-base font-bold text-white"
           type="button"
         >
           <LogIn aria-hidden="true" className="size-4" /> ログインする

@@ -68,18 +68,18 @@ function AuthenticatedGoalDetail({ goalId }: { goalId: string }) {
         {isEditing ? (
           <div className="flex gap-2">
             <input
-              className="min-h-11 min-w-0 flex-1 border border-slate-300 bg-white px-3 text-lg font-bold"
+              className="min-h-11 min-w-0 flex-1 border border-border bg-surface px-3 text-lg font-bold"
               onChange={(event) => setName(event.target.value)}
               value={name}
             />
-            <button className="min-h-11 px-3 text-sm font-bold text-emerald-700 disabled:text-slate-400" disabled={isSaving} onClick={() => void handleUpdate()} type="button">{isSaving ? '保存中…' : '保存'}</button>
+            <button className="min-h-11 px-3 text-sm font-bold text-primary disabled:text-text-disabled" disabled={isSaving} onClick={() => void handleUpdate()} type="button">{isSaving ? '保存中…' : '保存'}</button>
           </div>
         ) : (
           <div className="flex items-center justify-between gap-3">
             <SectionHeading>{goal.name}</SectionHeading>
             <button
               aria-label="Goal名を編集"
-              className="grid size-11 place-items-center text-slate-600"
+              className="grid size-11 place-items-center text-text-muted"
               onClick={() => {
                 setName(goal.name)
                 setIsEditing(true)
@@ -92,51 +92,51 @@ function AuthenticatedGoalDetail({ goalId }: { goalId: string }) {
           </div>
         )}
         <div className="grid grid-cols-2 gap-3 text-sm">
-          <p className="border-l-2 border-emerald-700 pl-3 text-slate-600">累計PDCA<br /><strong className="text-lg text-slate-900">{goal.totalCycles}周</strong></p>
-          <p className="border-l-2 border-sky-600 pl-3 text-slate-600">活動日数<br /><strong className="text-lg text-slate-900">{goal.activeDays}日</strong></p>
+          <p className="border-l-2 border-primary pl-3 text-text-muted">累計PDCA<br /><strong className="text-lg text-text">{goal.totalCycles}周</strong></p>
+          <p className="border-l-2 border-choice-info pl-3 text-text-muted">活動日数<br /><strong className="text-lg text-text">{goal.activeDays}日</strong></p>
         </div>
       </section>
 
-      <section className="border-y border-slate-200 py-5">
-        <p className="text-sm font-medium text-slate-500">次の候補</p>
+      <section className="border-y border-border-subtle py-5">
+        <p className="text-sm font-medium text-text-subtle">次の候補</p>
         <p className="mt-1 text-base font-bold">{goal.nextPlanCandidate ?? 'まだ決まっていません'}</p>
         {goal.archivedAt === undefined ? (
           <Link
-            className="mt-4 flex min-h-12 items-center justify-center bg-emerald-700 px-4 text-base font-bold text-white"
+            className="mt-4 flex min-h-12 items-center justify-center bg-primary px-4 text-base font-bold text-white"
             to={`/pdca/plan/${goal._id}`}
           >
             PDCAを回す
           </Link>
         ) : (
-          <p className="mt-4 text-sm text-slate-600">アーカイブしたGoalでは新しいPDCAを始められません。</p>
+          <p className="mt-4 text-sm text-text-muted">アーカイブしたGoalでは新しいPDCAを始められません。</p>
         )}
       </section>
 
       <section>
         <h2 className="text-base font-bold">最近のPDCA</h2>
         {recentCycles.length === 0 ? (
-          <p className="mt-3 text-sm text-slate-600">まだ完了したPDCAはありません。</p>
+          <p className="mt-3 text-sm text-text-muted">まだ完了したPDCAはありません。</p>
         ) : (
           <div className="mt-3 space-y-3">
             {recentCycles.map((cycle) => (
-              <article className="border-l-2 border-slate-200 pl-3" key={cycle._id}>
-                <p className="text-xs text-slate-500">{formatCompletedAt(cycle.completedAt)}</p>
+              <article className="border-l-2 border-border-subtle pl-3" key={cycle._id}>
+                <p className="text-xs text-text-subtle">{formatCompletedAt(cycle.completedAt)}</p>
                 <p className="mt-1 text-sm font-semibold">{cycle.planText}</p>
-                {cycle.nextPlanCandidate ? <p className="mt-1 text-sm text-slate-600">次回: {cycle.nextPlanCandidate}</p> : null}
+                {cycle.nextPlanCandidate ? <p className="mt-1 text-sm text-text-muted">次回: {cycle.nextPlanCandidate}</p> : null}
               </article>
             ))}
           </div>
         )}
       </section>
 
-      {error ? <p className="text-sm text-rose-700">{error}</p> : null}
+      {error ? <p className="text-sm text-attention-body">{error}</p> : null}
 
       {isConfirmingArchive ? (
-        <div className="space-y-3 border border-slate-300 bg-slate-50 p-4">
-          <p className="text-sm leading-6 text-slate-700">このGoalをアーカイブしますか？過去の履歴は残ります。</p>
+        <div className="space-y-3 border border-border bg-surface-subtle p-4">
+          <p className="text-sm leading-6 text-text-body">このGoalをアーカイブしますか？過去の履歴は残ります。</p>
           <div className="flex gap-3">
             <button
-              className="flex min-h-11 flex-1 items-center justify-center bg-slate-700 px-4 text-sm font-bold text-white"
+              className="flex min-h-11 flex-1 items-center justify-center bg-text-body px-4 text-sm font-bold text-white"
               disabled={isArchiving}
               onClick={() => void handleArchive()}
               type="button"
@@ -144,7 +144,7 @@ function AuthenticatedGoalDetail({ goalId }: { goalId: string }) {
               {isArchiving ? 'アーカイブ中…' : 'アーカイブする'}
             </button>
             <button
-              className="flex min-h-11 flex-1 items-center justify-center border border-slate-300 px-4 text-sm font-semibold text-slate-700"
+              className="flex min-h-11 flex-1 items-center justify-center border border-border px-4 text-sm font-semibold text-text-body"
               disabled={isArchiving}
               onClick={() => setIsConfirmingArchive(false)}
               type="button"
@@ -155,7 +155,7 @@ function AuthenticatedGoalDetail({ goalId }: { goalId: string }) {
         </div>
       ) : (
         <button
-          className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-slate-600"
+          className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-text-muted"
           onClick={() => setIsConfirmingArchive(true)}
           type="button"
         >
@@ -171,10 +171,10 @@ export function GoalDetailPage() {
 
   return (
     <div className="space-y-6">
-      <Link className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-slate-600" to="/">
+      <Link className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-text-muted" to="/">
         <ArrowLeft aria-hidden="true" className="size-4" /> ホーム
       </Link>
-      {isClerkConfigured && goalId ? <AuthenticatedGoalDetail goalId={goalId} /> : <p className="text-sm text-slate-600">ログイン設定の完了後にGoalを表示できます。</p>}
+      {isClerkConfigured && goalId ? <AuthenticatedGoalDetail goalId={goalId} /> : <p className="text-sm text-text-muted">ログイン設定の完了後にGoalを表示できます。</p>}
     </div>
   )
 }

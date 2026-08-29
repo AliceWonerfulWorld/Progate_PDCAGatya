@@ -17,12 +17,12 @@ export function PartnerBanner() {
   const riveAsset = getRiveAsset(partner.character.name)
 
   return (
-    <section className="flex items-center gap-3 border-b border-slate-200 pb-6">
+    <section className="flex items-center gap-3 border-b border-border-subtle pb-6">
       {riveAsset ? (
         <RiveAnimation
           alt={partner.character.name}
           artboard={riveAsset.artboard}
-          className="size-14 shrink-0 bg-slate-100 object-cover"
+          className="size-14 shrink-0 bg-surface-muted object-cover"
           fallbackSrc={riveAsset.fallbackSrc}
           src={riveAsset.src}
           stateMachine={riveAsset.stateMachine}
@@ -31,13 +31,13 @@ export function PartnerBanner() {
       ) : (
         <img
           alt={partner.character.name}
-          className="size-14 shrink-0 bg-slate-100 object-cover"
+          className="size-14 shrink-0 bg-surface-muted object-cover"
           src={partner.character.imagePath}
         />
       )}
       <div className="min-w-0">
-        <p className="truncate text-sm font-bold text-slate-700">{partner.character.name}</p>
-        <p className="mt-0.5 text-sm leading-5 text-slate-600">
+        <p className="truncate text-sm font-bold text-text-body">{partner.character.name}</p>
+        <p className="mt-0.5 text-sm leading-5 text-text-muted">
           「{partner.character.defaultMessage ?? '今日も1周だけやろう'}」
         </p>
       </div>

@@ -50,12 +50,12 @@ function PlanEditor({
   return (
     <div className="space-y-7">
       <section className="space-y-3">
-        <p className="text-sm font-medium text-slate-500">{goalName}</p>
-        {isRecovery ? <p className="text-sm font-bold text-rose-600">リカバリー</p> : null}
+        <p className="text-sm font-medium text-text-subtle">{goalName}</p>
+        {isRecovery ? <p className="text-sm font-bold text-attention">リカバリー</p> : null}
         <SectionHeading>{isEditing ? '今日やること' : title}</SectionHeading>
         {isEditing && hasCandidate ? (
           <button
-            className="text-sm font-semibold text-slate-500 underline-offset-2 hover:text-slate-700 hover:underline"
+            className="text-sm font-semibold text-text-subtle underline-offset-2 hover:text-text-body hover:underline"
             onClick={() => setIsEditing(false)}
             type="button"
           >
@@ -64,12 +64,12 @@ function PlanEditor({
         ) : null}
         {isEditing ? (
           <label className="block space-y-2" htmlFor="plan-text">
-            <span className="text-sm text-slate-600">
+            <span className="text-sm text-text-muted">
               {hasCandidate ? '今日やることを書いてください。' : '最初にやることを決めよう。'}
             </span>
             <input
               autoFocus
-              className="min-h-12 w-full border border-slate-300 bg-white px-3 text-base outline-none focus:border-emerald-700"
+              className="min-h-12 w-full border border-border bg-surface px-3 text-base outline-none focus:border-primary"
               id="plan-text"
               maxLength={INPUT_LIMITS.planText}
               onChange={(event) => setText(event.target.value)}
@@ -82,7 +82,7 @@ function PlanEditor({
         )}
       </section>
 
-      {error ? <p className="text-sm text-rose-700">{error}</p> : null}
+      {error ? <p className="text-sm text-attention-body">{error}</p> : null}
 
       <div className="space-y-3">
         <button
@@ -141,7 +141,7 @@ function SignedInPlanPage({ goalId }: { goalId: string }) {
 
   const { goal } = detail
   if (goal.archivedAt !== undefined) {
-    return <p className="text-sm text-slate-600">アーカイブしたGoalでは新しいPDCAを始められません。</p>
+    return <p className="text-sm text-text-muted">アーカイブしたGoalでは新しいPDCAを始められません。</p>
   }
 
   async function handleStart(planText: string) {
@@ -238,7 +238,7 @@ export function PlanPage() {
       {isClerkConfigured && goalId ? (
         <PlanGate goalId={goalId} />
       ) : (
-        <p className="text-sm text-slate-600">ログイン設定の完了後にPLANを決められます。</p>
+        <p className="text-sm text-text-muted">ログイン設定の完了後にPLANを決められます。</p>
       )}
     </div>
   )

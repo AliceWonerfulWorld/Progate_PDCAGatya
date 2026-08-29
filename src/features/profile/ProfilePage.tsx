@@ -43,7 +43,7 @@ function DisplayNameEditor({ currentUser }: { currentUser: Doc<'users'> }) {
   if (!isEditing) {
     return (
       <button
-        className={`flex items-center gap-1.5 text-sm font-semibold text-slate-600 ${SECONDARY_BUTTON_CLASS} border-none px-0`}
+        className={`flex items-center gap-1.5 text-sm font-semibold text-text-muted ${SECONDARY_BUTTON_CLASS} border-none px-0`}
         onClick={() => setIsEditing(true)}
         type="button"
       >
@@ -59,14 +59,14 @@ function DisplayNameEditor({ currentUser }: { currentUser: Doc<'users'> }) {
       </label>
       <input
         autoFocus
-        className="min-h-11 w-full max-w-xs border border-slate-300 bg-white px-3 text-sm outline-none focus:border-emerald-700"
+        className="min-h-11 w-full max-w-xs border border-border bg-surface px-3 text-sm outline-none focus:border-primary"
         id="display-name"
         maxLength={INPUT_LIMITS.displayName}
         onChange={(event) => setValue(event.target.value)}
         placeholder="表示名"
         value={value}
       />
-      {error ? <p className="text-sm text-rose-700">{error}</p> : null}
+      {error ? <p className="text-sm text-attention-body">{error}</p> : null}
       <div className="flex gap-2">
         <button
           className={`min-h-9 px-4 text-sm font-bold text-white ${PRIMARY_BUTTON_CLASS}`}
@@ -119,38 +119,38 @@ function AuthenticatedProfile() {
       <DisplayNameEditor currentUser={currentUser} />
       <section className="space-y-2">
         <p className="text-2xl font-bold">Player Lv.{playerLevel}</p>
-        <p className="text-sm font-semibold text-slate-600">
+        <p className="text-sm font-semibold text-text-muted">
           {playerXp.toLocaleString()} / {levelCeilXp.toLocaleString()} XP
         </p>
-        <div className="h-2 w-full bg-slate-200">
-          <div className="h-2 bg-emerald-700" style={{ width: `${progressPercent}%` }} />
+        <div className="h-2 w-full bg-border-subtle">
+          <div className="h-2 bg-primary" style={{ width: `${progressPercent}%` }} />
         </div>
       </section>
 
-      <dl className="grid grid-cols-1 gap-6 border-y border-slate-200 py-6">
+      <dl className="grid grid-cols-1 gap-6 border-y border-border-subtle py-6">
         <div>
-          <dt className="text-sm font-medium text-slate-500">称号</dt>
+          <dt className="text-sm font-medium text-text-subtle">称号</dt>
           <dd className="mt-1 text-lg font-bold">{currentTitle ?? '称号なし'}</dd>
         </div>
         <div>
-          <dt className="text-sm font-medium text-slate-500">現在の相棒</dt>
+          <dt className="text-sm font-medium text-text-subtle">現在の相棒</dt>
           <dd className="mt-1 flex items-center gap-3">
             {partner ? (
               <>
                 <img
                   alt={partner.character.name}
-                  className="size-12 bg-slate-100 object-cover"
+                  className="size-12 bg-surface-muted object-cover"
                   src={partner.character.imagePath}
                 />
                 <span className="text-lg font-bold">{partner.character.name}</span>
               </>
             ) : (
-              <span className="text-base text-slate-500">未設定</span>
+              <span className="text-base text-text-subtle">未設定</span>
             )}
           </dd>
         </div>
         <div>
-          <dt className="text-sm font-medium text-slate-500">累計PDCA</dt>
+          <dt className="text-sm font-medium text-text-subtle">累計PDCA</dt>
           <dd className="mt-1 text-lg font-bold">{totalCycles.toLocaleString()}周</dd>
         </div>
       </dl>
@@ -165,7 +165,7 @@ export function ProfilePage() {
       {isClerkConfigured ? (
         <AuthenticatedProfile />
       ) : (
-        <p className="text-sm leading-6 text-slate-600">あなたのPDCAの積み重ねが、ここに表示されます。</p>
+        <p className="text-sm leading-6 text-text-muted">あなたのPDCAの積み重ねが、ここに表示されます。</p>
       )}
     </div>
   )

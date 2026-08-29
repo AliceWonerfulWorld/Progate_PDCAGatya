@@ -12,7 +12,7 @@ export function BackButton() {
 
   return (
     <button
-      className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-slate-600 transition-colors duration-150 hover:text-slate-900 active:scale-[0.98]"
+      className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-text-muted transition-colors duration-(--duration-fast) ease-standard hover:text-text active:scale-[0.98]"
       onClick={() => (canGoBack ? navigate(-1) : navigate('/'))}
       type="button"
     >

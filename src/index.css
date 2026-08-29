@@ -1,13 +1,179 @@
 @import "tailwindcss";
 
+/*
+ * デザイントークン (docs/ui-spec.md §36)
+ *
+ * 色・duration・easing をここに集約する。値の直書きをやめる目的は2つ:
+ *   1. 「Primaryを変える」が1箇所の変更で済むようにする
+ *   2. prefers-reduced-motion を duration トークンの差し替えだけで
+ *      全画面に効かせる (個別対応は必ず漏れる)
+ *
+ * 注意: `@theme` であって `@theme inline` ではない。inline はトークンの値を
+ * ユーティリティに焼き込んでしまうため、下部の prefers-reduced-motion による
+ * 上書きが効かなくなる。ここを inline に変えないこと。
+ */
 @theme {
   --font-sans: "Hiragino Sans", "Yu Gothic", "Noto Sans JP", system-ui, sans-serif;
+
+  /* --- Primary -------------------------------------------------------
+   * 事実上のPrimaryだった emerald-700 をブランドカラーとして正式採用
+   * (issue #97 の判断事項)。値は従来の emerald と同一なので、Primary の
+   * 見た目は変わらない。
+   */
+  --color-primary: oklch(50.8% 0.118 165.612);
+  --color-primary-hover: oklch(43.2% 0.095 166.913);
+  --color-primary-active: oklch(37.8% 0.077 168.94);
+  --color-primary-subtle: oklch(97.9% 0.021 166.113);
+  --color-primary-subtle-hover: oklch(95% 0.052 163.051);
+  --color-primary-strong: oklch(43.2% 0.095 166.913);
+
+  /* 濃淡で「量」を表すためのスケール (CompletionHeatmap の密度表現)。
+   * 状態色ではなく段階そのものが意味を持つので、primary-* とは別に
+   * 5段の連続スケールとして持つ。段が潰れると密度が読めなくなる。 */
+  --color-primary-scale-1: oklch(96.8% 0.007 247.896);
+  --color-primary-scale-2: oklch(90.5% 0.093 164.15);
+  --color-primary-scale-3: oklch(76.5% 0.177 163.223);
+  --color-primary-scale-4: oklch(59.6% 0.145 163.225);
+  --color-primary-scale-5: oklch(43.2% 0.095 166.913);
+
+  /* --- Surface / Text / Border ---------------------------------------
+   * 日常画面は落ち着いたUI (§36)。slate/stone 系を役割名へ整理する。
+   */
+  --color-background: oklch(98.5% 0.001 106.423);
+  --color-surface: oklch(100% 0 0);
+  --color-surface-subtle: oklch(98.4% 0.003 247.858);
+  --color-surface-muted: oklch(96.8% 0.007 247.896);
+
+  --color-text: oklch(20.8% 0.042 265.755);
+  --color-text-strong: oklch(27.9% 0.041 260.031);
+  --color-text-body: oklch(37.2% 0.044 257.287);
+  --color-text-muted: oklch(44.6% 0.043 257.281);
+  --color-text-subtle: oklch(55.4% 0.046 257.417);
+  --color-text-disabled: oklch(70.4% 0.04 256.788);
+
+  --color-border: oklch(86.9% 0.022 252.894);
+  --color-border-strong: oklch(70.4% 0.04 256.788);
+  --color-border-subtle: oklch(92.9% 0.013 255.508);
+
+  /* --- Rarity ---------------------------------------------------------
+   * レアリティは識別しやすく、SSRだけ特別感を強くする (§36)。
+   * choice-* とは意図的に別トークンにしている: 現状 SR と choice-info は
+   * 同じ sky 系だが、レアリティの色を後から変えたときに選択ボタンまで
+   * 巻き添えで変わるのを防ぐため。
+   */
+  --color-rarity-r: oklch(37.2% 0.044 257.287);
+  --color-rarity-r-border: oklch(86.9% 0.022 252.894);
+  --color-rarity-r-bg: oklch(98.4% 0.003 247.858);
+
+  --color-rarity-sr: oklch(50% 0.134 242.749);
+  --color-rarity-sr-border: oklch(82.8% 0.111 230.318);
+  --color-rarity-sr-bg: oklch(97.7% 0.013 236.62);
+
+  --color-rarity-ssr: oklch(55.5% 0.163 48.998);
+  --color-rarity-ssr-border: oklch(82.8% 0.189 84.429);
+  --color-rarity-ssr-bg: oklch(98.7% 0.022 95.277);
+  /* SSRのみの特別感: 光彩。rgba直書きだった値をトークン化する */
+  --color-rarity-ssr-glow: oklch(82.8% 0.189 84.429 / 0.35);
+
+  /* --- At Risk --------------------------------------------------------
+   * 注意喚起はするが恐怖訴求はしない (§36)。彩度の高い赤ではなく
+   * rose 系を維持し、面は淡く、文字で伝える。
+   */
+  --color-attention: oklch(58.6% 0.253 17.585);
+  --color-attention-text: oklch(45.5% 0.188 13.697);
+  --color-attention-body: oklch(51.4% 0.222 16.935);
+  --color-attention-border: oklch(81% 0.117 11.638);
+  --color-attention-bg: oklch(96.9% 0.015 12.422);
+  --color-attention-subtle: oklch(64.5% 0.246 16.439);
+
+  /* --- Gacha / Ticket --------------------------------------------------
+   * ガチャ・チケット系の差し色 (violet)。報酬まわりを日常UIから
+   * 視覚的に切り分ける役割。
+   */
+  --color-reward: oklch(54.1% 0.281 293.009);
+  --color-reward-strong: oklch(49.1% 0.27 292.581);
+  --color-reward-text: oklch(43.2% 0.232 292.759);
+  --color-reward-border: oklch(89.4% 0.057 293.283);
+  --color-reward-bg: oklch(96.9% 0.016 293.756);
+
+  /* --- Choice (選択ボタン) ---------------------------------------------
+   * DO結果 / CHECK負荷 / ACT種別 などのトグル。rarity-* とは別系統。
+   */
+  --color-choice-info: oklch(58.8% 0.158 241.966);
+  --color-choice-info-text: oklch(44.3% 0.11 240.79);
+  --color-choice-info-bg: oklch(97.7% 0.013 236.62);
+  --color-choice-info-bg-hover: oklch(95.1% 0.026 236.824);
+
+  --color-choice-warn: oklch(58.6% 0.253 17.585);
+  --color-choice-warn-text: oklch(45.5% 0.188 13.697);
+  --color-choice-warn-bg: oklch(96.9% 0.015 12.422);
+  --color-choice-warn-bg-hover: oklch(94.1% 0.03 12.58);
+
+  /* --- Motion: duration ------------------------------------------------
+   * duration トークンの実体は下の :root にある。Tailwind v4 の
+   * --duration-* は utility 生成 namespace ではないので @theme に置いても
+   * クラスは生成されず、二重定義は desync のもとになるため一本化した。
+   */
+
+  /* --- Motion: easing --------------------------------------------------
+   * --ease-* は生成 namespace なので `ease-standard` がそのまま使える。
+   * 全画面で同じ easing を使うことがモーションの一貫性を決める。
+   */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-decelerate: cubic-bezier(0, 0, 0, 1);
+  --ease-accelerate: cubic-bezier(0.3, 0, 1, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/*
+ * Tailwind v4 は「どこからも参照されていない @theme の値」を出力から
+ * tree-shake する。モーションのスケールは段階が揃っていること自体に
+ * 意味があり、また JS から読む / 後続issueで使う可能性があるため、
+ * ここで :root へ実体化して常に出力へ残す。
+ * (色トークンは utility 経由で参照されるのでこの処置は不要)
+ */
+:root {
+  --duration-instant: 75ms;
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 400ms;
+  --duration-reward: 700ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-decelerate: cubic-bezier(0, 0, 0, 1);
+  --ease-accelerate: cubic-bezier(0.3, 0, 1, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/*
+ * prefers-reduced-motion をトークン層で吸収する (issue #97)。
+ * duration を 0 に落とすだけで、トークン経由の全アニメーションが停止する。
+ * 個別コンポーネントでの対応は不要 = 漏れない。
+ * easing はそのままでよい (所要時間0なら曲線は影響しない)。
+ */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-instant: 0ms;
+    --duration-fast: 0ms;
+    --duration-normal: 0ms;
+    --duration-slow: 0ms;
+    --duration-reward: 0ms;
+  }
+
+  /* あえて `*{transition-duration:0!important}` の全称セレクタは置かない。
+   * それを置くとトークン層が効いているのか !important が効いているのか
+   * 区別できなくなり、トークンを経由しない箇所(duration-150 等)の
+   * 取りこぼしも隠してしまう。ここを「トークンだけが機構」に保つことで、
+   * 直書きdurationの混入は即座に不具合として現れる。
+   * scroll-behavior はトークンで表現できないためここで扱う。 */
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 :root {
   font-family: var(--font-sans);
-  color: #0f172a;
-  background: #fafaf9;
+  color: var(--color-text);
+  background: var(--color-background);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -21,7 +187,7 @@
 html {
   min-width: 320px;
   overflow-x: hidden;
-  background: #fafaf9;
+  background: var(--color-background);
 }
 
 body {
