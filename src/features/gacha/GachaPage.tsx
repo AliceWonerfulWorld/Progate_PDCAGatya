@@ -297,11 +297,12 @@ function GuestGacha() {
       {error ? <p className="text-sm text-rose-700">{error}</p> : null}
 
       <button
-        className="flex min-h-12 w-full items-center justify-center bg-emerald-700 px-4 text-base font-bold text-white"
+        className="flex min-h-12 w-full items-center justify-center bg-emerald-700 px-4 text-base font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+        disabled={activeCharacters === undefined}
         onClick={() => void handleDraw()}
         type="button"
       >
-        1回回す
+        {activeCharacters === undefined ? '準備しています…' : '1回回す'}
       </button>
     </div>
   )
