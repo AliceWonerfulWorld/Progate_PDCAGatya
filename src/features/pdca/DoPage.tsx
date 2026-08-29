@@ -6,9 +6,11 @@ import type { Id } from '../../../convex/_generated/dataModel'
 import { isClerkConfigured } from '../../app/AppProviders'
 import { BackButton } from '../../components/ui/BackButton'
 import { LoadFailure } from '../../components/ui/LoadFailure'
+import { LoadingState } from '../../components/ui/LoadingState'
 import { SectionHeading } from '../../components/ui/SectionHeading'
 import { useGuestState } from '../../hooks/useGuestState'
 import { choiceButtonClass, PRIMARY_BUTTON_CLASS } from '../../lib/buttonStyles'
+import { userFacingError } from '../../lib/userFacingError'
 import type { GuestDoResult, GuestPdcaCycle } from '../../lib/guestStore'
 import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
 
@@ -111,7 +113,7 @@ function SignedInDoPage({ cycleId }: { cycleId: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   if (hasError) return <LoadFailure message="DOを読み込めませんでした。" onRetry={retry} />
-  if (!isReady || detail === undefined) return <p className="text-sm text-slate-600">DOを読み込んでいます。</p>
+  if (!isReady || detail === undefined) return <LoadingState label="DOを読み込んでいます。" />
 
   const { cycle, goalName } = detail
   // reload時は保存済みstatusから再開する。DOが済んでいれば先のステップへ送る。
@@ -135,8 +137,8 @@ function SignedInDoPage({ cycleId }: { cycleId: string }) {
     try {
       await submitDoResult({ cycleId: cycle._id, doResult })
       navigate(`/pdca/check/${cycle._id}`)
-    } catch {
-      setError('DO結果を保存できませんでした。もう一度試してください。')
+    } catch (caughtError) {
+      setError(userFacingError(caughtError, 'DO結果を保存できませんでした。もう一度試してください。'))
       setIsSubmitting(false)
     }
   }

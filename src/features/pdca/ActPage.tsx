@@ -13,9 +13,11 @@ import type { CompletePdcaCycleResult } from '../../../convex/pdca'
 import { isClerkConfigured } from '../../app/AppProviders'
 import { BackButton } from '../../components/ui/BackButton'
 import { LoadFailure } from '../../components/ui/LoadFailure'
+import { LoadingState } from '../../components/ui/LoadingState'
 import { SectionHeading } from '../../components/ui/SectionHeading'
 import { useGuestState } from '../../hooks/useGuestState'
 import { choiceButtonClass, PRIMARY_BUTTON_CLASS, SECONDARY_BUTTON_CLASS } from '../../lib/buttonStyles'
+import { userFacingError } from '../../lib/userFacingError'
 import type { GuestActType, GuestPdcaCycle } from '../../lib/guestStore'
 import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
 
@@ -61,6 +63,7 @@ function ActBody({
           <button
             aria-pressed={actType === value}
             className={`flex min-h-12 w-full items-center gap-2 px-4 text-left text-base font-semibold ${choiceButtonClass(actType === value, 'emerald')}`}
+            disabled={isSubmitting}
             key={value}
             onClick={() => setActType(value)}
             type="button"
@@ -115,6 +118,7 @@ function ActBody({
         {isAdjusting ? null : (
           <button
             className={`min-h-12 w-full px-4 text-base font-semibold ${SECONDARY_BUTTON_CLASS}`}
+            disabled={isSubmitting}
             onClick={() => setIsAdjusting(true)}
             type="button"
           >
@@ -139,7 +143,7 @@ function SignedInActPage({ cycleId }: { cycleId: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   if (hasError) return <LoadFailure message="ACTを読み込めませんでした。" onRetry={retry} />
-  if (!isReady || detail === undefined) return <p className="text-sm text-slate-600">ACTを読み込んでいます。</p>
+  if (!isReady || detail === undefined) return <LoadingState label="ACTを読み込んでいます。" />
 
   const { cycle, goalName } = detail
   if (cycle.status !== 'acting') {
@@ -172,8 +176,8 @@ function SignedInActPage({ cycleId }: { cycleId: string }) {
       await submitAct({ cycleId: cycle._id, actType, nextPlanCandidate: nextPlanCandidate.trim() || undefined })
       const result = await completePdcaCycle({ cycleId: cycle._id })
       navigate(`/pdca/complete/${cycle._id}`, { state: { result, goalId: cycle.goalId, isRecovery: cycle.isRecovery } })
-    } catch {
-      setError('ACTを保存できませんでした。もう一度試してください。')
+    } catch (caughtError) {
+      setError(userFacingError(caughtError, 'ACTを保存できませんでした。もう一度試してください。'))
       setIsSubmitting(false)
     }
   }

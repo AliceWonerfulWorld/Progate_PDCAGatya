@@ -3,6 +3,7 @@ import { api } from '../../../convex/_generated/api'
 import { requiredXpForLevel } from '../../../convex/lib/playerLevel'
 import { isClerkConfigured } from '../../app/AppProviders'
 import { LoadFailure } from '../../components/ui/LoadFailure'
+import { LoadingState } from '../../components/ui/LoadingState'
 import { SectionHeading } from '../../components/ui/SectionHeading'
 import { SignInPrompt } from '../../components/ui/SignInPrompt'
 import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
@@ -16,7 +17,7 @@ function AuthenticatedProfile() {
   if (!isSignedIn) return <SignInPrompt message="ログインすると、あなたのPDCAの積み重ねを確認できます。" />
   if (hasError) return <LoadFailure message="プロフィールを読み込めませんでした。" onRetry={retry} />
   if (!isReady || currentUser === undefined || collection === undefined) {
-    return <p className="text-sm text-slate-600">読み込んでいます。</p>
+    return <LoadingState label="プロフィールを読み込んでいます。" />
   }
 
   const { playerLevel, playerXp, currentTitle, totalCycles } = currentUser

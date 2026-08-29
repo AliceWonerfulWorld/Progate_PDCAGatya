@@ -5,8 +5,10 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../../../convex/_generated/api'
 import { isClerkConfigured } from '../../app/AppProviders'
 import { LoadFailure } from '../../components/ui/LoadFailure'
+import { LoadingState } from '../../components/ui/LoadingState'
 import { SectionHeading } from '../../components/ui/SectionHeading'
 import { SignInPrompt } from '../../components/ui/SignInPrompt'
+import { userFacingError } from '../../lib/userFacingError'
 import { useCurrentUserInitialization } from './useCurrentUserInitialization'
 
 function formatCompletedAt(timestamp: number | undefined): string {
@@ -23,32 +25,40 @@ function AuthenticatedGoalDetail({ goalId }: { goalId: string }) {
   const [isEditing, setIsEditing] = useState(false)
   const [name, setName] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
+  const [isArchiving, setIsArchiving] = useState(false)
   // ui-spec #35: 削除/アーカイブは確認を挟む。ネイティブのwindow.confirm()は
   // アプリの見た目・トーンから外れるため、他画面と同じ見た目のパネルで確認する。
   const [isConfirmingArchive, setIsConfirmingArchive] = useState(false)
 
   if (!isSignedIn) return <SignInPrompt message="ログインすると、Goalの詳細を確認できます。" />
   if (hasError) return <LoadFailure message="Goalを読み込めませんでした。" onRetry={retry} />
-  if (!isReady || detail === undefined) return <p className="text-sm text-slate-600">Goalを読み込んでいます。</p>
+  if (!isReady || detail === undefined) return <LoadingState label="Goalを読み込んでいます。" />
   const { goal, recentCycles } = detail
 
   async function handleUpdate() {
+    setIsSaving(true)
     try {
       await updateGoal({ goalId: goal._id, name })
       setIsEditing(false)
       setError(null)
-    } catch {
-      setError('Goal名を更新できませんでした。')
+    } catch (caughtError) {
+      setError(userFacingError(caughtError, 'Goal名を更新できませんでした。'))
+    } finally {
+      setIsSaving(false)
     }
   }
 
   async function handleArchive() {
+    setIsArchiving(true)
     try {
       await archiveGoal({ goalId: goal._id })
       navigate('/')
-    } catch {
-      setError('Goalをアーカイブできませんでした。')
+    } catch (caughtError) {
+      setError(userFacingError(caughtError, 'Goalをアーカイブできませんでした。'))
       setIsConfirmingArchive(false)
+    } finally {
+      setIsArchiving(false)
     }
   }
 
@@ -62,7 +72,7 @@ function AuthenticatedGoalDetail({ goalId }: { goalId: string }) {
               onChange={(event) => setName(event.target.value)}
               value={name}
             />
-            <button className="min-h-11 px-3 text-sm font-bold text-emerald-700" onClick={handleUpdate} type="button">保存</button>
+            <button className="min-h-11 px-3 text-sm font-bold text-emerald-700 disabled:text-slate-400" disabled={isSaving} onClick={() => void handleUpdate()} type="button">{isSaving ? '保存中…' : '保存'}</button>
           </div>
         ) : (
           <div className="flex items-center justify-between gap-3">
@@ -127,13 +137,15 @@ function AuthenticatedGoalDetail({ goalId }: { goalId: string }) {
           <div className="flex gap-3">
             <button
               className="flex min-h-11 flex-1 items-center justify-center bg-slate-700 px-4 text-sm font-bold text-white"
+              disabled={isArchiving}
               onClick={() => void handleArchive()}
               type="button"
             >
-              アーカイブする
+              {isArchiving ? 'アーカイブ中…' : 'アーカイブする'}
             </button>
             <button
               className="flex min-h-11 flex-1 items-center justify-center border border-slate-300 px-4 text-sm font-semibold text-slate-700"
+              disabled={isArchiving}
               onClick={() => setIsConfirmingArchive(false)}
               type="button"
             >
