@@ -454,4 +454,41 @@ describe('Recovery end-to-end', () => {
     expect(user?.currentStreak).toBe(15)
     expect(user?.lastRecoveryDate).toBe(localDate(0))
   })
+
+  it('AC-RECOVERY-004: completing after the recovery deadline resets the streak instead of extending it', async () => {
+    const t = convexTest(schema, modules)
+    const userId = await seedUser(t, 'user_a', {
+      currentStreak: 14,
+      longestStreak: 14,
+      lastCompletedDate: localDate(-10),
+    })
+    const goalId = await seedGoal(t, userId)
+    const cycleId = await seedActingCycle(t, userId, goalId)
+
+    const result = await t
+      .withIdentity({ subject: 'user_a' })
+      .mutation(api.pdca.completePdcaCycle, { cycleId })
+
+    // 14日ストリークは失効済み。今日の完了は新しい1日目として扱う。
+    expect(result.currentStreak).toBe(1)
+
+    const user = await t.run((ctx) => ctx.db.get(userId))
+    expect(user?.currentStreak).toBe(1)
+    expect(user?.longestStreak).toBe(14)
+  })
+
+  it('rejects starting a Recovery cycle once the deadline has passed (multiple days missed)', async () => {
+    const t = convexTest(schema, modules)
+    const userId = await seedUser(t, 'user_a', { lastCompletedDate: localDate(-10) })
+    const goalId = await seedGoal(t, userId)
+
+    await expectConvexErrorCode(
+      t.withIdentity({ subject: 'user_a' }).mutation(api.pdca.startPdcaCycle, {
+        goalId,
+        planText: '英単語を3個だけ復習する',
+        isRecovery: true,
+      }),
+      ERROR_CODES.RECOVERY_NOT_AVAILABLE,
+    )
+  })
 })
