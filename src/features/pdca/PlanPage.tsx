@@ -61,9 +61,8 @@ function AuthenticatedPlanPage({ goalId }: { goalId: string }) {
     setIsSubmitting(true)
     try {
       // Cycle はここで初めて作成される（AC-PDCA-001 / AC-PDCA-002）。
-      await startPdcaCycle({ goalId: goal._id, planText: currentPlanText })
-      // TODO: DO画面は T008 で実装するため、確定後は一旦 Goal詳細へ戻す。
-      navigate(`/goal/${goal._id}`)
+      const { cycleId } = await startPdcaCycle({ goalId: goal._id, planText: currentPlanText })
+      navigate(`/pdca/do/${cycleId}`)
     } catch {
       setError('PDCAを開始できませんでした。もう一度試してください。')
       setIsSubmitting(false)

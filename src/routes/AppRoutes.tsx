@@ -4,6 +4,7 @@ import { CreateGoalPage } from '../features/goals/CreateGoalPage'
 import { GoalDetailPage } from '../features/goals/GoalDetailPage'
 import { HistoryPage } from '../features/history/HistoryPage'
 import { HomePage } from '../features/home/HomePage'
+import { DoPage } from '../features/pdca/DoPage'
 import { PlanPage } from '../features/pdca/PlanPage'
 import { ProfilePage } from '../features/profile/ProfilePage'
 
@@ -17,6 +18,7 @@ export function AppRoutes() {
       <Route path="/goals/new" element={<CreateGoalPage />} />
       <Route path="/goal/:goalId" element={<GoalDetailPage />} />
       <Route path="/pdca/plan/:goalId" element={<PlanPage />} />
+      <Route path="/pdca/do/:cycleId" element={<DoPage />} />
       <Route path="*" element={<Navigate replace to="/" />} />
     </Routes>
   )

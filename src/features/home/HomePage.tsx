@@ -6,6 +6,7 @@ import { isClerkConfigured } from '../../app/AppProviders'
 import { SectionHeading } from '../../components/ui/SectionHeading'
 import { SignInPrompt } from '../../components/ui/SignInPrompt'
 import { GoalCard } from '../goals/GoalCard'
+import { ActiveCycleCard } from '../pdca/ActiveCycleCard'
 import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
 
 function CreateGoalLink() {
@@ -51,6 +52,13 @@ function AuthenticatedGoalList() {
   )
 }
 
+// 進行中PDCAはGoal一覧より上に表示する（ui-spec 7）。
+function AuthenticatedActiveCycle() {
+  const { isReady, isSignedIn } = useCurrentUserInitialization()
+  if (!isSignedIn) return null
+  return <ActiveCycleCard isReady={isReady} />
+}
+
 export function HomePage() {
   return (
     <div className="space-y-8">
@@ -62,6 +70,8 @@ export function HomePage() {
           <span className="inline-flex items-center gap-1"><RotateCcw aria-hidden="true" className="size-4 text-sky-600" />今日 0周</span>
         </div>
       </section>
+
+      {isClerkConfigured ? <AuthenticatedActiveCycle /> : null}
 
       <section aria-labelledby="home-goal-heading" className="border-y border-slate-200 py-5">
         <p className="text-sm font-medium text-slate-500">続けたいこと</p>
