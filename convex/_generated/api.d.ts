@@ -10,6 +10,7 @@
 
 import type * as characters from "../characters.js";
 import type * as goals from "../goals.js";
+import type * as history from "../history.js";
 import type * as lib_act from "../lib/act.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_characterSeed from "../lib/characterSeed.js";
@@ -33,6 +34,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   characters: typeof characters;
   goals: typeof goals;
+  history: typeof history;
   "lib/act": typeof lib_act;
   "lib/auth": typeof lib_auth;
   "lib/characterSeed": typeof lib_characterSeed;
