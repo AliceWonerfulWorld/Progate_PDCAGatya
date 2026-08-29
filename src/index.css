@@ -26,6 +26,9 @@
   --color-primary-subtle: oklch(97.9% 0.021 166.113);
   --color-primary-subtle-hover: oklch(95% 0.052 163.051);
   --color-primary-strong: oklch(43.2% 0.095 166.913);
+  /* 淡い面(primary-subtle)の上でも視認できる境界線用。
+   * primary-subtle-hover を流用すると背景とほぼ同化してしまう。 */
+  --color-primary-border: oklch(84.5% 0.143 164.978);
 
   /* 濃淡で「量」を表すためのスケール (CompletionHeatmap の密度表現)。
    * 状態色ではなく段階そのものが意味を持つので、primary-* とは別に
@@ -74,6 +77,8 @@
   --color-rarity-ssr-bg: oklch(98.7% 0.022 95.277);
   /* SSRのみの特別感: 光彩。rgba直書きだった値をトークン化する */
   --color-rarity-ssr-glow: oklch(82.8% 0.189 84.429 / 0.35);
+  /* 白背景に置く星アイコン用。border 用より一段濃くしないと沈む。 */
+  --color-rarity-ssr-icon: oklch(76.9% 0.188 70.08);
 
   /* --- At Risk --------------------------------------------------------
    * 注意喚起はするが恐怖訴求はしない (§36)。彩度の高い赤ではなく
@@ -85,6 +90,14 @@
   --color-attention-border: oklch(81% 0.117 11.638);
   --color-attention-bg: oklch(96.9% 0.015 12.422);
   --color-attention-subtle: oklch(64.5% 0.246 16.439);
+
+  /* --- Notice (一時的な状態告知) ----------------------------------------
+   * オフライン等のシステム状態バナー。At Risk(attention) ほど強くなく、
+   * かつレアリティ色とは無関係な独立した役割として持つ。
+   * 旧実装は amber 系だったので同系の値を維持している。
+   */
+  --color-notice: oklch(41.4% 0.112 45.904);
+  --color-notice-bg: oklch(96.2% 0.059 95.617);
 
   /* --- Gacha / Ticket --------------------------------------------------
    * ガチャ・チケット系の差し色 (violet)。報酬まわりを日常UIから
@@ -138,7 +151,9 @@
   --duration-normal: 250ms;
   --duration-slow: 400ms;
   --duration-reward: 700ms;
-  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  /* --ease-standard は utility(ease-standard) 経由で参照されるため
+   * tree-shake されない。ここで重複定義すると desync するので置かない。
+   * 未参照の3つだけをスケールとして残す。 */
   --ease-decelerate: cubic-bezier(0, 0, 0, 1);
   --ease-accelerate: cubic-bezier(0.3, 0, 1, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -159,12 +174,26 @@
     --duration-reward: 0ms;
   }
 
-  /* あえて `*{transition-duration:0!important}` の全称セレクタは置かない。
-   * それを置くとトークン層が効いているのか !important が効いているのか
-   * 区別できなくなり、トークンを経由しない箇所(duration-150 等)の
-   * 取りこぼしも隠してしまう。ここを「トークンだけが機構」に保つことで、
-   * 直書きdurationの混入は即座に不具合として現れる。
-   * scroll-behavior はトークンで表現できないためここで扱う。 */
+  /* transition については全称セレクタでの !important 上書きを**置かない**。
+   * それを置くとトークン層が効いているのか !important が効いているのかを
+   * 区別できなくなり、トークンを経由しない取りこぼし(duration-150 等)まで
+   * 隠してしまう。トークンだけを機構に保つことで混入が不具合として現れる。
+   *
+   * 一方 CSS animation (animate-spin / animate-pulse) は Tailwind が
+   * duration を @keyframes 側に焼き込むため、トークンでは表現できない。
+   * ここだけは対象を animate-* に限定して明示的に止める。
+   * 全称セレクタにしないのは上記 transition の検証可能性を守るため。 */
+  /* spinner は「処理中」を伝える役割なので完全停止させない
+   * (止めると読み込みが終わったように見える)。速度を落として
+   * 前庭系への刺激を減らす方針にする。pulse は明滅なので停止でよい。 */
+  .animate-spin {
+    animation-duration: 1.8s !important;
+  }
+
+  .animate-pulse {
+    animation: none !important;
+  }
+
   html {
     scroll-behavior: auto;
   }

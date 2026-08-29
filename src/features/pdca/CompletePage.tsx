@@ -46,7 +46,7 @@ export function CompletePage() {
           <RotateCcw aria-hidden="true" className="size-5 text-choice-info" /> +1周
         </li>
         <li className="flex items-center gap-3 text-base font-semibold">
-          <Star aria-hidden="true" className="size-5 text-rarity-ssr-border" /> Player XP +{result.gainedXp}
+          <Star aria-hidden="true" className="size-5 text-rarity-ssr-icon" /> Player XP +{result.gainedXp}
         </li>
         <li className="flex items-center gap-3 text-base font-semibold">
           <Ticket aria-hidden="true" className="size-5 text-reward" /> ガチャ +{result.gachaDrawsAdded}

@@ -207,7 +207,7 @@ function AuthenticatedCollection() {
                   <div className="size-full bg-border" />
                 )}
                 {entry.isPartner ? (
-                  <Star aria-hidden="true" className="absolute right-1 top-1 size-4 fill-rarity-ssr-border text-rarity-ssr-border" />
+                  <Star aria-hidden="true" className="absolute right-1 top-1 size-4 fill-rarity-ssr-border text-rarity-ssr-icon" />
                 ) : null}
                 {entry.eventNames.length > 0 ? (
                   <span className="absolute left-1 top-1 bg-choice-info px-1 text-[9px] font-bold text-white">

@@ -13,7 +13,7 @@ export function DailyMissionCard() {
   return (
     <div
       className={`flex items-center gap-3 border px-4 py-3 ${
-        mission.completed ? 'border-primary-subtle-hover bg-primary-subtle' : 'border-border-subtle'
+        mission.completed ? 'border-primary-border bg-primary-subtle' : 'border-border-subtle'
       }`}
     >
       {mission.completed ? (
