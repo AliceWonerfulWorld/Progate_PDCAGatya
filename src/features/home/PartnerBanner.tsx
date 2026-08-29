@@ -1,6 +1,6 @@
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
-import { RiveAnimation } from '../../components/ui/RiveAnimation'
+import { LazyRiveAnimation } from '../../components/ui/LazyRiveAnimation'
 import { getRiveAsset } from '../../lib/riveAssets'
 import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
 
@@ -19,7 +19,7 @@ export function PartnerBanner() {
   return (
     <section className="flex items-center gap-3 border-b border-border-subtle pb-6">
       {riveAsset ? (
-        <RiveAnimation
+        <LazyRiveAnimation
           alt={partner.character.name}
           artboard={riveAsset.artboard}
           className="size-14 shrink-0 bg-surface-muted object-cover"

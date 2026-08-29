@@ -10,7 +10,7 @@ import { GoalCard } from '../goals/GoalCard'
 import { GuestGoalSection } from '../goals/GuestGoalSection'
 import { ActiveCycleCard } from '../pdca/ActiveCycleCard'
 import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
-import { RiveAnimation } from '../../components/ui/RiveAnimation'
+import { LazyRiveAnimation } from '../../components/ui/LazyRiveAnimation'
 import { getRiveAsset } from '../../lib/riveAssets'
 import { AtRiskBanner } from './AtRiskBanner'
 import { DailyMissionCard } from './DailyMissionCard'
@@ -99,7 +99,7 @@ function HomeMascot() {
   if (!asset) return null
 
   return (
-    <RiveAnimation
+    <LazyRiveAnimation
       alt="にんじゃわんこ"
       artboard={asset.artboard}
       className="size-16 shrink-0"
