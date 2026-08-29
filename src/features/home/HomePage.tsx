@@ -65,16 +65,28 @@ function AuthenticatedActiveCycle() {
   return <ActiveCycleCard isReady={isReady} />
 }
 
+// Streak/今日の周回数はServer側の実データを表示する。未ログイン時は0のまま。
+function TodaySummary() {
+  const { isReady, isSignedIn } = useCurrentUserInitialization()
+  const summary = useQuery(api.history.getHistorySummary, isSignedIn && isReady ? {} : 'skip')
+  const currentStreak = summary?.currentStreak ?? 0
+  const todayCycles = summary?.todayCycles ?? 0
+
+  return (
+    <div className="flex gap-6 text-sm text-slate-600">
+      <span className="inline-flex items-center gap-1"><Flame aria-hidden="true" className="size-4 text-rose-500" />{currentStreak}日</span>
+      <span className="inline-flex items-center gap-1"><RotateCcw aria-hidden="true" className="size-4 text-sky-600" />今日 {todayCycles}周</span>
+    </div>
+  )
+}
+
 export function HomePage() {
   return (
     <div className="space-y-8">
       <section className="space-y-3">
         <p className="text-sm font-medium text-emerald-700">今日の一歩</p>
         <SectionHeading>今日も1周だけ回そう。</SectionHeading>
-        <div className="flex gap-6 text-sm text-slate-600">
-          <span className="inline-flex items-center gap-1"><Flame aria-hidden="true" className="size-4 text-rose-500" />0日</span>
-          <span className="inline-flex items-center gap-1"><RotateCcw aria-hidden="true" className="size-4 text-sky-600" />今日 0周</span>
-        </div>
+        <TodaySummary />
       </section>
 
       {isClerkConfigured ? <AtRiskBanner /> : null}
