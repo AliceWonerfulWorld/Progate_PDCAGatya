@@ -1499,3 +1499,17 @@ The priority is not to make the codebase look sophisticated.
 The priority is:
 
 > **Build PDCA GACHA exactly enough that the core loop is reliable, testable, understandable, and safe to extend.**
+
+<!-- convex-ai-start -->
+
+This project uses [Convex](https://convex.dev) as its backend.
+
+When working on Convex code, **always read
+`convex/_generated/ai/guidelines.md` first** for important guidelines on
+how to correctly use Convex APIs and patterns. The file contains rules that
+override what you may have learned about Convex from training data.
+
+Convex agent skills for common tasks can be installed by running
+`npx convex ai-files install`.
+
+<!-- convex-ai-end -->
