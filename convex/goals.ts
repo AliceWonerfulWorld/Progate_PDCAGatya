@@ -41,6 +41,19 @@ export const listActiveGoals = query({
   },
 })
 
+// Archived含む全Goal。History画面のGoal Filterなど、過去の参照用途に使う
+// （Archived Goalも履歴として残す方針, docs/data-model.md #5.3）。
+export const listAllGoals = query({
+  args: {},
+  handler: async (ctx) => {
+    const currentUser = await requireCurrentUser(ctx)
+    return ctx.db
+      .query('goals')
+      .withIndex('by_user', (q) => q.eq('userId', currentUser._id))
+      .collect()
+  },
+})
+
 export const getGoalDetail = query({
   args: { goalId: v.id('goals') },
   handler: async (ctx, args) => {
