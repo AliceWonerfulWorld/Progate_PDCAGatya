@@ -12,8 +12,8 @@ const GUEST_RESUME_PATHS = {
 
 // ログイン後(ActiveCycleCard)と同じ文言・現在地表示を使う（ui-spec #7.1 / #7.2）。
 const GUEST_RESUME_LABELS = {
-  doing: 'DOを開く',
-  checking: '振り返る',
+  doing: '振り返る',
+  checking: '結果を記録する',
   acting: '次のPLANを決める',
 } as const
 

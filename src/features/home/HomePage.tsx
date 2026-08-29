@@ -100,6 +100,7 @@ function AuthenticatedHome() {
 
 
 
+
 function GuestHome() {
   return (
     <div className="space-y-6">

@@ -9,13 +9,12 @@ const RESUME_PATHS = {
   acting: 'act',
 } as const
 
-// 「続きを開く」だと今どのフェーズなのかが伝わらないため、現在地に応じた
-// 次の一手をラベルにする。
-// doing は「実行前」と「実行して報告する段階」の両方を含む（その区別は
-// DoPage のローカルstateで、サーバーには持たない）ので、両方を包む語にする。
+// CTAは「今どこにいるか」ではなく「次に何をするか」を示す。
+// doing でHomeに戻ってきた人がDO画面でできるのは振り返りだけなので、
+// 遷移先のボタン文言（DoPageの「振り返る」）とそのまま揃える。
 const RESUME_LABELS = {
-  doing: 'DOを開く',
-  checking: '振り返る',
+  doing: '振り返る',
+  checking: '結果を記録する',
   acting: '次のPLANを決める',
 } as const
 
