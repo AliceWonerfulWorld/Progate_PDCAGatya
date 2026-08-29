@@ -138,6 +138,11 @@ function AuthenticatedGacha() {
         <p className="flex items-center justify-center gap-2 text-base font-semibold text-slate-700">
           <Ticket aria-hidden="true" className="size-5 text-violet-600" /> 残り {currentUser.availableGachaDraws}回
         </p>
+        {currentUser.availableGachaDraws <= 0 ? (
+          <p className="text-sm leading-6 text-slate-500">
+            PDCAを1周完了すると、ガチャ権が1回もらえます。
+          </p>
+        ) : null}
       </section>
 
       {error ? <p className="text-sm text-rose-700">{error}</p> : null}
