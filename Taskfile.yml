@@ -64,6 +64,7 @@ tasks:
     desc: 開発環境のセットアップ
     cmds:
       - task: setup:install
+      - task: setup:login
       - task: setup:env
       - task: setup:convex-env
 
@@ -71,6 +72,13 @@ tasks:
     desc: 依存パッケージをインストール
     cmds:
       - npm install
+
+  setup:login:
+    desc: Convex にログイン（ログイン済みなら何もしない）
+    status:
+      - npx convex login status
+    cmds:
+      - npx convex login
 
   setup:env:
     desc: .env.local を .env.example から生成（既存なら何もしない）
