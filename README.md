@@ -453,7 +453,20 @@ npm run build
 
 `npx convex dev --once` を実行すると、ローカル Convex deployment 用の値が `.env.local` に自動作成されます。`.env.local` は Git 管理しません。
 
-Clerk・LLM 用の環境変数は、該当フェーズでここに追記します。
+Clerk 認証を有効にする場合は、`.env.example` を参照して `.env.local` に以下を追加します。
+
+```bash
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
+CLERK_JWT_ISSUER_DOMAIN=https://...clerk.accounts.dev
+```
+
+`CLERK_JWT_ISSUER_DOMAIN` はローカル Convex deployment にも設定します。
+
+```bash
+npx convex env set CLERK_JWT_ISSUER_DOMAIN "https://...clerk.accounts.dev"
+```
+
+Clerk と Convex の認証連携には、Clerk Dashboard で Convex integration を有効化してください。LLM 用の環境変数は該当フェーズで追記します。
 
 ---
 
