@@ -73,7 +73,26 @@ export function isValidAiPlanCandidate(value: unknown): value is AiPlanCandidate
 
 export interface ResolveNextPlanResult {
   nextPlan: string
+  message: string
   usedFallback: boolean
+}
+
+function fallbackMessage(input: ResolveNextPlanFallbackInput): string {
+  if (input.mode === 'initial') {
+    return 'まずは小さく始められる形にしました'
+  }
+
+  switch (input.actType) {
+    case 'lighter':
+      return '前回より少し軽めにしました'
+    case 'heavier':
+      return '前回より少し増やしました'
+    case 'changeApproach':
+      return '別の進め方を考えやすい起点にしました'
+    case 'same':
+    default:
+      return '前回の流れをそのまま続けられる形にしました'
+  }
 }
 
 // rawAiOutput: LLMからの生JSON文字列。API失敗・timeout・network failure時はnullを渡す
@@ -87,12 +106,20 @@ export function resolveNextPlan(
     try {
       const parsed: unknown = JSON.parse(rawAiOutput)
       if (isValidAiPlanCandidate(parsed)) {
-        return { nextPlan: parsed.nextPlan.trim(), usedFallback: false }
+        return {
+          nextPlan: parsed.nextPlan.trim(),
+          message: parsed.message?.trim() || '次の一周を始めやすい形にしました',
+          usedFallback: false,
+        }
       }
     } catch {
       // Broken JSON -> fall through to the rule-based fallback.
     }
   }
 
-  return { nextPlan: resolveNextPlanFallback(fallbackInput), usedFallback: true }
+  return {
+    nextPlan: resolveNextPlanFallback(fallbackInput),
+    message: fallbackMessage(fallbackInput),
+    usedFallback: true,
+  }
 }

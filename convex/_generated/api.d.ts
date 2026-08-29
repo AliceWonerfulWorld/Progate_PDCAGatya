@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as ai from "../ai.js";
 import type * as characters from "../characters.js";
 import type * as gacha from "../gacha.js";
 import type * as goals from "../goals.js";
@@ -34,6 +35,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  ai: typeof ai;
   characters: typeof characters;
   gacha: typeof gacha;
   goals: typeof goals;
