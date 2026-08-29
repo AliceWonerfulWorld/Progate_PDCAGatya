@@ -18,7 +18,7 @@ export const currentUser = query({
   handler: async (ctx) => requireCurrentUser(ctx),
 })
 
-// docs/data-model.md #117, AC-SEC-003: ランキング等に表示する任意のニックネーム。
+// docs/data-model.md #117, AC-SEC-003: アプリ内で使う任意の表示名。
 export const setDisplayName = mutation({
   args: { displayName: v.string() },
   handler: async (ctx, args) => {

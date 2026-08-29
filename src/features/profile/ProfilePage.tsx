@@ -14,8 +14,7 @@ import { SignInPrompt } from '../../components/ui/SignInPrompt'
 import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
 import { PRIMARY_BUTTON_CLASS, SECONDARY_BUTTON_CLASS } from '../../lib/buttonStyles'
 
-// ランキング(convex/ranking.ts)に表示する名前。未設定だと「プレイヤー」表記になるため、
-// ここで設定できるようにする。
+// アプリ内で使う表示名。未設定の状態を許容しつつ、ここで設定・変更できる。
 function DisplayNameEditor({ currentUser }: { currentUser: Doc<'users'> }) {
   const setDisplayName = useMutation(api.users.setDisplayName)
   const [isEditing, setIsEditing] = useState(!currentUser.displayName)
@@ -64,7 +63,7 @@ function DisplayNameEditor({ currentUser }: { currentUser: Doc<'users'> }) {
         id="display-name"
         maxLength={INPUT_LIMITS.displayName}
         onChange={(event) => setValue(event.target.value)}
-        placeholder="ランキングに表示する名前"
+        placeholder="表示名"
         value={value}
       />
       {error ? <p className="text-sm text-rose-700">{error}</p> : null}
