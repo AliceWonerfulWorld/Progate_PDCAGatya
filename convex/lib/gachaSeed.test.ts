@@ -38,6 +38,15 @@ describe('GACHA_SEED_DATA', () => {
       }
     }
   })
+
+  it('keeps the Progateコラボキャラ exclusive to the Progate gacha', () => {
+    const [standard, progate] = GACHA_SEED_DATA
+    expect(standard.characterNames).not.toContain('にんじゃわんこ')
+    expect(progate.characterNames).toContain('にんじゃわんこ')
+    // standardはimplicit(全active)ではなく、明示リストで漏れを防ぐ。
+    expect(standard.characterNames).toHaveLength(CHARACTER_SEED_DATA.length - 1)
+    expect(progate.characterNames).toHaveLength(CHARACTER_SEED_DATA.length)
+  })
 })
 
 describe('selectUnseededGachas', () => {

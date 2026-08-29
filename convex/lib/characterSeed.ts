@@ -149,6 +149,19 @@ export const CHARACTER_SEED_DATA: readonly CharacterSeedEntry[] = [
     sortOrder: 15,
     isActive: true,
   },
+  // Progateガチャ限定のコラボキャラクター(公式マスコット「にんじゃわんこ」)。
+  // convex/lib/gachaSeed.tsのprogateエントリにのみcharacterNamesとして含める。
+  // 恒常ガチャはstandardエントリで対象キャラを明示リスト化しているため、
+  // isActive=trueでも恒常ガチャには漏れ出さない。
+  {
+    name: 'にんじゃわんこ',
+    rarity: 'SSR',
+    description: 'Progateからやってきた、プログラミング学習を見守る忍者犬。',
+    imagePath: '/characters/progate_ninjawanko.png',
+    defaultMessage: '今日も一緒に、コツコツ続けよう。',
+    sortOrder: 16,
+    isActive: true,
+  },
 ] as const
 
 export function selectUnseededCharacters(
