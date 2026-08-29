@@ -1,6 +1,7 @@
 import { ConvexError, v } from 'convex/values'
 import { mutation, query } from './_generated/server'
 import { getOrCreateCurrentUser, requireCurrentUser } from './lib/auth'
+import { INPUT_LIMITS } from './lib/constants'
 import { getLocalDateString } from './lib/date'
 import { ERROR_CODES } from './lib/errors'
 import { deriveStreakStatus, isRecoveryAvailable } from './lib/streak'
@@ -15,6 +16,21 @@ export const ensureCurrentUser = mutation({
 export const currentUser = query({
   args: {},
   handler: async (ctx) => requireCurrentUser(ctx),
+})
+
+// docs/data-model.md #117, AC-SEC-003: ランキング等に表示する任意のニックネーム。
+export const setDisplayName = mutation({
+  args: { displayName: v.string() },
+  handler: async (ctx, args) => {
+    const user = await requireCurrentUser(ctx)
+    const trimmed = args.displayName.trim()
+    if (!trimmed || trimmed.length > INPUT_LIMITS.displayName) {
+      throw new ConvexError({ code: ERROR_CODES.VALIDATION_ERROR })
+    }
+
+    await ctx.db.patch(user._id, { displayName: trimmed, updatedAt: Date.now() })
+    return { displayName: trimmed }
+  },
 })
 
 // docs/ui-spec.md #8 (Home - Streak At Risk) の表示判定に使う。

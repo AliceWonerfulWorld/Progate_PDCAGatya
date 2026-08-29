@@ -7,6 +7,7 @@ import type { Doc, Id } from '../../../convex/_generated/dataModel'
 import { ACT_TYPE_LABELS, CHECK_LOAD_LABELS, DO_RESULT_LABELS } from '../../../convex/lib/act'
 import type { ActType, CheckLoad, DoResult } from '../../../convex/lib/act'
 import { isClerkConfigured } from '../../app/AppProviders'
+import { CompletionHeatmap } from '../../components/ui/CompletionHeatmap'
 import { LoadFailure } from '../../components/ui/LoadFailure'
 import { EmptyState } from '../../components/ui/EmptyState'
 import { LoadingState } from '../../components/ui/LoadingState'
@@ -128,6 +129,7 @@ function AuthenticatedHistory() {
   const [selectedGoalId, setSelectedGoalId] = useState<Id<'goals'> | null>(null)
 
   const summary = useQuery(api.history.getHistorySummary, isReady ? {} : 'skip')
+  const heatmap = useQuery(api.history.getCompletionHeatmap, isReady ? {} : 'skip')
   const goals = useQuery(api.goals.listAllGoals, isReady ? {} : 'skip')
   const cycles = useQuery(
     api.history.listRecentCycles,
@@ -143,13 +145,14 @@ function AuthenticatedHistory() {
   if (hasError) {
     return <LoadFailure message="履歴を読み込めませんでした。" onRetry={retry} />
   }
-  if (!isReady || summary === undefined || goals === undefined || cycles === undefined) {
+  if (!isReady || summary === undefined || heatmap === undefined || goals === undefined || cycles === undefined) {
     return <LoadingState label="履歴を読み込んでいます。" />
   }
 
   return (
     <div className="space-y-6">
       <SummaryStats summary={summary} />
+      <CompletionHeatmap days={heatmap} />
       {goals.length > 0 ? (
         <GoalFilterTabs goals={goals} onSelect={setSelectedGoalId} selectedGoalId={selectedGoalId} />
       ) : null}

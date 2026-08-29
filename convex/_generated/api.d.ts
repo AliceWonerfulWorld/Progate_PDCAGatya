@@ -28,6 +28,7 @@ import type * as lib_playerLevel from "../lib/playerLevel.js";
 import type * as lib_streak from "../lib/streak.js";
 import type * as missions from "../missions.js";
 import type * as pdca from "../pdca.js";
+import type * as ranking from "../ranking.js";
 import type * as users from "../users.js";
 
 import type {
@@ -57,6 +58,7 @@ declare const fullApi: ApiFromModules<{
   "lib/streak": typeof lib_streak;
   missions: typeof missions;
   pdca: typeof pdca;
+  ranking: typeof ranking;
   users: typeof users;
 }>;
 
