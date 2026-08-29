@@ -1,10 +1,11 @@
-import { Loader2, Sparkles, Ticket } from 'lucide-react'
+import { Clock, Loader2, Sparkles, Ticket } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { api } from '../../../convex/_generated/api'
 import type { CharacterRarity } from '../../../convex/lib/constants'
 import { rollRarity } from '../../../convex/lib/gacha'
+import type { GachaBannerInfo } from '../../../convex/gachas'
 import { isClerkConfigured } from '../../app/AppProviders'
 import { LoadFailure } from '../../components/ui/LoadFailure'
 import { LoadingState } from '../../components/ui/LoadingState'
@@ -12,6 +13,7 @@ import { SectionHeading } from '../../components/ui/SectionHeading'
 import { SignInPrompt } from '../../components/ui/SignInPrompt'
 import { useGuestState } from '../../hooks/useGuestState'
 import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
+import { formatRemainingTime } from '../../lib/gachaTime'
 import { userFacingError } from '../../lib/userFacingError'
 
 interface GachaDrawResult {
@@ -117,25 +119,70 @@ function GachaResultView({
   )
 }
 
+// 画像を持たないガチャバナー用に、対象キャラを名前の一覧で見せる。
+// ガチャの下に残り時間(常設ガチャは「常時開催」)を表示する。
+function GachaSelector({
+  gachas,
+  onSelect,
+}: {
+  gachas: GachaBannerInfo[]
+  onSelect: (gacha: GachaBannerInfo) => void
+}) {
+  return (
+    <div className="space-y-8 text-center">
+      <SectionHeading>GACHA</SectionHeading>
+      <div className="space-y-3 text-left">
+        {gachas.map((gacha) => (
+          <button
+            className="w-full space-y-2 border border-slate-300 p-4 text-left"
+            key={gacha.key}
+            onClick={() => onSelect(gacha)}
+            type="button"
+          >
+            <p className="text-base font-bold">{gacha.name}</p>
+            {gacha.description ? <p className="text-sm text-slate-600">{gacha.description}</p> : null}
+            <p className="text-xs text-slate-500">{gacha.characterNames.join('、')}</p>
+            <p className="flex items-center gap-1 text-xs font-semibold text-emerald-700">
+              <Clock aria-hidden="true" className="size-3.5" /> {formatRemainingTime(gacha.endAt)}
+            </p>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function SignedInGacha() {
   const navigate = useNavigate()
   const location = useLocation()
   const goalId = (location.state as { goalId?: string } | null)?.goalId
   const { hasError, isReady, retry } = useCurrentUserInitialization()
   const currentUser = useQuery(api.users.currentUser, isReady ? {} : 'skip')
+  const gachas = useQuery(api.gachas.listActiveGachas, isReady ? {} : 'skip')
   const drawGacha = useMutation(api.gacha.drawGacha)
+  const [selectedGacha, setSelectedGacha] = useState<GachaBannerInfo | null>(null)
   const [isDrawing, setIsDrawing] = useState(false)
   const [result, setResult] = useState<GachaDrawResult | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   if (hasError) return <LoadFailure message="ガチャを読み込めませんでした。" onRetry={retry} />
-  if (!isReady || currentUser === undefined) return <LoadingState label="ガチャを準備しています。" />
+  if (!isReady || currentUser === undefined || gachas === undefined) {
+    return <LoadingState label="ガチャを準備しています。" />
+  }
+
+  if (!selectedGacha) {
+    return <GachaSelector gachas={gachas} onSelect={setSelectedGacha} />
+  }
 
   async function handleDraw() {
+    if (!selectedGacha) return
     setError(null)
     setIsDrawing(true)
     try {
-      const [drawResult] = await Promise.all([drawGacha({}), sleep(MIN_DRAWING_MS)])
+      const [drawResult] = await Promise.all([
+        drawGacha({ gachaKey: selectedGacha.key }),
+        sleep(MIN_DRAWING_MS),
+      ])
       setResult(drawResult)
     } catch (caughtError) {
       setError(userFacingError(caughtError, 'ガチャを回せませんでした。もう一度試してください。'))
@@ -179,7 +226,10 @@ function SignedInGacha() {
   return (
     <div className="space-y-8 text-center">
       <section className="space-y-3">
-        <SectionHeading>GACHA</SectionHeading>
+        <SectionHeading>{selectedGacha.name}</SectionHeading>
+        <p className="flex items-center justify-center gap-1 text-xs font-semibold text-emerald-700">
+          <Clock aria-hidden="true" className="size-3.5" /> {formatRemainingTime(selectedGacha.endAt)}
+        </p>
         <p className="flex items-center justify-center gap-2 text-base font-semibold text-slate-700">
           <Ticket aria-hidden="true" className="size-5 text-violet-600" /> 残り {currentUser.availableGachaDraws}回
         </p>
@@ -203,6 +253,13 @@ function SignedInGacha() {
         </button>
         <button
           className="flex min-h-12 w-full items-center justify-center border border-slate-300 px-4 text-base font-semibold text-slate-700"
+          onClick={() => setSelectedGacha(null)}
+          type="button"
+        >
+          他のガチャを選ぶ
+        </button>
+        <button
+          className="flex min-h-12 w-full items-center justify-center text-sm font-semibold text-slate-500"
           onClick={() => navigate(goalId ? `/goal/${goalId}` : '/')}
           type="button"
         >

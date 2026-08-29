@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
+import { CHARACTER_SEED_DATA } from './characterSeed'
 import { GACHA_SEED_DATA, selectUnseededGachas } from './gachaSeed'
 
 describe('GACHA_SEED_DATA', () => {
-  it('contains the standard gacha', () => {
-    expect(GACHA_SEED_DATA).toHaveLength(1)
-    expect(GACHA_SEED_DATA[0].key).toBe('standard')
+  it('contains the standard, Progate, and excavation gachas', () => {
+    expect(GACHA_SEED_DATA.map((gacha) => gacha.key)).toEqual(['standard', 'progate', 'excavation'])
   })
 
   it('has unique keys', () => {
@@ -20,6 +20,22 @@ describe('GACHA_SEED_DATA', () => {
 
   it('is active for every entry', () => {
     expect(GACHA_SEED_DATA.every((gacha) => gacha.isActive)).toBe(true)
+  })
+
+  it('only the standing gacha has no time limit; the other two share the full roster', () => {
+    const [standard, progate, excavation] = GACHA_SEED_DATA
+    expect(standard.durationMs).toBeUndefined()
+    expect(progate.durationMs).toBeGreaterThan(0)
+    expect(excavation.durationMs).toBeGreaterThan(0)
+  })
+
+  it('every characterNames entry references a real character name', () => {
+    const realNames = new Set(CHARACTER_SEED_DATA.map((character) => character.name))
+    for (const gacha of GACHA_SEED_DATA) {
+      for (const name of gacha.characterNames ?? []) {
+        expect(realNames.has(name)).toBe(true)
+      }
+    }
   })
 })
 

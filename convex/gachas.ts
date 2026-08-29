@@ -1,9 +1,31 @@
 import { v } from 'convex/values'
+import type { Id } from './_generated/dataModel'
 import { internalMutation, query } from './_generated/server'
+import type { QueryCtx } from './_generated/server'
+import { requireCurrentUser } from './lib/auth'
 import { GACHA_SEED_DATA, selectUnseededGachas } from './lib/gachaSeed'
 
-// npx convex run gachas:seedGachas で実行する。
+async function resolveCharacterIds(
+  ctx: QueryCtx,
+  characterNames: readonly string[],
+): Promise<Id<'characters'>[]> {
+  const characters = await ctx.db.query('characters').collect()
+  const idByName = new Map(characters.map((character) => [character.name, character._id]))
+
+  return characterNames.map((name) => {
+    const id = idByName.get(name)
+    if (id === undefined) {
+      throw new Error(`gachaSeed references unknown character name: ${name}`)
+    }
+    return id
+  })
+}
+
+// npx convex run gachas:seedGachas で実行する(先に characters:seedCharacters を
+// 実行しておくこと。characterNamesの解決にCharacter masterが必要なため)。
 // 既存 key と重複する Gacha は再作成しない（再実行してもレコードが増えない）。
+// durationMs指定のガチャは、このmutationで初めてそのkeyを投入した時刻が
+// startAt(=開催開始)になる。
 export const seedGachas = internalMutation({
   args: {},
   handler: async (ctx) => {
@@ -13,8 +35,20 @@ export const seedGachas = internalMutation({
 
     const now = Date.now()
     for (const gacha of toInsert) {
+      const characterIds = gacha.characterNames
+        ? await resolveCharacterIds(ctx, gacha.characterNames)
+        : undefined
+
       await ctx.db.insert('gachas', {
-        ...gacha,
+        key: gacha.key,
+        name: gacha.name,
+        description: gacha.description,
+        rates: gacha.rates,
+        characterIds,
+        isActive: gacha.isActive,
+        sortOrder: gacha.sortOrder,
+        startAt: gacha.durationMs !== undefined ? now : undefined,
+        endAt: gacha.durationMs !== undefined ? now + gacha.durationMs : undefined,
         createdAt: now,
         updatedAt: now,
       })
@@ -40,5 +74,49 @@ export const getActiveGachaRates = query({
 
     if (gacha === null || !gacha.isActive) return null
     return gacha.rates
+  },
+})
+
+export interface GachaBannerInfo {
+  key: string
+  name: string
+  description: string | undefined
+  characterNames: string[]
+  startAt: number | undefined
+  endAt: number | undefined
+}
+
+// 選択式のガチャ一覧(バナー)。終了済み(endAt <= now)のガチャは含めない。
+// 画像を持たないため、対象キャラは名前の一覧で表現する。
+export const listActiveGachas = query({
+  args: {},
+  handler: async (ctx): Promise<GachaBannerInfo[]> => {
+    await requireCurrentUser(ctx)
+    const now = Date.now()
+
+    const gachas = await ctx.db
+      .query('gachas')
+      .withIndex('by_active_sort_order', (q) => q.eq('isActive', true))
+      .collect()
+    const visible = gachas.filter((gacha) => gacha.endAt === undefined || gacha.endAt > now)
+
+    const sortedGachas = [...visible]
+    // oxlint-disable-next-line no-array-sort -- already spread into a fresh array.
+    sortedGachas.sort((a, b) => a.sortOrder - b.sortOrder)
+
+    const allCharacters = await ctx.db.query('characters').collect()
+    const nameById = new Map(allCharacters.map((character) => [character._id, character.name]))
+
+    return sortedGachas.map((gacha) => ({
+      key: gacha.key,
+      name: gacha.name,
+      description: gacha.description,
+      characterNames:
+        gacha.characterIds === undefined
+          ? allCharacters.filter((character) => character.isActive).map((character) => character.name)
+          : gacha.characterIds.map((id) => nameById.get(id)).filter((name): name is string => name !== undefined),
+      startAt: gacha.startAt,
+      endAt: gacha.endAt,
+    }))
   },
 })
