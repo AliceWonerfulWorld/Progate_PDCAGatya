@@ -11,14 +11,17 @@ const userBId = 'users:user-b' as Id<'users'>
 const userA = { _id: userAId } as Doc<'users'>
 
 function createContext({
-  identity = { subject: 'user-a' },
+  identity = { subject: 'user-a', tokenIdentifier: 'https://clerk.example|user-a' },
   currentUser = userA,
+  fallbackUser,
   document,
 }: {
-  identity?: { subject: string } | null
+  identity?: { subject: string; tokenIdentifier: string } | null
   currentUser?: Doc<'users'> | null
+  fallbackUser?: Doc<'users'> | null
   document?: Doc<'goals'> | Doc<'pdcaCycles'> | null
 } = {}): QueryCtx {
+  let lookupCount = 0
   return {
     auth: {
       getUserIdentity: async () => identity,
@@ -26,7 +29,10 @@ function createContext({
     db: {
       query: () => ({
         withIndex: () => ({
-          unique: async () => currentUser,
+          unique: async () => {
+            lookupCount += 1
+            return lookupCount === 1 ? currentUser : fallbackUser ?? currentUser
+          },
         }),
       }),
       get: async () => document ?? null,
@@ -57,6 +63,12 @@ describe('requireCurrentUser', () => {
       () => requireCurrentUser(createContext({ currentUser: null })),
       ERROR_CODES.USER_NOT_FOUND,
     )
+  })
+
+  it('supports legacy users saved with the Clerk subject', async () => {
+    await expect(
+      requireCurrentUser(createContext({ currentUser: null, fallbackUser: userA })),
+    ).resolves.toBe(userA)
   })
 })
 
