@@ -86,20 +86,32 @@ export interface GachaCharacterPreview {
 // 体験できる。この初回ガチャは Inventory へ何も書き込まないため認可不要であり、
 // requireCurrentUser を呼ばない唯一の公開Query。個人情報を含まない
 // Character masterの最小情報のみを返す。
+// 対象は「standardガチャの排出対象」に揃える(convex/gacha.tsのdrawGachaと同じ
+// スコープ)。Progateガチャ限定キャラ(にんじゃわんこ等)がGuestの初回ガチャに
+// 漏れ出さないようにするため。
 export const listActiveForGuestGacha = query({
   args: {},
   handler: async (ctx): Promise<GachaCharacterPreview[]> => {
+    const standardGacha = await ctx.db
+      .query('gachas')
+      .withIndex('by_key', (q) => q.eq('key', 'standard'))
+      .unique()
+
     const characters = await ctx.db.query('characters').collect()
-    return characters
-      .filter((character) => character.isActive)
-      .map((character) => ({
-        _id: character._id,
-        name: character.name,
-        rarity: character.rarity,
-        imagePath: character.imagePath,
-        description: character.description,
-        defaultMessage: character.defaultMessage,
-        weight: character.weight,
-      }))
+    const activeCharacters = characters.filter((character) => character.isActive)
+    const scoped =
+      standardGacha?.characterIds === undefined
+        ? activeCharacters
+        : activeCharacters.filter((character) => standardGacha.characterIds?.includes(character._id))
+
+    return scoped.map((character) => ({
+      _id: character._id,
+      name: character.name,
+      rarity: character.rarity,
+      imagePath: character.imagePath,
+      description: character.description,
+      defaultMessage: character.defaultMessage,
+      weight: character.weight,
+    }))
   },
 })
