@@ -2,7 +2,7 @@ import { ConvexError, v } from 'convex/values'
 import type { Id } from './_generated/dataModel'
 import { mutation, query } from './_generated/server'
 import { requireCurrentUser, requireOwnedCycle, requireOwnedGoal } from './lib/auth'
-import { BASE_PDCA_XP, INPUT_LIMITS } from './lib/constants'
+import { BASE_PDCA_XP, DAILY_MISSION_XP, INPUT_LIMITS } from './lib/constants'
 import { getLocalDateString } from './lib/date'
 import { ERROR_CODES } from './lib/errors'
 import { assertValidPdcaTransition } from './lib/pdca'
@@ -228,6 +228,8 @@ export interface CompletePdcaCycleResult {
   gachaDrawsAdded: number
   availableGachaDraws: number
   totalCycles: number
+  dailyMissionCompleted: boolean
+  dailyMissionXp: number
 }
 
 // Completes a PDCA cycle and grants the one-time base reward
@@ -257,6 +259,8 @@ export const completePdcaCycle = mutation({
         gachaDrawsAdded: 0,
         availableGachaDraws: currentUser.availableGachaDraws,
         totalCycles: currentUser.totalCycles,
+        dailyMissionCompleted: false,
+        dailyMissionXp: 0,
       }
     }
 
@@ -305,8 +309,15 @@ export const completePdcaCycle = mutation({
 
     // 3. Player aggregates: XP (+100), level recalculation, gacha right (+1),
     // streak resolution via the shared resolver (AGENTS.md §30).
+    //
+    // Daily Mission (docs/data-model.md §25 COMPLETE_ONE_PDCA): +DAILY_MISSION_XP
+    // once per local day. currentUser.lastCompletedDate is still the pre-update
+    // value here, so comparing it against `today` tells us whether an earlier
+    // cycle already completed today (T030).
+    const dailyMissionCompleted = currentUser.lastCompletedDate !== today
+    const dailyMissionXp = dailyMissionCompleted ? DAILY_MISSION_XP : 0
     const previousLevel = currentUser.playerLevel
-    const playerXp = currentUser.playerXp + BASE_PDCA_XP
+    const playerXp = currentUser.playerXp + BASE_PDCA_XP + dailyMissionXp
     const newLevel = calculatePlayerLevel(playerXp)
     const availableGachaDraws = currentUser.availableGachaDraws + 1
     const totalCycles = currentUser.totalCycles + 1
@@ -351,6 +362,8 @@ export const completePdcaCycle = mutation({
       gachaDrawsAdded: 1,
       availableGachaDraws,
       totalCycles,
+      dailyMissionCompleted,
+      dailyMissionXp,
     }
   },
 })

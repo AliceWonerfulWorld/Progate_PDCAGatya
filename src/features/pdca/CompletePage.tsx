@@ -1,4 +1,4 @@
-import { Flame, RotateCcw, Sparkles, Star, Ticket } from 'lucide-react'
+import { CheckCircle2, Flame, RotateCcw, Sparkles, Star, Ticket } from 'lucide-react'
 import { Link, Navigate, useLocation } from 'react-router-dom'
 import type { CompletePdcaCycleResult } from '../../../convex/pdca'
 import { SectionHeading } from '../../components/ui/SectionHeading'
@@ -51,6 +51,12 @@ export function CompletePage() {
         <li className="flex items-center gap-3 text-base font-semibold">
           <Ticket aria-hidden="true" className="size-5 text-violet-600" /> ガチャ +{result.gachaDrawsAdded}
         </li>
+        {result.dailyMissionCompleted && result.dailyMissionXp > 0 ? (
+          <li className="flex items-center gap-3 text-base font-semibold text-emerald-700">
+            <CheckCircle2 aria-hidden="true" className="size-5" /> 今日のチャレンジ達成 Player XP +
+            {result.dailyMissionXp}
+          </li>
+        ) : null}
       </ul>
 
       {isRecoveredCompletion ? (

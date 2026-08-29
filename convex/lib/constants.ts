@@ -1,5 +1,8 @@
 export const BASE_PDCA_XP = 100
 
+// docs/data-model.md #25 (Mission Data): DAILY_MISSIONS.COMPLETE_ONE_PDCA.
+export const DAILY_MISSION_XP = 50
+
 export const GACHA_RATES = {
   R: 0.7,
   SR: 0.25,

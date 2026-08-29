@@ -9,6 +9,7 @@ import { GoalCard } from '../goals/GoalCard'
 import { ActiveCycleCard } from '../pdca/ActiveCycleCard'
 import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
 import { AtRiskBanner } from './AtRiskBanner'
+import { DailyMissionCard } from './DailyMissionCard'
 
 function CreateGoalLink() {
   return (
@@ -77,6 +78,7 @@ export function HomePage() {
       </section>
 
       {isClerkConfigured ? <AtRiskBanner /> : null}
+      {isClerkConfigured ? <DailyMissionCard /> : null}
 
       {isClerkConfigured ? <AuthenticatedActiveCycle /> : null}
 
