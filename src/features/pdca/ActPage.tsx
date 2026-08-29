@@ -1,5 +1,6 @@
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, ArrowRightLeft, Minus, Plus } from 'lucide-react'
 import { useState } from 'react'
+import type { ReactNode } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../../../convex/_generated/api'
@@ -13,15 +14,18 @@ import { isClerkConfigured } from '../../app/AppProviders'
 import { LoadFailure } from '../../components/ui/LoadFailure'
 import { SectionHeading } from '../../components/ui/SectionHeading'
 import { useGuestState } from '../../hooks/useGuestState'
+import { choiceButtonClass, PRIMARY_BUTTON_CLASS, SECONDARY_BUTTON_CLASS } from '../../lib/buttonStyles'
 import type { GuestActType, GuestPdcaCycle } from '../../lib/guestStore'
 import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
 
+// 「軽くする」と「増やす」を見た目でも取り違えないよう、アイコンで方向を示す
+// (どちらも同じ灰色ボタンでラベルの読み違いが起きやすかったため)。
 const ACT_TYPES = [
-  { value: 'lighter', label: '少し軽くする' },
-  { value: 'same', label: 'そのまま' },
-  { value: 'heavier', label: '少し増やす' },
-  { value: 'changeApproach', label: 'やり方を変える' },
-] as const satisfies readonly { value: ActType; label: string }[]
+  { value: 'lighter', label: '少し軽くする', icon: <Minus aria-hidden="true" className="size-4" /> },
+  { value: 'same', label: 'そのまま', icon: null },
+  { value: 'heavier', label: '少し増やす', icon: <Plus aria-hidden="true" className="size-4" /> },
+  { value: 'changeApproach', label: 'やり方を変える', icon: <ArrowRightLeft aria-hidden="true" className="size-4" /> },
+] as const satisfies readonly { value: ActType; label: string; icon: ReactNode }[]
 
 function ActBody({
   goalName,
@@ -52,16 +56,15 @@ function ActBody({
       </section>
 
       <div className="space-y-3">
-        {ACT_TYPES.map(({ value, label }) => (
+        {ACT_TYPES.map(({ value, label, icon }) => (
           <button
             aria-pressed={actType === value}
-            className={`min-h-12 w-full border px-4 text-left text-base font-semibold ${
-              actType === value ? 'border-emerald-700 bg-emerald-50 text-emerald-800' : 'border-slate-300 text-slate-700'
-            }`}
+            className={`flex min-h-12 w-full items-center gap-2 px-4 text-left text-base font-semibold ${choiceButtonClass(actType === value, 'emerald')}`}
             key={value}
             onClick={() => setActType(value)}
             type="button"
           >
+            {icon}
             {label}
             {value === recommended ? <span className="ml-2 text-xs font-bold text-emerald-700">おすすめ</span> : null}
           </button>
@@ -92,7 +95,7 @@ function ActBody({
 
       <div className="space-y-3">
         <button
-          className="min-h-12 w-full bg-emerald-700 px-4 text-base font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+          className={`min-h-12 w-full px-4 text-base font-bold text-white ${PRIMARY_BUTTON_CLASS}`}
           disabled={isSubmitting}
           onClick={() => onSubmit(actType, nextPlanCandidate)}
           type="button"
@@ -101,7 +104,7 @@ function ActBody({
         </button>
         {isAdjusting ? null : (
           <button
-            className="min-h-12 w-full border border-slate-300 px-4 text-base font-semibold text-slate-700"
+            className={`min-h-12 w-full px-4 text-base font-semibold ${SECONDARY_BUTTON_CLASS}`}
             onClick={() => setIsAdjusting(true)}
             type="button"
           >
@@ -136,7 +139,7 @@ function SignedInActPage({ cycleId }: { cycleId: string }) {
           {cycle.status === 'checking' ? 'まずCHECKを記録してください。' : 'このPDCAはACTを記録済みです。'}
         </p>
         <Link
-          className="flex min-h-12 items-center justify-center bg-emerald-700 px-4 text-base font-bold text-white"
+          className={`flex min-h-12 items-center justify-center px-4 text-base font-bold text-white ${PRIMARY_BUTTON_CLASS}`}
           to={cycle.status === 'checking' ? `/pdca/check/${cycle._id}` : `/goal/${cycle.goalId}`}
         >
           {cycle.status === 'checking' ? 'CHECKへ戻る' : 'Goalへ戻る'}
@@ -194,7 +197,7 @@ function GuestActPage() {
           {cycle.status === 'checking' ? 'まずCHECKを記録してください。' : 'このPDCAはACTを記録済みです。'}
         </p>
         <Link
-          className="flex min-h-12 items-center justify-center bg-emerald-700 px-4 text-base font-bold text-white"
+          className={`flex min-h-12 items-center justify-center px-4 text-base font-bold text-white ${PRIMARY_BUTTON_CLASS}`}
           to={cycle.status === 'checking' ? '/pdca/check/guest' : '/'}
         >
           {cycle.status === 'checking' ? 'CHECKへ戻る' : 'ホームへ戻る'}

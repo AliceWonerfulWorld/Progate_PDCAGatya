@@ -8,6 +8,7 @@ import { isClerkConfigured } from '../../app/AppProviders'
 import { LoadFailure } from '../../components/ui/LoadFailure'
 import { SectionHeading } from '../../components/ui/SectionHeading'
 import { useGuestState } from '../../hooks/useGuestState'
+import { PRIMARY_BUTTON_CLASS, SECONDARY_BUTTON_CLASS } from '../../lib/buttonStyles'
 import type { GuestDoResult, GuestPdcaCycle } from '../../lib/guestStore'
 import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
 
@@ -55,7 +56,7 @@ function DoBody({
         {isReflecting ? (
           DO_RESULTS.map(({ value, label }) => (
             <button
-              className="min-h-12 w-full border border-slate-300 px-4 text-base font-semibold text-slate-700 disabled:cursor-not-allowed disabled:text-slate-400"
+              className={`min-h-12 w-full px-4 text-base font-semibold ${SECONDARY_BUTTON_CLASS}`}
               disabled={isSubmitting}
               key={value}
               onClick={() => onSubmit(value)}
@@ -66,7 +67,7 @@ function DoBody({
           ))
         ) : (
           <button
-            className="min-h-12 w-full bg-emerald-700 px-4 text-base font-bold text-white"
+            className={`min-h-12 w-full px-4 text-base font-bold text-white ${PRIMARY_BUTTON_CLASS}`}
             onClick={() => setIsReflecting(true)}
             type="button"
           >
@@ -99,7 +100,7 @@ function SignedInDoPage({ cycleId }: { cycleId: string }) {
       <div className="space-y-4">
         <p className="text-sm text-slate-600">このPDCAはDOを記録済みです。</p>
         <Link
-          className="flex min-h-12 items-center justify-center bg-emerald-700 px-4 text-base font-bold text-white"
+          className={`flex min-h-12 items-center justify-center px-4 text-base font-bold text-white ${PRIMARY_BUTTON_CLASS}`}
           to={cycle.status === 'checking' ? `/pdca/check/${cycle._id}` : `/goal/${cycle.goalId}`}
         >
           {cycle.status === 'checking' ? 'CHECKへ進む' : 'Goalへ戻る'}
@@ -142,7 +143,7 @@ function GuestDoPage() {
       <div className="space-y-4">
         <p className="text-sm text-slate-600">このPDCAはDOを記録済みです。</p>
         <Link
-          className="flex min-h-12 items-center justify-center bg-emerald-700 px-4 text-base font-bold text-white"
+          className={`flex min-h-12 items-center justify-center px-4 text-base font-bold text-white ${PRIMARY_BUTTON_CLASS}`}
           to={cycle.status === 'checking' ? '/pdca/check/guest' : '/'}
         >
           {cycle.status === 'checking' ? 'CHECKへ進む' : 'ホームへ戻る'}

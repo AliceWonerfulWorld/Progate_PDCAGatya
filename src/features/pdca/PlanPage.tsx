@@ -1,4 +1,4 @@
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Minus, Pencil, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { useMutation, useQuery } from 'convex/react'
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
@@ -10,6 +10,7 @@ import { isClerkConfigured } from '../../app/AppProviders'
 import { LoadFailure } from '../../components/ui/LoadFailure'
 import { SectionHeading } from '../../components/ui/SectionHeading'
 import { useGuestState } from '../../hooks/useGuestState'
+import { PRIMARY_BUTTON_CLASS, SECONDARY_BUTTON_CLASS } from '../../lib/buttonStyles'
 import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
 
 const GUEST_RESUME_PATHS = { doing: 'do', checking: 'check', acting: 'act' } as const
@@ -73,7 +74,7 @@ function PlanEditor({
 
       <div className="space-y-3">
         <button
-          className="min-h-12 w-full bg-emerald-700 px-4 text-base font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+          className={`min-h-12 w-full px-4 text-base font-bold text-white ${PRIMARY_BUTTON_CLASS}`}
           disabled={isSubmitting}
           onClick={() => onSubmit(text)}
           type="button"
@@ -83,25 +84,25 @@ function PlanEditor({
         {isEditing ? null : (
           <>
             <button
-              className="min-h-12 w-full border border-slate-300 px-4 text-base font-semibold text-slate-700"
+              className={`flex min-h-12 w-full items-center justify-center gap-2 px-4 text-base font-semibold ${SECONDARY_BUTTON_CLASS}`}
               onClick={() => applyAdjustment('lighter')}
               type="button"
             >
-              もっと軽く
+              <Minus aria-hidden="true" className="size-4" /> もっと軽く
             </button>
             <button
-              className="min-h-12 w-full border border-slate-300 px-4 text-base font-semibold text-slate-700"
+              className={`flex min-h-12 w-full items-center justify-center gap-2 px-4 text-base font-semibold ${SECONDARY_BUTTON_CLASS}`}
               onClick={() => applyAdjustment('heavier')}
               type="button"
             >
-              もう少しやる
+              <Plus aria-hidden="true" className="size-4" /> もう少しやる
             </button>
             <button
-              className="min-h-12 w-full border border-slate-300 px-4 text-base font-semibold text-slate-700"
+              className={`flex min-h-12 w-full items-center justify-center gap-2 px-4 text-base font-semibold ${SECONDARY_BUTTON_CLASS}`}
               onClick={() => setIsEditing(true)}
               type="button"
             >
-              自分で変更
+              <Pencil aria-hidden="true" className="size-4" /> 自分で変更
             </button>
           </>
         )}

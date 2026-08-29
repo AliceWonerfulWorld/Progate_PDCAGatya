@@ -9,6 +9,7 @@ import { isClerkConfigured } from '../../app/AppProviders'
 import { LoadFailure } from '../../components/ui/LoadFailure'
 import { SectionHeading } from '../../components/ui/SectionHeading'
 import { useGuestState } from '../../hooks/useGuestState'
+import { choiceButtonClass, PRIMARY_BUTTON_CLASS, SECONDARY_BUTTON_CLASS } from '../../lib/buttonStyles'
 import type { GuestCheckLoad, GuestCheckReason, GuestPdcaCycle } from '../../lib/guestStore'
 import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
 
@@ -98,11 +99,7 @@ function CheckBody({
         {CHECK_LOADS.map(({ value, label }) => (
           <button
             aria-pressed={checkLoad === value}
-            className={`min-h-12 w-full border px-4 text-base font-semibold ${
-              checkLoad === value
-                ? 'border-emerald-700 bg-emerald-50 text-emerald-800'
-                : 'border-slate-300 text-slate-700'
-            }`}
+            className={`min-h-12 w-full px-4 text-base font-semibold ${choiceButtonClass(checkLoad === value, 'emerald')}`}
             disabled={isSubmitting}
             key={value}
             onClick={() => selectLoad(value)}
@@ -121,11 +118,7 @@ function CheckBody({
             {CHECK_REASONS.map(({ value, label }) => (
               <button
                 aria-pressed={checkReason === value}
-                className={`min-h-12 w-full border px-4 text-base font-semibold ${
-                  checkReason === value
-                    ? 'border-sky-600 bg-sky-50 text-sky-800'
-                    : 'border-slate-300 text-slate-700'
-                }`}
+                className={`min-h-12 w-full px-4 text-base font-semibold ${choiceButtonClass(checkReason === value, 'sky')}`}
                 key={value}
                 onClick={() => setCheckReason(checkReason === value ? null : value)}
                 type="button"
@@ -150,7 +143,7 @@ function CheckBody({
         </label>
       ) : (
         <button
-          className="min-h-11 text-sm font-semibold text-slate-600"
+          className={`min-h-11 px-2 text-sm font-semibold text-slate-600 ${SECONDARY_BUTTON_CLASS} border-none`}
           onClick={() => setIsMemoOpen(true)}
           type="button"
         >
@@ -162,7 +155,7 @@ function CheckBody({
 
       {showReason || isMemoOpen ? (
         <button
-          className="min-h-12 w-full bg-emerald-700 px-4 text-base font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+          className={`min-h-12 w-full px-4 text-base font-bold text-white ${PRIMARY_BUTTON_CLASS}`}
           disabled={checkLoad === null || isSubmitting}
           onClick={() => checkLoad !== null && submit(checkLoad, checkReason)}
           type="button"
@@ -196,7 +189,7 @@ function SignedInCheckPage({ cycleId }: { cycleId: string }) {
           {cycle.status === 'doing' ? 'まずDOの結果を記録してください。' : 'このPDCAはCHECKを記録済みです。'}
         </p>
         <Link
-          className="flex min-h-12 items-center justify-center bg-emerald-700 px-4 text-base font-bold text-white"
+          className={`flex min-h-12 items-center justify-center px-4 text-base font-bold text-white ${PRIMARY_BUTTON_CLASS}`}
           to={cycle.status === 'doing' ? `/pdca/do/${cycle._id}` : cycle.status === 'acting' ? `/pdca/act/${cycle._id}` : `/goal/${cycle.goalId}`}
         >
           {cycle.status === 'doing' ? 'DOへ戻る' : cycle.status === 'acting' ? 'ACTへ進む' : 'Goalへ戻る'}
@@ -242,7 +235,7 @@ function GuestCheckPage() {
           {cycle.status === 'doing' ? 'まずDOの結果を記録してください。' : 'このPDCAはCHECKを記録済みです。'}
         </p>
         <Link
-          className="flex min-h-12 items-center justify-center bg-emerald-700 px-4 text-base font-bold text-white"
+          className={`flex min-h-12 items-center justify-center px-4 text-base font-bold text-white ${PRIMARY_BUTTON_CLASS}`}
           to={cycle.status === 'doing' ? '/pdca/do/guest' : cycle.status === 'acting' ? '/pdca/act/guest' : '/'}
         >
           {cycle.status === 'doing' ? 'DOへ戻る' : cycle.status === 'acting' ? 'ACTへ進む' : 'ホームへ戻る'}
