@@ -45,6 +45,7 @@ export const seedGachas = internalMutation({
         description: gacha.description,
         rates: gacha.rates,
         characterIds,
+        imagePath: gacha.imagePath,
         isActive: gacha.isActive,
         sortOrder: gacha.sortOrder,
         startAt: gacha.durationMs !== undefined ? now : undefined,
@@ -82,12 +83,13 @@ export interface GachaBannerInfo {
   name: string
   description: string | undefined
   characterNames: string[]
+  imagePath: string | undefined
   startAt: number | undefined
   endAt: number | undefined
 }
 
 // 選択式のガチャ一覧(バナー)。終了済み(endAt <= now)のガチャは含めない。
-// 画像を持たないため、対象キャラは名前の一覧で表現する。
+// imagePath未指定のガチャは、対象キャラの名前一覧で代替表現する(UI側)。
 export const listActiveGachas = query({
   args: {},
   handler: async (ctx): Promise<GachaBannerInfo[]> => {
@@ -115,6 +117,7 @@ export const listActiveGachas = query({
         gacha.characterIds === undefined
           ? allCharacters.filter((character) => character.isActive).map((character) => character.name)
           : gacha.characterIds.map((id) => nameById.get(id)).filter((name): name is string => name !== undefined),
+      imagePath: gacha.imagePath,
       startAt: gacha.startAt,
       endAt: gacha.endAt,
     }))

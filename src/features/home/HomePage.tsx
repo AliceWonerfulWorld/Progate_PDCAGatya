@@ -10,6 +10,8 @@ import { GoalCard } from '../goals/GoalCard'
 import { GuestGoalSection } from '../goals/GuestGoalSection'
 import { ActiveCycleCard } from '../pdca/ActiveCycleCard'
 import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
+import { RiveAnimation } from '../../components/ui/RiveAnimation'
+import { getRiveAsset } from '../../lib/riveAssets'
 import { AtRiskBanner } from './AtRiskBanner'
 import { DailyMissionCard } from './DailyMissionCard'
 import { GachaTicketCard } from './GachaTicketCard'
@@ -90,13 +92,35 @@ function TodaySummary() {
   )
 }
 
+// Riveの実験を兼ねた飾り。ログイン状態やコレクションに関係なく常に出す。
+// タップするとhappyアニメーションが再生される。
+function HomeMascot() {
+  const asset = getRiveAsset('にんじゃわんこ')
+  if (!asset) return null
+
+  return (
+    <RiveAnimation
+      alt="にんじゃわんこ"
+      artboard={asset.artboard}
+      className="size-16 shrink-0"
+      fallbackSrc={asset.fallbackSrc}
+      src={asset.src}
+      stateMachine={asset.stateMachine}
+      tapTrigger={asset.tapTrigger}
+    />
+  )
+}
+
 export function HomePage() {
   return (
     <div className="space-y-8">
-      <section className="space-y-3">
-        <p className="text-sm font-medium text-emerald-700">今日の一歩</p>
-        <SectionHeading>今日も1周だけ回そう。</SectionHeading>
-        {isClerkConfigured ? <TodaySummary /> : null}
+      <section className="flex items-start justify-between gap-3">
+        <div className="space-y-3">
+          <p className="text-sm font-medium text-emerald-700">今日の一歩</p>
+          <SectionHeading>今日も1周だけ回そう。</SectionHeading>
+          {isClerkConfigured ? <TodaySummary /> : null}
+        </div>
+        <HomeMascot />
       </section>
 
       {/* ui-spec #6.2: 進行中PDCA(1) → ストリーク危機(2) → 今日のミッション(3) の順に出す。 */}

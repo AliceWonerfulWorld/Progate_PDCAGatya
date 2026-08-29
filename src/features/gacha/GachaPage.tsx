@@ -119,8 +119,35 @@ function GachaResultView({
   )
 }
 
-// 画像を持たないガチャバナー用に、対象キャラを名前の一覧で見せる。
-// ガチャの下に残り時間(常設ガチャは「常時開催」)を表示する。
+// オリパ系アプリ(例: DOPA)のように、ガチャ一覧を画像主体のバナーカードで見せる。
+// imagePathが無いガチャ(恒常ガチャ)はTicketアイコンのプレースホルダーにする。
+// カードの下に対象キャラ(名前の一覧)と残り時間(常設ガチャは「常時開催」)を表示する。
+function GachaBannerCard({ gacha, onSelect }: { gacha: GachaBannerInfo; onSelect: (gacha: GachaBannerInfo) => void }) {
+  return (
+    <button
+      className="w-full overflow-hidden border border-slate-200 bg-white text-left transition-transform duration-150 active:scale-[0.98]"
+      onClick={() => onSelect(gacha)}
+      type="button"
+    >
+      <div className="flex h-32 items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200">
+        {gacha.imagePath ? (
+          <img alt={gacha.name} className="h-20 w-20 object-contain" src={gacha.imagePath} />
+        ) : (
+          <Ticket aria-hidden="true" className="size-12 text-slate-400" />
+        )}
+      </div>
+      <div className="space-y-1.5 p-4">
+        <p className="text-base font-bold">{gacha.name}</p>
+        {gacha.description ? <p className="text-sm text-slate-600">{gacha.description}</p> : null}
+        <p className="truncate text-xs text-slate-500">{gacha.characterNames.join('、')}</p>
+        <p className="flex items-center gap-1 text-xs font-semibold text-emerald-700">
+          <Clock aria-hidden="true" className="size-3.5" /> {formatRemainingTime(gacha.endAt)}
+        </p>
+      </div>
+    </button>
+  )
+}
+
 function GachaSelector({
   gachas,
   onSelect,
@@ -129,23 +156,11 @@ function GachaSelector({
   onSelect: (gacha: GachaBannerInfo) => void
 }) {
   return (
-    <div className="space-y-8 text-center">
+    <div className="space-y-6">
       <SectionHeading>GACHA</SectionHeading>
-      <div className="space-y-3 text-left">
+      <div className="space-y-4">
         {gachas.map((gacha) => (
-          <button
-            className="w-full space-y-2 border border-slate-300 p-4 text-left"
-            key={gacha.key}
-            onClick={() => onSelect(gacha)}
-            type="button"
-          >
-            <p className="text-base font-bold">{gacha.name}</p>
-            {gacha.description ? <p className="text-sm text-slate-600">{gacha.description}</p> : null}
-            <p className="text-xs text-slate-500">{gacha.characterNames.join('、')}</p>
-            <p className="flex items-center gap-1 text-xs font-semibold text-emerald-700">
-              <Clock aria-hidden="true" className="size-3.5" /> {formatRemainingTime(gacha.endAt)}
-            </p>
-          </button>
+          <GachaBannerCard gacha={gacha} key={gacha.key} onSelect={onSelect} />
         ))}
       </div>
     </div>

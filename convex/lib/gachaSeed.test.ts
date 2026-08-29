@@ -3,8 +3,8 @@ import { CHARACTER_SEED_DATA } from './characterSeed'
 import { GACHA_SEED_DATA, selectUnseededGachas } from './gachaSeed'
 
 describe('GACHA_SEED_DATA', () => {
-  it('contains the standard, Progate, and excavation gachas', () => {
-    expect(GACHA_SEED_DATA.map((gacha) => gacha.key)).toEqual(['standard', 'progate', 'excavation'])
+  it('contains the standard and Progate gachas', () => {
+    expect(GACHA_SEED_DATA.map((gacha) => gacha.key)).toEqual(['standard', 'progate'])
   })
 
   it('has unique keys', () => {
@@ -22,11 +22,12 @@ describe('GACHA_SEED_DATA', () => {
     expect(GACHA_SEED_DATA.every((gacha) => gacha.isActive)).toBe(true)
   })
 
-  it('only the standing gacha has no time limit; the other two share the full roster', () => {
-    const [standard, progate, excavation] = GACHA_SEED_DATA
+  it('only the standing gacha has no time limit; Progate is time-limited with a banner image', () => {
+    const [standard, progate] = GACHA_SEED_DATA
     expect(standard.durationMs).toBeUndefined()
+    expect(standard.imagePath).toBeUndefined()
     expect(progate.durationMs).toBeGreaterThan(0)
-    expect(excavation.durationMs).toBeGreaterThan(0)
+    expect(progate.imagePath).toBe('/gacha/progate.svg')
   })
 
   it('every characterNames entry references a real character name', () => {
@@ -36,6 +37,15 @@ describe('GACHA_SEED_DATA', () => {
         expect(realNames.has(name)).toBe(true)
       }
     }
+  })
+
+  it('keeps the Progateコラボキャラ exclusive to the Progate gacha', () => {
+    const [standard, progate] = GACHA_SEED_DATA
+    expect(standard.characterNames).not.toContain('にんじゃわんこ')
+    expect(progate.characterNames).toContain('にんじゃわんこ')
+    // standardはimplicit(全active)ではなく、明示リストで漏れを防ぐ。
+    expect(standard.characterNames).toHaveLength(CHARACTER_SEED_DATA.length - 1)
+    expect(progate.characterNames).toHaveLength(CHARACTER_SEED_DATA.length)
   })
 })
 

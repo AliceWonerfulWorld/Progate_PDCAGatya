@@ -3,6 +3,7 @@
 import { convexTest } from 'convex-test'
 import { describe, expect, it } from 'vitest'
 import { api, internal } from './_generated/api'
+import { CHARACTER_SEED_DATA } from './lib/characterSeed'
 import { GACHA_SEED_DATA } from './lib/gachaSeed'
 import schema from './schema'
 
@@ -39,12 +40,14 @@ describe('seedGachas', () => {
     expect(gachas).toHaveLength(GACHA_SEED_DATA.length)
 
     const progate = gachas.find((gacha) => gacha.key === 'progate')
-    expect(progate?.characterIds).toHaveLength(15)
+    expect(progate?.characterIds).toHaveLength(CHARACTER_SEED_DATA.length)
+    expect(progate?.imagePath).toBe('/gacha/progate.svg')
     expect(progate?.startAt).toEqual(expect.any(Number))
     expect(progate?.endAt).toEqual(expect.any(Number))
 
     const standard = gachas.find((gacha) => gacha.key === 'standard')
-    expect(standard?.characterIds).toBeUndefined()
+    // にんじゃわんこ(Progateコラボ)を除いた明示リストになっている。
+    expect(standard?.characterIds).toHaveLength(CHARACTER_SEED_DATA.length - 1)
     expect(standard?.startAt).toBeUndefined()
     expect(standard?.endAt).toBeUndefined()
   })
@@ -150,6 +153,7 @@ describe('listActiveGachas', () => {
         name: 'Progateガチャ',
         rates: { R: 1, SR: 0, SSR: 0 },
         characterIds: [charA],
+        imagePath: '/gacha/progate.svg',
         isActive: true,
         sortOrder: 2,
         startAt: now - 1000,
@@ -173,7 +177,9 @@ describe('listActiveGachas', () => {
     const result = await t.withIdentity({ subject: 'user_a' }).query(api.gachas.listActiveGachas, {})
 
     expect(result.map((gacha) => gacha.key)).toEqual(['standard', 'progate'])
+    expect(result[0].imagePath).toBeUndefined()
     expect(result[1].characterNames).toEqual(['キャラA'])
+    expect(result[1].imagePath).toBe('/gacha/progate.svg')
     expect(result[1].endAt).toBeGreaterThan(now)
   })
 })

@@ -1,6 +1,13 @@
 import { CHARACTER_SEED_DATA } from './characterSeed'
 import type { GachaRates } from './gacha'
 
+// にんじゃわんこ(Progateコラボ)はProgateガチャ限定。恒常ガチャの対象キャラは
+// 「未指定=全active Character」ではなく明示リストにして、isActive=trueのまま
+// でも恒常ガチャへ自動的に混ざらないようにする。
+const PROGATE_EXCLUSIVE_CHARACTER_NAME = 'にんじゃわんこ'
+const BASE_CHARACTER_NAMES = CHARACTER_SEED_DATA.filter(
+  (character) => character.name !== PROGATE_EXCLUSIVE_CHARACTER_NAME,
+).map((character) => character.name)
 const ALL_CHARACTER_NAMES = CHARACTER_SEED_DATA.map((character) => character.name)
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000
@@ -16,6 +23,8 @@ export interface GachaSeedEntry {
   // 未指定 = 常設。指定時は「seedGachasで最初に投入された時刻」から
   // durationMsだけ有効になる(=施策コード投入のタイミングが開始時刻になる)。
   durationMs?: number
+  // ガチャ選択画面のサムネイル画像(未指定可)。public/gacha/配下のパスを想定。
+  imagePath?: string
   sortOrder: number
   isActive: boolean
 }
@@ -29,27 +38,19 @@ export const GACHA_SEED_DATA: readonly GachaSeedEntry[] = [
     name: '恒常ガチャ',
     description: 'いつでも回せる通常のガチャ。',
     rates: { R: 0.7, SR: 0.25, SSR: 0.05 },
+    characterNames: BASE_CHARACTER_NAMES,
     sortOrder: 1,
     isActive: true,
   },
   {
     key: 'progate',
     name: 'Progateガチャ',
-    description: 'Progateコラボの期間限定ガチャ。',
+    description: 'Progateコラボの期間限定ガチャ。「にんじゃわんこ」も登場。',
     rates: { R: 0.7, SR: 0.25, SSR: 0.05 },
     characterNames: ALL_CHARACTER_NAMES,
     durationMs: SEVEN_DAYS_MS,
+    imagePath: '/gacha/progate.svg',
     sortOrder: 2,
-    isActive: true,
-  },
-  {
-    key: 'excavation',
-    name: '発掘ガチャ',
-    description: '積み重ねの中から掘り出す、期間限定ガチャ。',
-    rates: { R: 0.7, SR: 0.25, SSR: 0.05 },
-    characterNames: ALL_CHARACTER_NAMES,
-    durationMs: SEVEN_DAYS_MS,
-    sortOrder: 3,
     isActive: true,
   },
 ] as const
