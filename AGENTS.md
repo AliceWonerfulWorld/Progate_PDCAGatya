@@ -1258,8 +1258,12 @@ OK   duration-(--duration-fast) → var() で出力され reduced-motion が効�
 
 ```text
 NG   transition-colors
+NG   transition                 (素の transition も既定値にフォールバックする)
 OK   transition-colors duration-(--duration-fast) ease-standard
+OK   transition duration-(--duration-fast) ease-standard
 ```
+
+`transition-none` / `transition-discrete` は時間を伴わないため対象外。
 
 `prefers-reduced-motion` は duration トークンを 0 に差し替えることで
 **トークン層だけで**全画面に効く設計になっている。

@@ -20,8 +20,14 @@ import { join, relative, extname } from 'node:path'
 // (コメント中に旧クラス名や oklch 値が出てくるため)
 const EXCLUDED = new Set(['src/index.css'])
 
-const PALETTES =
-  'emerald|amber|violet|slate|stone|rose|sky|red|green|blue|indigo|teal|gray|zinc|neutral|orange|yellow|fuchsia|pink|cyan|lime'
+// Tailwind v4 が持つ全パレット名。1つでも漏らすとその色だけ検査をすり抜けるため、
+// 手で列挙せず `Object.keys(require('tailwindcss/colors'))` と対応させている。
+const PALETTES = [
+  'slate', 'gray', 'zinc', 'neutral', 'stone',
+  'mauve', 'olive', 'mist', 'taupe',
+  'red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal',
+  'cyan', 'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose',
+].join('|')
 const PREFIXES =
   'bg|text|border|ring|outline|fill|stroke|from|to|via|divide|placeholder|caret|accent|decoration|shadow'
 
@@ -43,7 +49,9 @@ const RULES = [
     re: new RegExp(`\\b(${PREFIXES})-(${PALETTES})-(\\d{2,3})\\b`, 'g'),
     message(m) {
       const [full, , palette] = m
-      const hint = TOKEN_HINT[palette] ?? 'src/index.css の @theme を参照'
+      const hint =
+        TOKEN_HINT[palette] ??
+        'この色に対応する役割トークンがありません。src/index.css の @theme に役割ベースの名前で追加してください'
       return `${full} は直書きのパレット色です。トークンを使ってください → ${hint}`
     },
   },
@@ -57,8 +65,12 @@ const RULES = [
   },
 ]
 
-/** transition-* があるのに duration トークンが無い行を検出する */
-const TRANSITION_RE = /\btransition-(colors|transform|all|opacity|shadow)\b/
+/**
+ * transition があるのに duration トークンが無い行を検出する。
+ * 素の `transition` (Tailwind の既定プロパティ集合) も対象に含める。
+ * `transition-none` と `transition-discrete` は時間を伴わないので除外する。
+ */
+const TRANSITION_RE = /\btransition(?!-(?:none|discrete|behavior)\b)(?:-[a-z]+)?\b/
 const HAS_DURATION_TOKEN_RE = /duration-\(--duration-/
 
 function checkContent(content, displayPath) {
