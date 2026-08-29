@@ -27,6 +27,7 @@ function AuthenticatedActPage({ cycleId }: { cycleId: string }) {
     isReady ? { cycleId: cycleId as Id<'pdcaCycles'> } : 'skip',
   )
   const submitAct = useMutation(api.pdca.submitAct)
+  const completePdcaCycle = useMutation(api.pdca.completePdcaCycle)
   const [actType, setActType] = useState<ActType | null>(null)
   const [nextPlanCandidate, setNextPlanCandidate] = useState<string | null>(null)
   const [isAdjusting, setIsAdjusting] = useState(false)
@@ -71,8 +72,8 @@ function AuthenticatedActPage({ cycleId }: { cycleId: string }) {
         actType: selectedActType,
         nextPlanCandidate: currentCandidate.trim() || undefined,
       })
-      // TODO: PDCA Complete画面は T011 / T012 で実装するため、一旦 Goal詳細へ戻す。
-      navigate(`/goal/${cycle.goalId}`)
+      const result = await completePdcaCycle({ cycleId: cycle._id })
+      navigate(`/pdca/complete/${cycle._id}`, { state: { result, goalId: cycle.goalId } })
     } catch {
       setError('ACTを保存できませんでした。もう一度試してください。')
       setIsSubmitting(false)
