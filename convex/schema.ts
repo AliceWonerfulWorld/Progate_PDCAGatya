@@ -112,8 +112,13 @@ export default defineSchema({
     name: v.string(),
     description: v.optional(v.string()),
     rates: v.object({ R: v.number(), SR: v.number(), SSR: v.number() }),
+    // 未指定 = 全active Characterが対象(恒常ガチャ相当)。
+    characterIds: v.optional(v.array(v.id('characters'))),
     isActive: v.boolean(),
     sortOrder: v.number(),
+    // 期間限定ガチャの開始/終了時刻。両方未指定なら常設(恒常ガチャ)として扱う。
+    startAt: v.optional(v.number()),
+    endAt: v.optional(v.number()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -155,6 +160,8 @@ export default defineSchema({
     wasDuplicate: v.boolean(),
     fragmentReward: v.number(),
     gachaType,
+    // どのgachas.keyから引いたか。gachasテーブル導入前の既存行には無いため任意。
+    gachaKey: v.optional(v.string()),
     drawSequence: v.number(),
     drawnAt: v.number(),
   })
