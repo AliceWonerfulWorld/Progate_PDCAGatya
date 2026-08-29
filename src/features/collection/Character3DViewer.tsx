@@ -18,8 +18,10 @@ interface Character3DViewerProps {
 }
 
 // backgroundSrc が無い / 読めないときの下地。SSR らしい淡いステージ風グラデーション。
+// 色はデザイントークン経由 (AGENTS.md §55.1)。amber-50 は SSR の面色、
+// slate-200 は淡い境界色に相当するため、それぞれ役割トークンへ対応させている。
 const FRAME_CLASS =
-  'relative mx-auto aspect-[4/5] w-60 overflow-hidden rounded-lg bg-gradient-to-b from-amber-50 via-white to-slate-200'
+  'relative mx-auto aspect-[4/5] w-60 overflow-hidden rounded-lg bg-gradient-to-b from-rarity-ssr-bg via-surface to-border-subtle'
 
 export default function Character3DViewer({
   modelPath,

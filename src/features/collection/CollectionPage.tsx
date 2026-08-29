@@ -37,13 +37,13 @@ function CollectionFilterPanel({
   onSearchChange: (value: string) => void
 }) {
   return (
-    <div className="space-y-4 border border-slate-200 bg-slate-50 p-4">
+    <div className="space-y-4 border border-border-subtle bg-surface-subtle p-4">
       <label className="block space-y-1.5" htmlFor="collection-search">
-        <span className="text-xs font-semibold text-slate-500">名前で検索</span>
+        <span className="text-xs font-semibold text-text-subtle">名前で検索</span>
         <span className="relative block">
-          <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+          <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-text-disabled" />
           <input
-            className="min-h-11 w-full border border-slate-300 bg-white pl-9 pr-3 text-sm outline-none focus:border-emerald-700"
+            className="min-h-11 w-full border border-border bg-surface pl-9 pr-3 text-sm outline-none focus:border-primary"
             id="collection-search"
             onChange={(event) => onSearchChange(event.target.value)}
             placeholder="キャラクター名"
@@ -53,12 +53,12 @@ function CollectionFilterPanel({
       </label>
 
       <div className="space-y-1.5">
-        <p className="text-xs font-semibold text-slate-500">レアリティ</p>
+        <p className="text-xs font-semibold text-text-subtle">レアリティ</p>
         <div className="flex flex-wrap gap-2">
           {RARITY_FILTERS.map((value) => (
             <button
               aria-pressed={rarityFilter === value}
-              className={`min-h-9 px-3 text-sm font-semibold ${choiceButtonClass(rarityFilter === value, 'emerald')}`}
+              className={`min-h-9 px-3 text-sm font-semibold ${choiceButtonClass(rarityFilter === value, 'primary')}`}
               key={value}
               onClick={() => onRarityChange(value)}
               type="button"
@@ -71,11 +71,11 @@ function CollectionFilterPanel({
 
       {eventOptions.length > 0 ? (
         <div className="space-y-1.5">
-          <p className="text-xs font-semibold text-slate-500">イベント</p>
+          <p className="text-xs font-semibold text-text-subtle">イベント</p>
           <div className="flex flex-wrap gap-2">
             <button
               aria-pressed={eventFilter === EVENT_FILTER_ALL}
-              className={`min-h-9 px-3 text-sm font-semibold ${choiceButtonClass(eventFilter === EVENT_FILTER_ALL, 'sky')}`}
+              className={`min-h-9 px-3 text-sm font-semibold ${choiceButtonClass(eventFilter === EVENT_FILTER_ALL, 'info')}`}
               onClick={() => onEventChange(EVENT_FILTER_ALL)}
               type="button"
             >
@@ -84,7 +84,7 @@ function CollectionFilterPanel({
             {eventOptions.map((value) => (
               <button
                 aria-pressed={eventFilter === value}
-                className={`min-h-9 px-3 text-sm font-semibold ${choiceButtonClass(eventFilter === value, 'sky')}`}
+                className={`min-h-9 px-3 text-sm font-semibold ${choiceButtonClass(eventFilter === value, 'info')}`}
                 key={value}
                 onClick={() => onEventChange(value)}
                 type="button"
@@ -134,7 +134,7 @@ function AuthenticatedCollection() {
         <p className="text-2xl font-bold">
           {ownedCount} / {totalCount}
         </p>
-        <p className="text-sm font-semibold text-slate-500">{percent}%</p>
+        <p className="text-sm font-semibold text-text-subtle">{percent}%</p>
       </div>
 
       {ownedCount === 0 ? (
@@ -151,7 +151,7 @@ function AuthenticatedCollection() {
           <SlidersHorizontal aria-hidden="true" className="size-4" />
           絞り込み
           {activeFilterCount > 0 ? (
-            <span className="grid size-5 place-items-center rounded-full bg-emerald-700 text-xs font-bold text-white">
+            <span className="grid size-5 place-items-center rounded-full bg-primary text-xs font-bold text-white">
               {activeFilterCount}
             </span>
           ) : null}
@@ -192,11 +192,11 @@ function AuthenticatedCollection() {
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {filtered.map((entry) => (
             <Link
-              className="space-y-1 border border-slate-200 p-2 text-center"
+              className="space-y-1 border border-border-subtle p-2 text-center"
               key={entry.character._id}
               to={`/collection/${entry.character._id}`}
             >
-              <div className="relative flex aspect-square items-center justify-center bg-slate-100 text-2xl">
+              <div className="relative flex aspect-square items-center justify-center bg-surface-muted text-2xl">
                 {entry.owned ? (
                   <img
                     alt={entry.character.name}
@@ -204,19 +204,19 @@ function AuthenticatedCollection() {
                     src={entry.character.imagePath}
                   />
                 ) : (
-                  <div className="size-full bg-slate-300" />
+                  <div className="size-full bg-border" />
                 )}
                 {entry.isPartner ? (
-                  <Star aria-hidden="true" className="absolute right-1 top-1 size-4 fill-amber-400 text-amber-500" />
+                  <Star aria-hidden="true" className="absolute right-1 top-1 size-4 fill-rarity-ssr-border text-rarity-ssr-icon" />
                 ) : null}
                 {entry.eventNames.length > 0 ? (
-                  <span className="absolute left-1 top-1 bg-sky-600 px-1 text-[9px] font-bold text-white">
+                  <span className="absolute left-1 top-1 bg-choice-info px-1 text-[9px] font-bold text-white">
                     限定
                   </span>
                 ) : null}
               </div>
               <p className="truncate text-xs font-bold">{entry.owned ? entry.character.name : '???'}</p>
-              <p className="text-[10px] font-semibold text-slate-500">{entry.character.rarity}</p>
+              <p className="text-[10px] font-semibold text-text-subtle">{entry.character.rarity}</p>
             </Link>
           ))}
         </div>
@@ -232,7 +232,7 @@ export function CollectionPage() {
       {isClerkConfigured ? (
         <AuthenticatedCollection />
       ) : (
-        <p className="text-sm leading-6 text-slate-600">PDCAを1周すると、ここに仲間が増えていきます。</p>
+        <p className="text-sm leading-6 text-text-muted">PDCAを1周すると、ここに仲間が増えていきます。</p>
       )}
     </div>
   )

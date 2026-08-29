@@ -32,17 +32,17 @@ function SummaryStats({
   summary: { currentStreak: number; todayCycles: number; weekCycles: number; totalCycles: number }
 }) {
   const items = [
-    { icon: <Flame aria-hidden="true" className="size-4 text-rose-500" />, label: 'Streak', value: `${summary.currentStreak}日` },
-    { icon: <RotateCcw aria-hidden="true" className="size-4 text-sky-600" />, label: '今日', value: `${summary.todayCycles}周` },
-    { icon: <RotateCcw aria-hidden="true" className="size-4 text-sky-600" />, label: '今週', value: `${summary.weekCycles}周` },
-    { icon: <RotateCcw aria-hidden="true" className="size-4 text-sky-600" />, label: '累計', value: `${summary.totalCycles}周` },
+    { icon: <Flame aria-hidden="true" className="size-4 text-attention-subtle" />, label: 'Streak', value: `${summary.currentStreak}日` },
+    { icon: <RotateCcw aria-hidden="true" className="size-4 text-choice-info" />, label: '今日', value: `${summary.todayCycles}周` },
+    { icon: <RotateCcw aria-hidden="true" className="size-4 text-choice-info" />, label: '今週', value: `${summary.weekCycles}周` },
+    { icon: <RotateCcw aria-hidden="true" className="size-4 text-choice-info" />, label: '累計', value: `${summary.totalCycles}周` },
   ]
 
   return (
-    <div className="grid grid-cols-2 gap-x-3 gap-y-4 border-y border-slate-200 py-4 text-center sm:grid-cols-4">
+    <div className="grid grid-cols-2 gap-x-3 gap-y-4 border-y border-border-subtle py-4 text-center sm:grid-cols-4">
       {items.map((item) => (
         <div className="space-y-1" key={item.label}>
-          <p className="flex items-center justify-center gap-1 text-xs text-slate-500">
+          <p className="flex items-center justify-center gap-1 text-xs text-text-subtle">
             {item.icon} {item.label}
           </p>
           <p className="text-lg font-bold">{item.value}</p>
@@ -66,7 +66,7 @@ function GoalFilterTabs({
       <button
         aria-pressed={selectedGoalId === null}
         className={`min-h-9 shrink-0 whitespace-nowrap px-3 text-sm font-semibold ${
-          selectedGoalId === null ? 'bg-emerald-700 text-white' : 'border border-slate-300 text-slate-700'
+          selectedGoalId === null ? 'bg-primary text-white' : 'border border-border text-text-body'
         }`}
         onClick={() => onSelect(null)}
         type="button"
@@ -77,7 +77,7 @@ function GoalFilterTabs({
         <button
           aria-pressed={selectedGoalId === goal._id}
           className={`min-h-9 shrink-0 whitespace-nowrap px-3 text-sm font-semibold ${
-            selectedGoalId === goal._id ? 'bg-emerald-700 text-white' : 'border border-slate-300 text-slate-700'
+            selectedGoalId === goal._id ? 'bg-primary text-white' : 'border border-border text-text-body'
           }`}
           key={goal._id}
           onClick={() => onSelect(goal._id)}
@@ -100,25 +100,25 @@ function HistoryCard({
   timezone: string
 }) {
   return (
-    <li className="space-y-2 border-b border-slate-200 py-4">
-      <p className="text-sm font-bold text-emerald-700">{goalName ?? '(削除されたGoal)'}</p>
+    <li className="space-y-2 border-b border-border-subtle py-4">
+      <p className="text-sm font-bold text-primary">{goalName ?? '(削除されたGoal)'}</p>
       <div className="space-y-1 text-sm">
-        <p><span className="font-semibold text-slate-500">PLAN</span> {cycle.planText}</p>
+        <p><span className="font-semibold text-text-subtle">PLAN</span> {cycle.planText}</p>
         {cycle.doResult ? (
-          <p><span className="font-semibold text-slate-500">DO</span> {DO_RESULT_LABELS[cycle.doResult as DoResult]}</p>
+          <p><span className="font-semibold text-text-subtle">DO</span> {DO_RESULT_LABELS[cycle.doResult as DoResult]}</p>
         ) : null}
         {cycle.checkLoad ? (
-          <p><span className="font-semibold text-slate-500">CHECK</span> {CHECK_LOAD_LABELS[cycle.checkLoad as CheckLoad]}</p>
+          <p><span className="font-semibold text-text-subtle">CHECK</span> {CHECK_LOAD_LABELS[cycle.checkLoad as CheckLoad]}</p>
         ) : null}
         {cycle.actType ? (
           <p>
-            <span className="font-semibold text-slate-500">ACT</span> {ACT_TYPE_LABELS[cycle.actType as ActType]}
+            <span className="font-semibold text-text-subtle">ACT</span> {ACT_TYPE_LABELS[cycle.actType as ActType]}
             {cycle.nextPlanCandidate ? `（次回候補: ${cycle.nextPlanCandidate}）` : ''}
           </p>
         ) : null}
       </div>
       {cycle.completedAt !== undefined ? (
-        <p className="text-xs text-slate-400">{formatCompletedAt(cycle.completedAt, timezone)}</p>
+        <p className="text-xs text-text-disabled">{formatCompletedAt(cycle.completedAt, timezone)}</p>
       ) : null}
     </li>
   )
@@ -158,7 +158,7 @@ function AuthenticatedHistory() {
       ) : null}
       {cycles.length === 0 ? (
         <EmptyState
-          action={<Link className="inline-flex min-h-11 items-center justify-center bg-emerald-700 px-4 text-sm font-bold text-white" to="/">PDCAを回す</Link>}
+          action={<Link className="inline-flex min-h-11 items-center justify-center bg-primary px-4 text-sm font-bold text-white" to="/">PDCAを回す</Link>}
           description="最初の一周から始めよう。"
           title="まだPDCA履歴がありません。"
         />
@@ -177,11 +177,11 @@ export function HistoryPage() {
   return (
     <div className="space-y-6">
       <SectionHeading>履歴</SectionHeading>
-      <p className="text-sm leading-6 text-slate-600">回してきたPDCAを、ここで振り返れます。</p>
+      <p className="text-sm leading-6 text-text-muted">回してきたPDCAを、ここで振り返れます。</p>
       {isClerkConfigured ? (
         <AuthenticatedHistory />
       ) : (
-        <p className="text-sm text-slate-600">ログイン設定の完了後に履歴を確認できます。</p>
+        <p className="text-sm text-text-muted">ログイン設定の完了後に履歴を確認できます。</p>
       )}
     </div>
   )

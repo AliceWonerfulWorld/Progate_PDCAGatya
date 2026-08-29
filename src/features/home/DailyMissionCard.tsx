@@ -13,17 +13,17 @@ export function DailyMissionCard() {
   return (
     <div
       className={`flex items-center gap-3 border px-4 py-3 ${
-        mission.completed ? 'border-emerald-300 bg-emerald-50' : 'border-slate-200'
+        mission.completed ? 'border-primary-border bg-primary-subtle' : 'border-border-subtle'
       }`}
     >
       {mission.completed ? (
-        <CheckCircle2 aria-hidden="true" className="size-5 shrink-0 text-emerald-700" />
+        <CheckCircle2 aria-hidden="true" className="size-5 shrink-0 text-primary" />
       ) : (
-        <Circle aria-hidden="true" className="size-5 shrink-0 text-slate-400" />
+        <Circle aria-hidden="true" className="size-5 shrink-0 text-text-disabled" />
       )}
       <div className="min-w-0">
-        <p className="text-xs font-medium text-slate-500">今日のチャレンジ</p>
-        <p className={`text-sm font-bold ${mission.completed ? 'text-emerald-800' : 'text-slate-700'}`}>
+        <p className="text-xs font-medium text-text-subtle">今日のチャレンジ</p>
+        <p className={`text-sm font-bold ${mission.completed ? 'text-primary-strong' : 'text-text-body'}`}>
           PDCAを1周する {mission.completed ? '達成！' : `(+${mission.rewardXp} XP)`}
         </p>
       </div>

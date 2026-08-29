@@ -23,30 +23,30 @@ export function AtRiskBanner() {
   const primaryGoal = goals?.[0]
 
   return (
-    <div className="space-y-3 border border-rose-300 bg-rose-50 p-4">
-      <p className="text-sm font-bold text-rose-800">⚠️ ストリークが危機です</p>
-      <p className="text-sm leading-6 text-rose-700">
+    <div className="space-y-3 border border-attention-border bg-attention-bg p-4">
+      <p className="text-sm font-bold text-attention-text">⚠️ ストリークが危機です</p>
+      <p className="text-sm leading-6 text-attention-body">
         昨日はPDCAを回せませんでした。でも、まだ戻せます。
       </p>
       {streakStatus.recoveryAvailable ? (
         <div className="flex gap-3">
           {primaryGoal ? (
             <Link
-              className="flex min-h-11 flex-1 items-center justify-center bg-rose-600 px-4 text-sm font-bold text-white"
+              className="flex min-h-11 flex-1 items-center justify-center bg-attention px-4 text-sm font-bold text-white"
               to={`/pdca/plan/${primaryGoal._id}?recovery=1`}
             >
               リカバリーする
             </Link>
           ) : (
             <a
-              className="flex min-h-11 flex-1 items-center justify-center bg-rose-600 px-4 text-sm font-bold text-white"
+              className="flex min-h-11 flex-1 items-center justify-center bg-attention px-4 text-sm font-bold text-white"
               href="#home-goal-heading"
             >
               リカバリーする
             </a>
           )}
           <button
-            className="flex min-h-11 flex-1 items-center justify-center border border-rose-300 px-4 text-sm font-semibold text-rose-700"
+            className="flex min-h-11 flex-1 items-center justify-center border border-attention-border px-4 text-sm font-semibold text-attention-body"
             onClick={() => setDismissed(true)}
             type="button"
           >
@@ -54,7 +54,7 @@ export function AtRiskBanner() {
           </button>
         </div>
       ) : (
-        <p className="text-xs text-rose-600">今回のリカバリーは既に使用済みです。次回からまた続けましょう。</p>
+        <p className="text-xs text-attention">今回のリカバリーは既に使用済みです。次回からまた続けましょう。</p>
       )}
     </div>
   )

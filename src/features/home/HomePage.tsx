@@ -19,7 +19,7 @@ import { PartnerBanner } from './PartnerBanner'
 
 function CreateGoalLink() {
   return (
-    <Link className="mt-4 inline-flex min-h-11 items-center gap-1 text-sm font-bold text-emerald-700" to="/goals/new">
+    <Link className="mt-4 inline-flex min-h-11 items-center gap-1 text-sm font-bold text-primary" to="/goals/new">
       <Plus aria-hidden="true" className="size-4" /> Goalを作る
     </Link>
   )
@@ -44,7 +44,7 @@ function AuthenticatedGoalList() {
   if (goals.length === 0) {
     return (
       <>
-        <p className="mt-2 text-sm leading-6 text-slate-600">まだGoalがありません。続けたいことを1つ作ってみよう。</p>
+        <p className="mt-2 text-sm leading-6 text-text-muted">まだGoalがありません。続けたいことを1つ作ってみよう。</p>
         <CreateGoalLink />
       </>
     )
@@ -85,9 +85,9 @@ function TodaySummary() {
   const todayCycles = summary?.todayCycles ?? 0
 
   return (
-    <div className="flex gap-6 text-sm text-slate-600">
-      <span className="inline-flex items-center gap-1"><Flame aria-hidden="true" className="size-4 text-rose-500" />{currentStreak}日</span>
-      <span className="inline-flex items-center gap-1"><RotateCcw aria-hidden="true" className="size-4 text-sky-600" />今日 {todayCycles}周</span>
+    <div className="flex gap-6 text-sm text-text-muted">
+      <span className="inline-flex items-center gap-1"><Flame aria-hidden="true" className="size-4 text-attention-subtle" />{currentStreak}日</span>
+      <span className="inline-flex items-center gap-1"><RotateCcw aria-hidden="true" className="size-4 text-choice-info" />今日 {todayCycles}周</span>
     </div>
   )
 }
@@ -116,7 +116,7 @@ export function HomePage() {
     <div className="space-y-8">
       <section className="flex items-start justify-between gap-3">
         <div className="space-y-3">
-          <p className="text-sm font-medium text-emerald-700">今日の一歩</p>
+          <p className="text-sm font-medium text-primary">今日の一歩</p>
           <SectionHeading>今日も1周だけ回そう。</SectionHeading>
           {isClerkConfigured ? <TodaySummary /> : null}
         </div>
@@ -129,8 +129,8 @@ export function HomePage() {
       {isClerkConfigured ? <AtRiskBanner /> : null}
       {isClerkConfigured ? <DailyMissionCard /> : null}
 
-      <section aria-labelledby="home-goal-heading" className="border-y border-slate-200 py-5">
-        <p className="text-sm font-medium text-slate-500">続けたいこと</p>
+      <section aria-labelledby="home-goal-heading" className="border-y border-border-subtle py-5">
+        <p className="text-sm font-medium text-text-subtle">続けたいこと</p>
         <h2 id="home-goal-heading" className="mt-1 text-lg font-bold leading-snug">
           Goalを作って、<span className="block sm:inline">最初の1周を始めよう</span>
         </h2>
@@ -138,7 +138,7 @@ export function HomePage() {
           <GoalSection />
         ) : (
           <>
-            <p className="mt-2 text-sm leading-6 text-slate-600">小さな行動から始められます。</p>
+            <p className="mt-2 text-sm leading-6 text-text-muted">小さな行動から始められます。</p>
             <CreateGoalLink />
           </>
         )}

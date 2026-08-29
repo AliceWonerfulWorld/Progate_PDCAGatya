@@ -18,14 +18,14 @@ export function ActiveCycleCard({ isReady }: { isReady: boolean }) {
   if (resumePath === undefined) return null
 
   return (
-    <section aria-labelledby="active-cycle-heading" className="border-y border-slate-200 py-5">
-      <p className="text-sm font-medium text-emerald-700" id="active-cycle-heading">
+    <section aria-labelledby="active-cycle-heading" className="border-y border-border-subtle py-5">
+      <p className="text-sm font-medium text-primary" id="active-cycle-heading">
         進行中
       </p>
-      {goalName ? <p className="mt-1 text-sm text-slate-500">{goalName}</p> : null}
+      {goalName ? <p className="mt-1 text-sm text-text-subtle">{goalName}</p> : null}
       <p className="mt-1 text-base font-bold">{cycle.planText}</p>
       <Link
-        className="mt-4 flex min-h-12 items-center justify-center bg-emerald-700 px-4 text-base font-bold text-white"
+        className="mt-4 flex min-h-12 items-center justify-center bg-primary px-4 text-base font-bold text-white"
         to={`/pdca/${resumePath}/${cycle._id}`}
       >
         続きを開く

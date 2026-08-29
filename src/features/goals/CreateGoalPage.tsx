@@ -33,7 +33,7 @@ function GoalNameForm({
         <span className="text-base font-bold">何を続けたい？</span>
         <input
           autoFocus
-          className="min-h-12 w-full border border-slate-300 bg-white px-3 text-base outline-none focus:border-emerald-700"
+          className="min-h-12 w-full border border-border bg-surface px-3 text-base outline-none focus:border-primary"
           id="goal-name"
           maxLength={INPUT_LIMITS.goalName}
           onChange={(event) => setName(event.target.value)}
@@ -41,9 +41,9 @@ function GoalNameForm({
           value={name}
         />
       </label>
-      {error ? <p className="text-sm text-rose-700">{error}</p> : null}
+      {error ? <p className="text-sm text-attention-body">{error}</p> : null}
       <button
-        className="min-h-12 w-full bg-emerald-700 px-4 text-base font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+        className="min-h-12 w-full bg-primary px-4 text-base font-bold text-white disabled:cursor-not-allowed disabled:bg-border"
         disabled={isSubmitting}
         type="submit"
       >
@@ -82,7 +82,7 @@ function SignedInCreateGoalPage() {
     return <LoadFailure message="準備に失敗しました。" onRetry={retry} />
   }
   if (!isReady) {
-    return <p className="text-sm text-slate-600">準備しています。</p>
+    return <p className="text-sm text-text-muted">準備しています。</p>
   }
 
   return <GoalNameForm error={error} isSubmitting={isSubmitting} onSubmit={(name) => void handleSubmit(name)} />
@@ -118,14 +118,14 @@ function CreateGoalGate() {
 export function CreateGoalPage() {
   return (
     <div className="space-y-6">
-      <Link className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-slate-600" to="/">
+      <Link className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-text-muted" to="/">
         <ArrowLeft aria-hidden="true" className="size-4" /> ホーム
       </Link>
       <SectionHeading>Goalを作る</SectionHeading>
       {isClerkConfigured ? (
         <CreateGoalGate />
       ) : (
-        <p className="text-sm text-slate-600">ログイン設定の完了後にGoalを作成できます。</p>
+        <p className="text-sm text-text-muted">ログイン設定の完了後にGoalを作成できます。</p>
       )}
     </div>
   )

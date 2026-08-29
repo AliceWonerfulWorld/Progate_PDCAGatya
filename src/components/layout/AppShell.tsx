@@ -9,7 +9,7 @@ type AppShellProps = PropsWithChildren<{
 
 export function AppShell({ children, showBottomNavigation }: AppShellProps) {
   return (
-    <div className="min-h-dvh bg-stone-50 text-slate-900">
+    <div className="min-h-dvh bg-background text-text">
       <Header />
       <OfflineBanner />
       <main className={showBottomNavigation ? 'mx-auto w-full max-w-2xl px-4 pb-24 pt-6' : 'mx-auto w-full max-w-2xl px-4 py-6'}>

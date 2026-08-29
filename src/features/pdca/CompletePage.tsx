@@ -33,7 +33,7 @@ export function CompletePage() {
   return (
     <div className="space-y-8 text-center">
       <section className="space-y-3">
-        <p className="text-sm font-medium text-emerald-700">
+        <p className="text-sm font-medium text-primary">
           {isRecoveredCompletion ? 'STREAK RECOVERED!' : 'PDCA COMPLETE!'}
         </p>
         <SectionHeading>
@@ -41,18 +41,18 @@ export function CompletePage() {
         </SectionHeading>
       </section>
 
-      <ul className="space-y-3 border-y border-slate-200 py-6 text-left">
+      <ul className="space-y-3 border-y border-border-subtle py-6 text-left">
         <li className="flex items-center gap-3 text-base font-semibold">
-          <RotateCcw aria-hidden="true" className="size-5 text-sky-600" /> +1周
+          <RotateCcw aria-hidden="true" className="size-5 text-choice-info" /> +1周
         </li>
         <li className="flex items-center gap-3 text-base font-semibold">
-          <Star aria-hidden="true" className="size-5 text-amber-500" /> Player XP +{result.gainedXp}
+          <Star aria-hidden="true" className="size-5 text-rarity-ssr-icon" /> Player XP +{result.gainedXp}
         </li>
         <li className="flex items-center gap-3 text-base font-semibold">
-          <Ticket aria-hidden="true" className="size-5 text-violet-600" /> ガチャ +{result.gachaDrawsAdded}
+          <Ticket aria-hidden="true" className="size-5 text-reward" /> ガチャ +{result.gachaDrawsAdded}
         </li>
         {result.dailyMissionCompleted && result.dailyMissionXp > 0 ? (
-          <li className="flex items-center gap-3 text-base font-semibold text-emerald-700">
+          <li className="flex items-center gap-3 text-base font-semibold text-primary">
             <CheckCircle2 aria-hidden="true" className="size-5" /> 今日のチャレンジ達成 Player XP +
             {result.dailyMissionXp}
           </li>
@@ -60,21 +60,21 @@ export function CompletePage() {
       </ul>
 
       {isRecoveredCompletion ? (
-        <p className="flex items-center justify-center gap-2 text-base font-bold text-rose-600">
+        <p className="flex items-center justify-center gap-2 text-base font-bold text-attention">
           <Flame aria-hidden="true" className="size-5" /> {result.currentStreak}日ストリークを維持しました
         </p>
       ) : result.streakUpdated ? (
-        <p className="flex items-center justify-center gap-2 text-base font-bold text-rose-600">
+        <p className="flex items-center justify-center gap-2 text-base font-bold text-attention">
           <Flame aria-hidden="true" className="size-5" /> 今日のストリーク達成！({result.currentStreak}日)
         </p>
       ) : null}
 
       {result.levelUp ? (
-        <section className="space-y-2 bg-emerald-50 px-4 py-6">
-          <p className="flex items-center justify-center gap-2 text-sm font-bold text-emerald-700">
+        <section className="space-y-2 bg-primary-subtle px-4 py-6">
+          <p className="flex items-center justify-center gap-2 text-sm font-bold text-primary">
             <Sparkles aria-hidden="true" className="size-4" /> PLAYER LEVEL UP!
           </p>
-          <p className="text-2xl font-bold text-emerald-800">
+          <p className="text-2xl font-bold text-primary-strong">
             Lv.{result.previousLevel} → Lv.{result.newLevel}
           </p>
         </section>
@@ -82,14 +82,14 @@ export function CompletePage() {
 
       <div className="space-y-3">
         <Link
-          className="flex min-h-12 w-full items-center justify-center bg-emerald-700 px-4 text-base font-bold text-white"
+          className="flex min-h-12 w-full items-center justify-center bg-primary px-4 text-base font-bold text-white"
           state={{ goalId }}
           to="/gacha"
         >
           ガチャを回す
         </Link>
         <Link
-          className="flex min-h-12 w-full items-center justify-center border border-slate-300 px-4 text-base font-semibold text-slate-700"
+          className="flex min-h-12 w-full items-center justify-center border border-border px-4 text-base font-semibold text-text-body"
           to={goalId === 'guest' ? '/' : `/goal/${goalId}`}
         >
           あとで

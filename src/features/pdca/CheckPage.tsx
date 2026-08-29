@@ -97,16 +97,16 @@ function CheckBody({
   return (
     <div className="space-y-7">
       <section className="space-y-3">
-        {goalName ? <p className="text-sm font-medium text-slate-500">{goalName}</p> : null}
+        {goalName ? <p className="text-sm font-medium text-text-subtle">{goalName}</p> : null}
         <SectionHeading>今回どうだった？</SectionHeading>
-        <p className="text-sm text-slate-600">{planText}</p>
+        <p className="text-sm text-text-muted">{planText}</p>
       </section>
 
       <div className="space-y-3">
         {CHECK_LOADS.map(({ value, label }) => (
           <button
             aria-pressed={checkLoad === value}
-            className={`min-h-12 w-full px-4 text-base font-semibold ${choiceButtonClass(checkLoad === value, 'emerald')}`}
+            className={`min-h-12 w-full px-4 text-base font-semibold ${choiceButtonClass(checkLoad === value, 'primary')}`}
             disabled={isSubmitting || isAutoAdvancing}
             key={value}
             onClick={() => selectLoad(value)}
@@ -120,12 +120,12 @@ function CheckBody({
       {showReason ? (
         <section className="space-y-3">
           <h2 className="text-base font-bold">何が原因だった？</h2>
-          <p className="text-sm text-slate-600">選ばなくても次へ進めます。</p>
+          <p className="text-sm text-text-muted">選ばなくても次へ進めます。</p>
           <div className="space-y-3">
             {CHECK_REASONS.map(({ value, label }) => (
               <button
                 aria-pressed={checkReason === value}
-                className={`min-h-12 w-full px-4 text-base font-semibold ${choiceButtonClass(checkReason === value, 'sky')}`}
+                className={`min-h-12 w-full px-4 text-base font-semibold ${choiceButtonClass(checkReason === value, 'info')}`}
                 disabled={isSubmitting}
                 key={value}
                 onClick={() => setCheckReason(checkReason === value ? null : value)}
@@ -140,9 +140,9 @@ function CheckBody({
 
       {isMemoOpen ? (
         <label className="block space-y-2" htmlFor="check-memo">
-          <span className="text-sm text-slate-600">メモ（任意）</span>
+          <span className="text-sm text-text-muted">メモ（任意）</span>
           <textarea
-            className="min-h-24 w-full border border-slate-300 bg-white p-3 text-base outline-none focus:border-emerald-700"
+            className="min-h-24 w-full border border-border bg-surface p-3 text-base outline-none focus:border-primary"
             id="check-memo"
             maxLength={INPUT_LIMITS.checkMemo}
             onChange={(event) => setCheckMemo(event.target.value)}
@@ -151,7 +151,7 @@ function CheckBody({
         </label>
       ) : (
         <button
-          className={`min-h-11 px-2 text-sm font-semibold text-slate-600 ${SECONDARY_BUTTON_CLASS} border-none`}
+          className={`min-h-11 px-2 text-sm font-semibold text-text-muted ${SECONDARY_BUTTON_CLASS} border-none`}
           onClick={() => setIsMemoOpen(true)}
           type="button"
         >
@@ -159,7 +159,7 @@ function CheckBody({
         </button>
       )}
 
-      {error ? <p className="text-sm text-rose-700">{error}</p> : null}
+      {error ? <p className="text-sm text-attention-body">{error}</p> : null}
 
       {showReason || isMemoOpen ? (
         <button
@@ -193,7 +193,7 @@ function SignedInCheckPage({ cycleId }: { cycleId: string }) {
   if (cycle.status !== 'checking') {
     return (
       <div className="space-y-4">
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-text-muted">
           {cycle.status === 'doing' ? 'まずDOの結果を記録してください。' : 'このPDCAはCHECKを記録済みです。'}
         </p>
         <Link
@@ -239,7 +239,7 @@ function GuestCheckPage() {
   if (cycle.status !== 'checking') {
     return (
       <div className="space-y-4">
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-text-muted">
           {cycle.status === 'doing' ? 'まずDOの結果を記録してください。' : 'このPDCAはCHECKを記録済みです。'}
         </p>
         <Link
@@ -292,7 +292,7 @@ export function CheckPage() {
       {isClerkConfigured && cycleId ? (
         <CheckGate cycleId={cycleId} />
       ) : (
-        <p className="text-sm text-slate-600">ログイン設定の完了後にCHECKを記録できます。</p>
+        <p className="text-sm text-text-muted">ログイン設定の完了後にCHECKを記録できます。</p>
       )}
     </div>
   )

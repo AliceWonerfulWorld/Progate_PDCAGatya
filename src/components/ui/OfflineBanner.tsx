@@ -10,7 +10,7 @@ export function OfflineBanner() {
 
   return (
     <div
-      className="flex items-center justify-center gap-2 bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-900"
+      className="flex items-center justify-center gap-2 bg-notice-bg px-4 py-2 text-sm font-semibold text-notice"
       role="status"
     >
       <WifiOff aria-hidden="true" className="size-4" />

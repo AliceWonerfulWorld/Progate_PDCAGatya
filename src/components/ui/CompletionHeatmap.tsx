@@ -3,7 +3,15 @@ export interface HeatmapDay {
   count: number
 }
 
-const CELL_LEVEL_CLASS = ['bg-slate-100', 'bg-emerald-200', 'bg-emerald-400', 'bg-emerald-600', 'bg-emerald-800']
+// 密度5段。段階そのものが情報なので専用の連続スケールトークンを使う
+// (primary-* の状態色を流用すると段が潰れて密度が読めなくなる)。
+const CELL_LEVEL_CLASS = [
+  'bg-primary-scale-1',
+  'bg-primary-scale-2',
+  'bg-primary-scale-3',
+  'bg-primary-scale-4',
+  'bg-primary-scale-5',
+]
 
 function levelClassFor(count: number): string {
   const level = count <= 0 ? 0 : Math.min(count, CELL_LEVEL_CLASS.length - 1)
@@ -56,7 +64,7 @@ export function CompletionHeatmap({ days }: { days: HeatmapDay[] }) {
           )}
         </div>
       </div>
-      <div className="flex items-center gap-1 text-xs text-slate-500">
+      <div className="flex items-center gap-1 text-xs text-text-subtle">
         少ない
         {CELL_LEVEL_CLASS.map((className) => (
           <span className={`size-3 ${className}`} key={className} />

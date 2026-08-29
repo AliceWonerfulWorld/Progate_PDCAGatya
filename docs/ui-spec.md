@@ -1318,7 +1318,39 @@ UI：
 
 # 36. Color / Visual Direction
 
-具体的なブランドカラーは別途決定する。
+実体は `src/index.css` の `@theme` に定義したデザイントークンとする。
+以下は方針であり、**値の参照元はコードのトークン定義**（issue #97）。
+
+## 基調色（Primary）
+
+事実上のPrimaryとして使われていた emerald 系（`oklch(50.8% 0.118 165.612)`）を
+ブランドカラーとして正式採用し、`--color-primary` とした。
+
+## 色の役割
+
+| 役割 | トークン接頭辞 | 用途 |
+| --- | --- | --- |
+| Primary | `primary` | CTA・アクティブ状態・フォーカスリング |
+| Surface / Text / Border | `surface` / `text` / `border` | 日常画面の面・文字・境界 |
+| Rarity | `rarity-r` / `rarity-sr` / `rarity-ssr` | ガチャのレアリティ。SSRのみ `rarity-ssr-glow` で光彩 |
+| At Risk | `attention` | Streak At Risk の注意喚起 |
+| Gacha / Reward | `reward` | ガチャ・チケットなど報酬系の差し色 |
+| Choice | `choice-info` / `choice-warn` | 選択トグル。レアリティ色とは別系統 |
+
+Rarity と Choice は現状いくつか同系色だが、**意図的に別トークン**にしている。
+片方の色を変えたときにもう片方が巻き添えで変わるのを防ぐため。
+
+## モーション
+
+duration は `--duration-instant / fast / normal / slow / reward`、
+easing は `--ease-standard / decelerate / accelerate / spring` の5段・4種。
+
+`prefers-reduced-motion: reduce` はトークン層で duration を 0 に差し替えて吸収する。
+個別コンポーネントでの対応は不要。
+
+> **注意**: Tailwind v4 では `--duration-*` はユーティリティ生成の namespace ではないため、
+> `duration-fast` とは書けない。必ず `duration-(--duration-fast)` の形で参照すること。
+> `duration-150` のような数値ユーティリティは値を焼き込むため reduced-motion が効かない。
 
 基本方針：
 

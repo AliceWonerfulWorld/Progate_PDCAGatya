@@ -14,12 +14,12 @@ export function GachaTicketCard() {
   if (currentUser.availableGachaDraws <= 0) return null
 
   return (
-    <section className="flex items-center justify-between gap-3 border border-violet-200 bg-violet-50 px-4 py-3">
-      <p className="flex items-center gap-2 text-sm font-bold text-violet-800">
+    <section className="flex items-center justify-between gap-3 border border-reward-border bg-reward-bg px-4 py-3">
+      <p className="flex items-center gap-2 text-sm font-bold text-reward-text">
         <Ticket aria-hidden="true" className="size-5" /> ガチャ {currentUser.availableGachaDraws}回
       </p>
       <Link
-        className="flex min-h-11 shrink-0 items-center justify-center bg-violet-700 px-4 text-sm font-bold text-white"
+        className="flex min-h-11 shrink-0 items-center justify-center bg-reward-strong px-4 text-sm font-bold text-white"
         to="/gacha"
       >
         ガチャを回す

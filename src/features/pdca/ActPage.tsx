@@ -54,7 +54,7 @@ function ActBody({
   return (
     <div className="space-y-7">
       <section className="space-y-3">
-        {goalName ? <p className="text-sm font-medium text-slate-500">{goalName}</p> : null}
+        {goalName ? <p className="text-sm font-medium text-text-subtle">{goalName}</p> : null}
         <SectionHeading>次はどうする？</SectionHeading>
       </section>
 
@@ -62,7 +62,7 @@ function ActBody({
         {ACT_TYPES.map(({ value, label, icon }) => (
           <button
             aria-pressed={actType === value}
-            className={`flex min-h-12 w-full items-center gap-2 px-4 text-left text-base font-semibold ${choiceButtonClass(actType === value, 'emerald')}`}
+            className={`flex min-h-12 w-full items-center gap-2 px-4 text-left text-base font-semibold ${choiceButtonClass(actType === value, 'primary')}`}
             disabled={isSubmitting}
             key={value}
             onClick={() => setActType(value)}
@@ -70,20 +70,20 @@ function ActBody({
           >
             {icon}
             {label}
-            {value === recommended ? <span className="ml-2 text-xs font-bold text-emerald-700">おすすめ</span> : null}
+            {value === recommended ? <span className="ml-2 text-xs font-bold text-primary">おすすめ</span> : null}
           </button>
         ))}
       </div>
 
-      <section className="space-y-2 border-y border-slate-200 py-5">
-        <p className="text-sm font-medium text-slate-500">次回候補</p>
+      <section className="space-y-2 border-y border-border-subtle py-5">
+        <p className="text-sm font-medium text-text-subtle">次回候補</p>
         {isAdjusting ? (
           <>
             <label className="block space-y-2" htmlFor="next-plan-candidate">
               <span className="sr-only">次回候補</span>
               <input
                 autoFocus
-                className="min-h-12 w-full border border-slate-300 bg-white px-3 text-base outline-none focus:border-emerald-700"
+                className="min-h-12 w-full border border-border bg-surface px-3 text-base outline-none focus:border-primary"
                 id="next-plan-candidate"
                 maxLength={INPUT_LIMITS.nextPlanCandidate}
                 onChange={(event) => setNextPlanCandidate(event.target.value)}
@@ -92,7 +92,7 @@ function ActBody({
               />
             </label>
             <button
-              className="text-sm font-semibold text-slate-500 underline-offset-2 hover:text-slate-700 hover:underline"
+              className="text-sm font-semibold text-text-subtle underline-offset-2 hover:text-text-body hover:underline"
               onClick={() => setIsAdjusting(false)}
               type="button"
             >
@@ -104,7 +104,7 @@ function ActBody({
         )}
       </section>
 
-      {error ? <p className="text-sm text-rose-700">{error}</p> : null}
+      {error ? <p className="text-sm text-attention-body">{error}</p> : null}
 
       <div className="space-y-3">
         <button
@@ -149,7 +149,7 @@ function SignedInActPage({ cycleId }: { cycleId: string }) {
   if (cycle.status !== 'acting') {
     return (
       <div className="space-y-4">
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-text-muted">
           {cycle.status === 'checking' ? 'まずCHECKを記録してください。' : 'このPDCAはACTを記録済みです。'}
         </p>
         <Link
@@ -207,7 +207,7 @@ function GuestActPage() {
   if (cycle.status !== 'acting') {
     return (
       <div className="space-y-4">
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-text-muted">
           {cycle.status === 'checking' ? 'まずCHECKを記録してください。' : 'このPDCAはACTを記録済みです。'}
         </p>
         <Link
@@ -289,7 +289,7 @@ export function ActPage() {
       {isClerkConfigured && cycleId ? (
         <ActGate cycleId={cycleId} />
       ) : (
-        <p className="text-sm text-slate-600">ログイン設定の完了後にACTを記録できます。</p>
+        <p className="text-sm text-text-muted">ログイン設定の完了後にACTを記録できます。</p>
       )}
     </div>
   )

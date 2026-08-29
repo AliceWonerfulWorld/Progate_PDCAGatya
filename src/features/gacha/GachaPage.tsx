@@ -26,10 +26,13 @@ interface GachaDrawResult {
   availableGachaDraws: number
 }
 
+// レアリティ表現はトークン参照 (src/index.css)。SSRのみ光彩を足して
+// 特別感を強くする (docs/ui-spec.md §36)。光彩の色も
+// --color-rarity-ssr-glow としてトークン化してある。
 const RARITY_STYLES: Record<CharacterRarity, string> = {
-  R: 'border-slate-300 bg-slate-50 text-slate-700',
-  SR: 'border-sky-300 bg-sky-50 text-sky-700',
-  SSR: 'border-amber-400 bg-amber-50 text-amber-700 shadow-[0_0_24px_rgba(251,191,36,0.35)]',
+  R: 'border-rarity-r-border bg-rarity-r-bg text-rarity-r',
+  SR: 'border-rarity-sr-border bg-rarity-sr-bg text-rarity-sr',
+  SSR: 'border-rarity-ssr-border bg-rarity-ssr-bg text-rarity-ssr shadow-[0_0_24px_var(--color-rarity-ssr-glow)]',
 }
 
 function sleep(ms: number): Promise<void> {
@@ -78,26 +81,26 @@ function GachaResultView({
             <Sparkles aria-hidden="true" className="size-5" /> NEW!
           </p>
         )}
-        <p className="text-xl font-bold text-slate-900">{result.characterName}</p>
+        <p className="text-xl font-bold text-text">{result.characterName}</p>
         {result.imagePath ? (
           <img alt={result.characterName} className="mx-auto aspect-square w-40 border border-white/70 object-cover shadow-sm" src={result.imagePath} />
         ) : null}
         {result.wasDuplicate ? (
           <>
-            <p className="text-sm font-semibold text-slate-500">Already Owned</p>
-            <p className="text-base font-bold text-slate-700">欠片 +{result.fragmentReward}</p>
+            <p className="text-sm font-semibold text-text-subtle">Already Owned</p>
+            <p className="text-base font-bold text-text-body">欠片 +{result.fragmentReward}</p>
           </>
         ) : result.defaultMessage ? (
-          <p className="text-sm leading-6 text-slate-600">「{result.defaultMessage}」</p>
+          <p className="text-sm leading-6 text-text-muted">「{result.defaultMessage}」</p>
         ) : null}
       </section>
 
-      {error ? <p className="text-sm text-rose-700">{error}</p> : null}
+      {error ? <p className="text-sm text-attention-body">{error}</p> : null}
 
       <div className="space-y-3">
         {onDrawAgain ? (
           <button
-            className="flex min-h-12 w-full items-center justify-center bg-emerald-700 px-4 text-base font-bold text-white"
+            className="flex min-h-12 w-full items-center justify-center bg-primary px-4 text-base font-bold text-white"
             onClick={onDrawAgain}
             type="button"
           >
@@ -106,7 +109,7 @@ function GachaResultView({
         ) : null}
         {secondaryLinks.map((link) => (
           <Link
-            className="flex min-h-12 w-full items-center justify-center border border-slate-300 px-4 text-base font-semibold text-slate-700"
+            className="flex min-h-12 w-full items-center justify-center border border-border px-4 text-base font-semibold text-text-body"
             key={link.to}
             to={link.to}
           >
@@ -125,22 +128,22 @@ function GachaResultView({
 function GachaBannerCard({ gacha, onSelect }: { gacha: GachaBannerInfo; onSelect: (gacha: GachaBannerInfo) => void }) {
   return (
     <button
-      className="w-full overflow-hidden border border-slate-200 bg-white text-left transition-transform duration-150 active:scale-[0.98]"
+      className="w-full overflow-hidden border border-border-subtle bg-surface text-left transition-transform duration-(--duration-fast) ease-standard active:scale-[0.98]"
       onClick={() => onSelect(gacha)}
       type="button"
     >
-      <div className="flex h-32 items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200">
+      <div className="flex h-32 items-center justify-center bg-gradient-to-br from-surface-muted to-border-subtle">
         {gacha.imagePath ? (
           <img alt={gacha.name} className="h-20 w-20 object-contain" src={gacha.imagePath} />
         ) : (
-          <Ticket aria-hidden="true" className="size-12 text-slate-400" />
+          <Ticket aria-hidden="true" className="size-12 text-text-disabled" />
         )}
       </div>
       <div className="space-y-1.5 p-4">
         <p className="text-base font-bold">{gacha.name}</p>
-        {gacha.description ? <p className="text-sm text-slate-600">{gacha.description}</p> : null}
-        <p className="truncate text-xs text-slate-500">{gacha.characterNames.join('、')}</p>
-        <p className="flex items-center gap-1 text-xs font-semibold text-emerald-700">
+        {gacha.description ? <p className="text-sm text-text-muted">{gacha.description}</p> : null}
+        <p className="truncate text-xs text-text-subtle">{gacha.characterNames.join('、')}</p>
+        <p className="flex items-center gap-1 text-xs font-semibold text-primary">
           <Clock aria-hidden="true" className="size-3.5" /> {formatRemainingTime(gacha.endAt)}
         </p>
       </div>
@@ -209,8 +212,8 @@ function SignedInGacha() {
   if (isDrawing) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-24">
-        <Loader2 aria-hidden="true" className="size-12 animate-spin text-emerald-700" />
-        <p className="text-sm font-semibold text-slate-600">ガチャを回しています…</p>
+        <Loader2 aria-hidden="true" className="size-12 animate-spin text-primary" />
+        <p className="text-sm font-semibold text-text-muted">ガチャを回しています…</p>
       </div>
     )
   }
@@ -221,7 +224,7 @@ function SignedInGacha() {
         error={error}
         footer={
           <button
-            className="flex min-h-12 w-full items-center justify-center text-sm font-semibold text-slate-500"
+            className="flex min-h-12 w-full items-center justify-center text-sm font-semibold text-text-subtle"
             onClick={() => navigate('/')}
             type="button"
           >
@@ -242,24 +245,24 @@ function SignedInGacha() {
     <div className="space-y-8 text-center">
       <section className="space-y-3">
         <SectionHeading>{selectedGacha.name}</SectionHeading>
-        <p className="flex items-center justify-center gap-1 text-xs font-semibold text-emerald-700">
+        <p className="flex items-center justify-center gap-1 text-xs font-semibold text-primary">
           <Clock aria-hidden="true" className="size-3.5" /> {formatRemainingTime(selectedGacha.endAt)}
         </p>
-        <p className="flex items-center justify-center gap-2 text-base font-semibold text-slate-700">
-          <Ticket aria-hidden="true" className="size-5 text-violet-600" /> 残り {currentUser.availableGachaDraws}回
+        <p className="flex items-center justify-center gap-2 text-base font-semibold text-text-body">
+          <Ticket aria-hidden="true" className="size-5 text-reward" /> 残り {currentUser.availableGachaDraws}回
         </p>
         {currentUser.availableGachaDraws <= 0 ? (
-          <p className="text-sm leading-6 text-slate-500">
+          <p className="text-sm leading-6 text-text-subtle">
             ガチャは0回です。PDCAを1周すると、ガチャを1回回せます。
           </p>
         ) : null}
       </section>
 
-      {error ? <p className="text-sm text-rose-700">{error}</p> : null}
+      {error ? <p className="text-sm text-attention-body">{error}</p> : null}
 
       <div className="space-y-3">
         <button
-          className="flex min-h-12 w-full items-center justify-center bg-emerald-700 px-4 text-base font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+          className="flex min-h-12 w-full items-center justify-center bg-primary px-4 text-base font-bold text-white disabled:cursor-not-allowed disabled:bg-border"
           disabled={currentUser.availableGachaDraws <= 0 || isDrawing}
           onClick={() => void handleDraw()}
           type="button"
@@ -267,14 +270,14 @@ function SignedInGacha() {
           1回回す
         </button>
         <button
-          className="flex min-h-12 w-full items-center justify-center border border-slate-300 px-4 text-base font-semibold text-slate-700"
+          className="flex min-h-12 w-full items-center justify-center border border-border px-4 text-base font-semibold text-text-body"
           onClick={() => setSelectedGacha(null)}
           type="button"
         >
           他のガチャを選ぶ
         </button>
         <button
-          className="flex min-h-12 w-full items-center justify-center text-sm font-semibold text-slate-500"
+          className="flex min-h-12 w-full items-center justify-center text-sm font-semibold text-text-subtle"
           onClick={() => navigate(goalId ? `/goal/${goalId}` : '/')}
           type="button"
         >
@@ -314,9 +317,9 @@ function GuestGacha() {
     return (
       <div className="space-y-4 text-center">
         <SectionHeading>GACHA</SectionHeading>
-        <p className="text-sm leading-6 text-slate-500">PDCAを1周すると、ガチャを1回回せます。</p>
+        <p className="text-sm leading-6 text-text-subtle">PDCAを1周すると、ガチャを1回回せます。</p>
         <Link
-          className="flex min-h-12 items-center justify-center border border-slate-300 px-4 text-base font-semibold text-slate-700"
+          className="flex min-h-12 items-center justify-center border border-border px-4 text-base font-semibold text-text-body"
           to="/"
         >
           ホームへ
@@ -358,8 +361,8 @@ function GuestGacha() {
   if (isDrawing) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-24">
-        <Loader2 aria-hidden="true" className="size-12 animate-spin text-emerald-700" />
-        <p className="text-sm font-semibold text-slate-600">ガチャを回しています…</p>
+        <Loader2 aria-hidden="true" className="size-12 animate-spin text-primary" />
+        <p className="text-sm font-semibold text-text-muted">ガチャを回しています…</p>
       </div>
     )
   }
@@ -383,15 +386,15 @@ function GuestGacha() {
     <div className="space-y-8 text-center">
       <section className="space-y-3">
         <SectionHeading>GACHA</SectionHeading>
-        <p className="flex items-center justify-center gap-2 text-base font-semibold text-slate-700">
-          <Ticket aria-hidden="true" className="size-5 text-violet-600" /> 残り {state.gacha.availableDraws}回
+        <p className="flex items-center justify-center gap-2 text-base font-semibold text-text-body">
+          <Ticket aria-hidden="true" className="size-5 text-reward" /> 残り {state.gacha.availableDraws}回
         </p>
       </section>
 
-      {error ? <p className="text-sm text-rose-700">{error}</p> : null}
+      {error ? <p className="text-sm text-attention-body">{error}</p> : null}
 
       <button
-        className="flex min-h-12 w-full items-center justify-center bg-emerald-700 px-4 text-base font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+        className="flex min-h-12 w-full items-center justify-center bg-primary px-4 text-base font-bold text-white disabled:cursor-not-allowed disabled:bg-border"
         disabled={activeCharacters === undefined || gachaRates === undefined}
         onClick={() => void handleDraw()}
         type="button"
@@ -413,7 +416,7 @@ export function GachaPage() {
       {isClerkConfigured ? (
         <GachaGate />
       ) : (
-        <p className="text-sm text-slate-600">ログイン設定の完了後にガチャを回せます。</p>
+        <p className="text-sm text-text-muted">ログイン設定の完了後にガチャを回せます。</p>
       )}
     </div>
   )
