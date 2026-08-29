@@ -142,6 +142,8 @@ describe('completePdcaCycle', () => {
       gachaDrawsAdded: 1,
       availableGachaDraws: 1,
       totalCycles: 1,
+      dailyMissionCompleted: true,
+      dailyMissionXp: 50,
     })
 
     const { user, goal, cycle } = await t.run(async (ctx) => ({
@@ -152,7 +154,8 @@ describe('completePdcaCycle', () => {
 
     expect(cycle?.status).toBe('completed')
     expect(typeof cycle?.completedAt).toBe('number')
-    expect(user?.playerXp).toBe(100)
+    // Base PDCA XP (100) + Daily Mission COMPLETE_ONE_PDCA (50, T030).
+    expect(user?.playerXp).toBe(150)
     expect(user?.totalCycles).toBe(1)
     expect(user?.availableGachaDraws).toBe(1)
     expect(user?.currentStreak).toBe(1)
@@ -182,13 +185,15 @@ describe('completePdcaCycle', () => {
       currentStreak: 1,
       availableGachaDraws: 1,
       totalCycles: 1,
+      dailyMissionCompleted: false,
+      dailyMissionXp: 0,
     })
 
     const { user, goal } = await t.run(async (ctx) => ({
       user: await ctx.db.get(userId),
       goal: await ctx.db.get(goalId),
     }))
-    expect(user?.playerXp).toBe(100)
+    expect(user?.playerXp).toBe(150)
     expect(user?.totalCycles).toBe(1)
     expect(user?.availableGachaDraws).toBe(1)
     expect(user?.currentStreak).toBe(1)
@@ -283,6 +288,9 @@ describe('completePdcaCycle', () => {
       streakUpdated: false,
       totalCycles: 2,
       availableGachaDraws: 2,
+      // Daily Mission was already granted by the first cycle today (T030).
+      dailyMissionCompleted: false,
+      dailyMissionXp: 0,
     })
 
     const { user, goal } = await t.run(async (ctx) => ({
@@ -291,7 +299,8 @@ describe('completePdcaCycle', () => {
     }))
     expect(user?.currentStreak).toBe(1)
     expect(user?.totalCycles).toBe(2)
-    expect(user?.playerXp).toBe(200)
+    // First cycle: 100 (base) + 50 (Daily Mission). Second cycle: 100 (base only).
+    expect(user?.playerXp).toBe(250)
     expect(user?.availableGachaDraws).toBe(2)
     expect(goal?.totalCycles).toBe(2)
     expect(goal?.activeDays).toBe(1)
@@ -340,7 +349,7 @@ describe('completePdcaCycle', () => {
     })
 
     const user = await t.run((ctx) => ctx.db.get(userId))
-    expect(user?.playerXp).toBe(100)
+    expect(user?.playerXp).toBe(150)
     expect(user?.availableGachaDraws).toBe(1)
   })
 })
