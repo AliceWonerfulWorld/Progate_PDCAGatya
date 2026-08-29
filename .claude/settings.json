@@ -1,5 +1,18 @@
 {
   "enabledPlugins": {
     "rive-mcp@rive-tools": true
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/check-design-tokens.mjs\""
+          }
+        ]
+      }
+    ]
   }
 }

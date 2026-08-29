@@ -34,8 +34,11 @@ docs/acceptance-criteria.md
 For UI work, also read:
 
 ```text
-docs/ui-spec.md
+docs/ui-spec.md      (§36 = color / motion token policy)
+src/index.css        (@theme = the actual token definitions)
 ```
+
+UI work MUST follow §55.1 Design Tokens.
 
 For gacha / character / reward work, also read:
 
@@ -1060,6 +1063,7 @@ Before declaring a task complete:
 ```text
 TypeScript: no errors
 Lint: no errors
+Design tokens: no violations (npm run lint:tokens) — UI変更時
 Relevant tests: pass
 Existing P0 tests: pass
 Production build: pass when task affects build/runtime
@@ -1210,6 +1214,70 @@ reward experience expressive
 ```
 
 Do not add unnecessary forms, settings, dashboards, or text-heavy flows.
+
+---
+
+## 55.1 Design Tokens (MUST)
+
+Colors, durations, and easings are defined as design tokens in `src/index.css`
+(`@theme` / `:root`). Policy lives in `docs/ui-spec.md` §36.
+
+Never hardcode palette classes or numeric durations in `src/`:
+
+```text
+FORBIDDEN                  USE INSTEAD
+bg-emerald-700         →   bg-primary
+text-slate-500         →   text-text-subtle
+border-slate-300       →   border-border
+bg-rose-50             →   bg-attention-bg      (Streak At Risk)
+text-amber-700         →   text-rarity-ssr      (gacha rarity)
+text-violet-600        →   text-reward          (gacha / ticket)
+bg-amber-100           →   bg-notice-bg         (offline etc.)
+duration-150           →   duration-(--duration-fast)
+```
+
+### Tailwind v4 の落とし穴（必ず読む）
+
+`--duration-*` はユーティリティ生成の namespace **ではない**。
+`--duration-fast: 150ms` を定義しても `duration-fast` クラスは生成されず、
+**ビルドは通るのに CSS に何も出力されない**ため気づきにくい。
+
+```text
+NG   duration-fast              → クラスが生成されない（無音で失敗）
+NG   duration-150               → 値が焼き込まれ reduced-motion が効かない
+OK   duration-(--duration-fast) → var() で出力され reduced-motion が効く
+```
+
+`--color-*` と `--ease-*` は生成される namespace なので
+`bg-primary` / `ease-standard` はそのまま書ける。
+
+### transition には必ず duration トークンを付ける
+
+`transition-colors` だけ書くと Tailwind 既定の duration/easing に
+フォールバックし、`prefers-reduced-motion` の対象外になる。
+
+```text
+NG   transition-colors
+OK   transition-colors duration-(--duration-fast) ease-standard
+```
+
+`prefers-reduced-motion` は duration トークンを 0 に差し替えることで
+**トークン層だけで**全画面に効く設計になっている。
+そのため意図的に `*{transition-duration:0!important}` の全称セレクタは
+置いていない。置くとトークンを経由しない取りこぼしが隠れてしまうため。
+
+### 自動チェック
+
+このルールは仕組みで担保されている（読み忘れても止まる）:
+
+```text
+node scripts/check-design-tokens.mjs   # 単体実行
+npm run lint                            # oxlint と同時に実行される
+.claude/hooks/check-design-tokens.mjs   # Edit/Write 前に自動で走る
+```
+
+新しくトークンが必要になった場合は、直書きせず `src/index.css` の
+`@theme` に役割ベースの名前で追加すること。
 
 ---
 
@@ -1378,6 +1446,7 @@ Before reporting completion:
 [ ] Idempotency considered
 [ ] TypeScript passes
 [ ] Lint passes
+[ ] UI変更時: 色/durationの直書きなし (§55.1, npm run lint:tokens)
 [ ] Relevant tests pass
 [ ] Existing P0 tests pass
 [ ] Docs updated if approved behavior changed
