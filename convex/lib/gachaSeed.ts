@@ -16,6 +16,8 @@ export interface GachaSeedEntry {
   // 未指定 = 常設。指定時は「seedGachasで最初に投入された時刻」から
   // durationMsだけ有効になる(=施策コード投入のタイミングが開始時刻になる)。
   durationMs?: number
+  // ガチャ選択画面のサムネイル画像(未指定可)。public/gacha/配下のパスを想定。
+  imagePath?: string
   sortOrder: number
   isActive: boolean
 }
@@ -39,17 +41,8 @@ export const GACHA_SEED_DATA: readonly GachaSeedEntry[] = [
     rates: { R: 0.7, SR: 0.25, SSR: 0.05 },
     characterNames: ALL_CHARACTER_NAMES,
     durationMs: SEVEN_DAYS_MS,
+    imagePath: '/gacha/progate.svg',
     sortOrder: 2,
-    isActive: true,
-  },
-  {
-    key: 'excavation',
-    name: '発掘ガチャ',
-    description: '積み重ねの中から掘り出す、期間限定ガチャ。',
-    rates: { R: 0.7, SR: 0.25, SSR: 0.05 },
-    characterNames: ALL_CHARACTER_NAMES,
-    durationMs: SEVEN_DAYS_MS,
-    sortOrder: 3,
     isActive: true,
   },
 ] as const

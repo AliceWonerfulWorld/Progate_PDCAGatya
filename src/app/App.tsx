@@ -4,7 +4,9 @@ import { AppRoutes } from '../routes/AppRoutes'
 
 function App() {
   const { pathname } = useLocation()
-  const isPdcaFlow = pathname.startsWith('/pdca/') || pathname === '/gacha'
+  // ガチャはBottom Navigationの常設タブになったため、PDCAフロー扱いから外す
+  // (以前はPDCA完了直後の演出専用画面だったため、ここでナビを隠していた)。
+  const isPdcaFlow = pathname.startsWith('/pdca/')
 
   return (
     <AppShell showBottomNavigation={!isPdcaFlow}>

@@ -1,9 +1,10 @@
-import { Archive, History, House, UserRound } from 'lucide-react'
+import { Archive, History, House, Ticket, UserRound } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import type { LucideIcon } from 'lucide-react'
 
 const navigationItems: Array<{ label: string; to: string; icon: LucideIcon }> = [
   { label: 'ホーム', to: '/', icon: House },
+  { label: 'ガチャ', to: '/gacha', icon: Ticket },
   { label: 'コレクション', to: '/collection', icon: Archive },
   { label: '履歴', to: '/history', icon: History },
   { label: 'プロフィール', to: '/profile', icon: UserRound },
@@ -12,7 +13,7 @@ const navigationItems: Array<{ label: string; to: string; icon: LucideIcon }> = 
 export function BottomNavigation() {
   return (
     <nav aria-label="メインナビゲーション" className="fixed inset-x-0 bottom-0 z-10 border-t border-slate-200 bg-stone-50/95 backdrop-blur">
-      <div className="mx-auto grid h-16 w-full max-w-2xl grid-cols-4 px-2">
+      <div className="mx-auto grid h-16 w-full max-w-2xl grid-cols-5 px-2">
         {navigationItems.map(({ icon: Icon, label, to }) => (
           <NavLink
             className={({ isActive }) =>
