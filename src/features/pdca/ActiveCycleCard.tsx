@@ -5,9 +5,9 @@ import { api } from '../../../convex/_generated/api'
 // status ごとの再開先。reload しても保存済み状態から続きを開ける（AC-PDCA-005）。
 const RESUME_PATHS = {
   doing: 'do',
-  // TODO: CHECK / ACT 画面は T009 / T010 で実装する。
-  checking: 'do',
-  acting: 'do',
+  checking: 'check',
+  // TODO: ACT画面は T010 で実装する。
+  acting: 'check',
 } as const
 
 export function ActiveCycleCard({ isReady }: { isReady: boolean }) {

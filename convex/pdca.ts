@@ -11,6 +11,22 @@ const doResultValidator = v.union(
   v.literal('notCompleted'),
 )
 
+const checkLoadValidator = v.union(
+  v.literal('easy'),
+  v.literal('justRight'),
+  v.literal('slightlyHeavy'),
+  v.literal('tooHeavy'),
+)
+
+const checkReasonValidator = v.union(
+  v.literal('noTime'),
+  v.literal('tooLarge'),
+  v.literal('tooDifficult'),
+  v.literal('noFocus'),
+  v.literal('noMotivation'),
+  v.literal('other'),
+)
+
 // 進行中Cycleを探す順序。1ユーザーが同時に持つ進行中Cycleは1件を想定する。
 const ACTIVE_PDCA_STATUSES = ['doing', 'checking', 'acting'] as const
 
@@ -96,5 +112,42 @@ export const submitDoResult = mutation({
     })
 
     return { cycleId: cycle._id, status: 'checking' as const }
+  },
+})
+
+export function validateCheckMemo(checkMemo: string | undefined): string | undefined {
+  if (checkMemo === undefined) return undefined
+  const normalizedMemo = checkMemo.trim()
+  // Memoは常に任意。空文字は「未入力」として扱う（AC-PDCA-008）。
+  if (!normalizedMemo) return undefined
+  if (normalizedMemo.length > INPUT_LIMITS.checkMemo) {
+    throw new ConvexError({ code: ERROR_CODES.VALIDATION_ERROR })
+  }
+  return normalizedMemo
+}
+
+// Reason / Memo はどちらも任意（AC-PDCA-007 / AC-PDCA-008）。
+export const submitCheck = mutation({
+  args: {
+    cycleId: v.id('pdcaCycles'),
+    checkLoad: checkLoadValidator,
+    checkReason: v.optional(checkReasonValidator),
+    checkMemo: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const currentUser = await requireCurrentUser(ctx)
+    const cycle = await requireOwnedCycle(ctx, args.cycleId, currentUser)
+    // checking 以外からの送信は拒否する。
+    assertValidPdcaTransition(cycle.status, 'acting')
+
+    await ctx.db.patch(cycle._id, {
+      checkLoad: args.checkLoad,
+      checkReason: args.checkReason,
+      checkMemo: validateCheckMemo(args.checkMemo),
+      status: 'acting',
+      updatedAt: Date.now(),
+    })
+
+    return { cycleId: cycle._id, status: 'acting' as const }
   },
 })
