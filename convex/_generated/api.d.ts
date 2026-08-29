@@ -11,6 +11,7 @@
 import type * as characters from "../characters.js";
 import type * as gacha from "../gacha.js";
 import type * as goals from "../goals.js";
+import type * as guest from "../guest.js";
 import type * as history from "../history.js";
 import type * as lib_act from "../lib/act.js";
 import type * as lib_auth from "../lib/auth.js";
@@ -37,6 +38,7 @@ declare const fullApi: ApiFromModules<{
   characters: typeof characters;
   gacha: typeof gacha;
   goals: typeof goals;
+  guest: typeof guest;
   history: typeof history;
   "lib/act": typeof lib_act;
   "lib/auth": typeof lib_auth;

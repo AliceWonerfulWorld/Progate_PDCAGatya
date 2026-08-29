@@ -4,6 +4,7 @@ import { ConvexProviderWithClerk } from 'convex/react-clerk'
 import type { PropsWithChildren } from 'react'
 import { useEffect } from 'react'
 import { api } from '../../convex/_generated/api'
+import { clearGuestState, readGuestState } from '../lib/guestStore'
 
 const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
 const convexUrl = import.meta.env.VITE_CONVEX_URL
@@ -18,15 +19,53 @@ function getBrowserTimezone(): string {
   return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
 }
 
+function hasGuestProgress(guestState: ReturnType<typeof readGuestState>): boolean {
+  return (
+    guestState.goal !== undefined ||
+    guestState.cycle !== undefined ||
+    guestState.gacha.firstResult !== null ||
+    guestState.gacha.availableDraws > 0
+  )
+}
+
 function CurrentUserInitializer() {
   const { isAuthenticated } = useConvexAuth()
   const ensureCurrentUser = useMutation(api.users.ensureCurrentUser)
+  const migrateGuestData = useMutation(api.guest.migrateGuestData)
 
   useEffect(() => {
-    if (isAuthenticated) {
-      void ensureCurrentUser({ timezone: getBrowserTimezone() })
+    if (!isAuthenticated) return
+    let isActive = true
+
+    void (async () => {
+      await ensureCurrentUser({ timezone: getBrowserTimezone() })
+      if (!isActive) return
+
+      // docs/technical-design.md #56-58: Login後、貯まっていたGuest進行状態を
+      // 一度だけConvexへ移行する。失敗時はlocalStorageを消さず、次回ログイン時
+      // に再試行できるようにする(Migration成功後のみ削除)。
+      const guestState = readGuestState()
+      if (!hasGuestProgress(guestState)) return
+
+      try {
+        await migrateGuestData({
+          guestSessionId: guestState.guestSessionId,
+          guestData: {
+            goal: guestState.goal,
+            cycle: guestState.cycle,
+            gacha: guestState.gacha,
+          },
+        })
+        if (isActive) clearGuestState()
+      } catch {
+        // Guest dataはそのまま残し、次回retryできるようにする。
+      }
+    })()
+
+    return () => {
+      isActive = false
     }
-  }, [ensureCurrentUser, isAuthenticated])
+  }, [ensureCurrentUser, migrateGuestData, isAuthenticated])
 
   return null
 }

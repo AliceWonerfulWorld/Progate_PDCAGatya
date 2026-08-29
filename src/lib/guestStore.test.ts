@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { Id } from '../../convex/_generated/dataModel'
 import { clearGuestState, readGuestState, setGuestGachaState, setGuestGoal, setGuestPdcaCycle } from './guestStore'
+
+const TEST_CHARACTER_ID = 'char-1' as Id<'characters'>
 
 class MemoryStorage implements Storage {
   private store = new Map<string, string>()
@@ -84,11 +87,11 @@ describe('setGuestGoal / setGuestPdcaCycle / setGuestGachaState', () => {
   it('persists Gacha state', () => {
     setGuestGachaState({
       availableDraws: 1,
-      firstResult: { characterId: 'char-1', characterName: 'テスト', rarity: 'SR' },
+      firstResult: { characterId: TEST_CHARACTER_ID, characterName: 'テスト', rarity: 'SR' },
     })
     expect(readGuestState().gacha).toEqual({
       availableDraws: 1,
-      firstResult: { characterId: 'char-1', characterName: 'テスト', rarity: 'SR' },
+      firstResult: { characterId: TEST_CHARACTER_ID, characterName: 'テスト', rarity: 'SR' },
     })
   })
 
