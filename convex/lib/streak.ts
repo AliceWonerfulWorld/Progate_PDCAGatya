@@ -17,8 +17,17 @@ import { addDaysToLocalDate, daysBetweenLocalDates } from './date'
 // convex/lib/auth.ts の getOrCreateCurrentUser)。technical-design.md #41 は
 // recoveryUsedInWindow のような重複状態を持たず lastRecoveryDate のローリング
 // 判定を使う方針のため、本ファイルはtechnical-design.md準拠で実装した。
-// completePdcaCycle 等でこのリゾルバを実際に配線する際は、schema へ
-// streakStatus / pendingRecoveryDate を追加する承認が別途必要になる。
+//
+// streakStatus / pendingRecoveryDate はschema変更なしで運用する。
+// deriveStreakStatus() が lastCompletedDate + today から都度その場で導出する
+// ため、永続化は不要（#15 検討時にschema追加案も出したが、直接Recoveryの
+// 主要フローは導出だけで正しく動くため見送った）。
+//
+// 既知の制約: 「At Risk中に通常PDCAを1件完了→同日中に別途Recovery PDCAを
+// 完了」という2段階の順序（AC-RECOVERY-005、P1）だけは、1件目の完了で
+// lastCompletedDateが上書きされ「元々どの日を欠席したか」が失われるため、
+// 2件目のRecoveryで正しく救済できない。これを完全に直すにはschemaへ
+// pendingRecoveryDate（1フィールドのみ）の追加が必要。
 
 export type StreakStatus = 'active' | 'atRisk'
 
@@ -53,6 +62,31 @@ export function isRecoveryAvailable(lastRecoveryDate: string | undefined, today:
 function withinRecoveryDeadline(pendingRecoveryDate: string, today: string): boolean {
   // Deadline: end of the local day after the missed date (docs/technical-design.md #42).
   return daysBetweenLocalDates(pendingRecoveryDate, today) <= 1
+}
+
+export interface DerivedStreakStatus {
+  streakStatus: StreakStatus
+  pendingRecoveryDate: string | undefined
+}
+
+// Derives "is the user at risk right now" purely from lastCompletedDate + today,
+// without needing any persisted streakStatus/pendingRecoveryDate (docs/technical-design.md
+// #38 At Risk: exactly one local day missed, not yet past the recovery deadline).
+// Used for read-only checks: the Home At-Risk banner and the server-side eligibility
+// check before allowing a PDCA cycle to be started with isRecovery=true.
+export function deriveStreakStatus(
+  lastCompletedDate: string | undefined,
+  today: string,
+): DerivedStreakStatus {
+  if (lastCompletedDate === undefined) {
+    return { streakStatus: 'active', pendingRecoveryDate: undefined }
+  }
+
+  const gap = daysBetweenLocalDates(lastCompletedDate, today)
+  if (gap === 2) {
+    return { streakStatus: 'atRisk', pendingRecoveryDate: addDaysToLocalDate(lastCompletedDate, 1) }
+  }
+  return { streakStatus: 'active', pendingRecoveryDate: undefined }
 }
 
 export function resolveStreakState(input: ResolveStreakStateInput): ResolveStreakStateResult {

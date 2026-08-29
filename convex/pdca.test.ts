@@ -34,6 +34,7 @@ async function seedUser(
     currentStreak: number
     longestStreak: number
     lastCompletedDate: string
+    lastRecoveryDate: string
     availableGachaDraws: number
     totalCycles: number
   }> = {},
@@ -341,5 +342,107 @@ describe('completePdcaCycle', () => {
     const user = await t.run((ctx) => ctx.db.get(userId))
     expect(user?.playerXp).toBe(100)
     expect(user?.availableGachaDraws).toBe(1)
+  })
+})
+
+describe('startPdcaCycle - isRecovery', () => {
+  it('starts a normal cycle with isRecovery=false by default', async () => {
+    const t = convexTest(schema, modules)
+    const userId = await seedUser(t, 'user_a')
+    const goalId = await seedGoal(t, userId)
+
+    const { cycleId } = await t
+      .withIdentity({ subject: 'user_a' })
+      .mutation(api.pdca.startPdcaCycle, { goalId, planText: '英単語を5個復習する' })
+
+    const cycle = await t.run((ctx) => ctx.db.get(cycleId))
+    expect(cycle?.isRecovery).toBe(false)
+  })
+
+  it('AC-RECOVERY-001: allows isRecovery=true when exactly one local day was missed', async () => {
+    const t = convexTest(schema, modules)
+    const userId = await seedUser(t, 'user_a', { lastCompletedDate: localDate(-2) })
+    const goalId = await seedGoal(t, userId)
+
+    const { cycleId } = await t.withIdentity({ subject: 'user_a' }).mutation(api.pdca.startPdcaCycle, {
+      goalId,
+      planText: '英単語を3個だけ復習する',
+      isRecovery: true,
+    })
+
+    const cycle = await t.run((ctx) => ctx.db.get(cycleId))
+    expect(cycle?.isRecovery).toBe(true)
+  })
+
+  it('rejects isRecovery=true when the user is not actually at risk', async () => {
+    const t = convexTest(schema, modules)
+    const userId = await seedUser(t, 'user_a', { lastCompletedDate: localDate(0) })
+    const goalId = await seedGoal(t, userId)
+
+    await expectConvexErrorCode(
+      t.withIdentity({ subject: 'user_a' }).mutation(api.pdca.startPdcaCycle, {
+        goalId,
+        planText: '英単語を3個だけ復習する',
+        isRecovery: true,
+      }),
+      ERROR_CODES.RECOVERY_NOT_AVAILABLE,
+    )
+  })
+
+  it('AC-RECOVERY-002: rejects isRecovery=true when Recovery was used within the last 7 days', async () => {
+    const t = convexTest(schema, modules)
+    const userId = await seedUser(t, 'user_a', {
+      lastCompletedDate: localDate(-2),
+      lastRecoveryDate: localDate(-2),
+    })
+    const goalId = await seedGoal(t, userId)
+
+    await expectConvexErrorCode(
+      t.withIdentity({ subject: 'user_a' }).mutation(api.pdca.startPdcaCycle, {
+        goalId,
+        planText: '英単語を3個だけ復習する',
+        isRecovery: true,
+      }),
+      ERROR_CODES.RECOVERY_NOT_AVAILABLE,
+    )
+  })
+})
+
+describe('Recovery end-to-end', () => {
+  it('AC-RECOVERY-003: a Recovery cycle started via startPdcaCycle preserves and extends the streak on completion', async () => {
+    const t = convexTest(schema, modules)
+    const userId = await seedUser(t, 'user_a', {
+      currentStreak: 14,
+      longestStreak: 14,
+      lastCompletedDate: localDate(-2),
+    })
+    const goalId = await seedGoal(t, userId)
+    const asUser = t.withIdentity({ subject: 'user_a' })
+
+    const { cycleId } = await asUser.mutation(api.pdca.startPdcaCycle, {
+      goalId,
+      planText: '英単語を3個だけ復習する',
+      isRecovery: true,
+    })
+
+    // DO/CHECK/ACTの各Mutationは#8/#9/#10で担保済みのため、状態遷移のみ模擬する。
+    await t.run(async (ctx) => {
+      await ctx.db.patch(cycleId, {
+        status: 'acting',
+        doResult: 'completed',
+        checkLoad: 'justRight',
+        actType: 'same',
+        updatedAt: Date.now(),
+      })
+    })
+
+    const result = await asUser.mutation(api.pdca.completePdcaCycle, { cycleId })
+
+    expect(result.currentStreak).toBe(15)
+    expect(result.streakUpdated).toBe(true)
+
+    const user = await t.run((ctx) => ctx.db.get(userId))
+    expect(user?.currentStreak).toBe(15)
+    expect(user?.lastRecoveryDate).toBe(localDate(0))
   })
 })

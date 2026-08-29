@@ -2,7 +2,9 @@ import { ChevronRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { Doc } from '../../../convex/_generated/dataModel'
 
-export function GoalCard({ goal }: { goal: Doc<'goals'> }) {
+// recoverable=true の間は「PDCAを回す」の代わりに「リカバリーする」を出し、
+// isRecovery=true でCycleを開始できるようにする（ui-spec #8 / #28-31）。
+export function GoalCard({ goal, recoverable = false }: { goal: Doc<'goals'>; recoverable?: boolean }) {
   return (
     <div className="border-y border-slate-200 py-4">
       <Link
@@ -18,10 +20,12 @@ export function GoalCard({ goal }: { goal: Doc<'goals'> }) {
         <ChevronRight aria-hidden="true" className="ml-3 size-5 shrink-0 text-slate-400" />
       </Link>
       <Link
-        className="mt-3 flex min-h-11 items-center justify-center bg-emerald-700 px-4 text-sm font-bold text-white"
-        to={`/pdca/plan/${goal._id}`}
+        className={`mt-3 flex min-h-11 items-center justify-center px-4 text-sm font-bold text-white ${
+          recoverable ? 'bg-rose-600' : 'bg-emerald-700'
+        }`}
+        to={recoverable ? `/pdca/plan/${goal._id}?recovery=1` : `/pdca/plan/${goal._id}`}
       >
-        PDCAを回す
+        {recoverable ? 'リカバリーする' : 'PDCAを回す'}
       </Link>
     </div>
   )

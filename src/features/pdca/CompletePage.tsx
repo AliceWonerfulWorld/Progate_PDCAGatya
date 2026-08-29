@@ -6,6 +6,7 @@ import { SectionHeading } from '../../components/ui/SectionHeading'
 interface CompleteLocationState {
   result: CompletePdcaCycleResult
   goalId: string
+  isRecovery?: boolean
 }
 
 function isCompleteLocationState(value: unknown): value is CompleteLocationState {
@@ -24,13 +25,20 @@ export function CompletePage() {
     return <Navigate replace to="/" />
   }
 
-  const { result, goalId } = location.state
+  const { result, goalId, isRecovery } = location.state
+  // docs/ui-spec.md #31 (Recovery Complete)。救済が成立した(streakUpdated)場合のみ
+  // 専用の表現にする。救済されなかった場合(既に期限切れ等)は通常表示のまま。
+  const isRecoveredCompletion = isRecovery === true && result.streakUpdated
 
   return (
     <div className="space-y-8 text-center">
       <section className="space-y-3">
-        <p className="text-sm font-medium text-emerald-700">PDCA COMPLETE!</p>
-        <SectionHeading>今日も1周、できたね。</SectionHeading>
+        <p className="text-sm font-medium text-emerald-700">
+          {isRecoveredCompletion ? 'STREAK RECOVERED!' : 'PDCA COMPLETE!'}
+        </p>
+        <SectionHeading>
+          {isRecoveredCompletion ? 'ストリークを取り戻せたね。' : '今日も1周、できたね。'}
+        </SectionHeading>
       </section>
 
       <ul className="space-y-3 border-y border-slate-200 py-6 text-left">
@@ -45,7 +53,11 @@ export function CompletePage() {
         </li>
       </ul>
 
-      {result.streakUpdated ? (
+      {isRecoveredCompletion ? (
+        <p className="flex items-center justify-center gap-2 text-base font-bold text-rose-600">
+          <Flame aria-hidden="true" className="size-5" /> {result.currentStreak}日ストリークを維持しました
+        </p>
+      ) : result.streakUpdated ? (
         <p className="flex items-center justify-center gap-2 text-base font-bold text-rose-600">
           <Flame aria-hidden="true" className="size-5" /> 今日のストリーク達成！({result.currentStreak}日)
         </p>

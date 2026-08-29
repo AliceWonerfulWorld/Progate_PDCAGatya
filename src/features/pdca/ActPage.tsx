@@ -73,7 +73,9 @@ function AuthenticatedActPage({ cycleId }: { cycleId: string }) {
         nextPlanCandidate: currentCandidate.trim() || undefined,
       })
       const result = await completePdcaCycle({ cycleId: cycle._id })
-      navigate(`/pdca/complete/${cycle._id}`, { state: { result, goalId: cycle.goalId } })
+      navigate(`/pdca/complete/${cycle._id}`, {
+        state: { result, goalId: cycle.goalId, isRecovery: cycle.isRecovery },
+      })
     } catch {
       setError('ACTを保存できませんでした。もう一度試してください。')
       setIsSubmitting(false)

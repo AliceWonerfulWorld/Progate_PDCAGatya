@@ -8,6 +8,7 @@ import { SignInPrompt } from '../../components/ui/SignInPrompt'
 import { GoalCard } from '../goals/GoalCard'
 import { ActiveCycleCard } from '../pdca/ActiveCycleCard'
 import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
+import { AtRiskBanner } from './AtRiskBanner'
 
 function CreateGoalLink() {
   return (
@@ -21,6 +22,8 @@ function CreateGoalLink() {
 function AuthenticatedGoalList() {
   const { hasError, isReady, isSignedIn } = useCurrentUserInitialization()
   const goals = useQuery(api.goals.listActiveGoals, isReady ? {} : 'skip')
+  const streakStatus = useQuery(api.users.getStreakStatus, isReady ? {} : 'skip')
+  const recoverable = streakStatus?.streakStatus === 'atRisk' && streakStatus.recoveryAvailable
 
   if (!isSignedIn) {
     return (
@@ -46,7 +49,9 @@ function AuthenticatedGoalList() {
 
   return (
     <>
-      <div className="mt-3">{goals.map((goal) => <GoalCard goal={goal} key={goal._id} />)}</div>
+      <div className="mt-3">
+        {goals.map((goal) => <GoalCard goal={goal} key={goal._id} recoverable={recoverable} />)}
+      </div>
       <CreateGoalLink />
     </>
   )
@@ -70,6 +75,8 @@ export function HomePage() {
           <span className="inline-flex items-center gap-1"><RotateCcw aria-hidden="true" className="size-4 text-sky-600" />今日 0周</span>
         </div>
       </section>
+
+      {isClerkConfigured ? <AtRiskBanner /> : null}
 
       {isClerkConfigured ? <AuthenticatedActiveCycle /> : null}
 

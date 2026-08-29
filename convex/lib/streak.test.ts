@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isRecoveryAvailable, resolveStreakState, type ResolveStreakStateInput } from './streak'
+import { deriveStreakStatus, isRecoveryAvailable, resolveStreakState, type ResolveStreakStateInput } from './streak'
 
 const base: ResolveStreakStateInput = {
   currentStreak: 0,
@@ -196,5 +196,30 @@ describe('isRecoveryAvailable', () => {
 
   it('is available again once 7 days have passed', () => {
     expect(isRecoveryAvailable('2026-08-22', '2026-08-29')).toBe(true)
+  })
+})
+
+describe('deriveStreakStatus', () => {
+  it('is active when there is no completion history yet', () => {
+    expect(deriveStreakStatus(undefined, '2026-08-29')).toEqual({
+      streakStatus: 'active',
+      pendingRecoveryDate: undefined,
+    })
+  })
+
+  it('is active on the same day and the day right after', () => {
+    expect(deriveStreakStatus('2026-08-29', '2026-08-29').streakStatus).toBe('active')
+    expect(deriveStreakStatus('2026-08-28', '2026-08-29').streakStatus).toBe('active')
+  })
+
+  it('AC-STREAK-004: is atRisk after exactly one missed local day', () => {
+    expect(deriveStreakStatus('2026-08-27', '2026-08-29')).toEqual({
+      streakStatus: 'atRisk',
+      pendingRecoveryDate: '2026-08-28',
+    })
+  })
+
+  it('is active again once the recovery deadline has passed (multiple days missed)', () => {
+    expect(deriveStreakStatus('2026-08-20', '2026-08-29').streakStatus).toBe('active')
   })
 })
