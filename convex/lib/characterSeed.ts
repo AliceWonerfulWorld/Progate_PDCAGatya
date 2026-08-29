@@ -5,6 +5,8 @@ export interface CharacterSeedEntry {
   rarity: CharacterRarity
   description: string
   imagePath: string
+  // 詳細画面でのみ使う3Dモデル(.glb)。省略時は imagePath の2D画像のまま。
+  modelPath?: string
   defaultMessage?: string
   // 同じrarity内での抽選重み。省略時は1(均等)。
   weight?: number
@@ -136,6 +138,8 @@ export const CHARACTER_SEED_DATA: readonly CharacterSeedEntry[] = [
     rarity: 'SSR',
     description: '長く続いた継続だけに姿を見せる、夜明けの精霊。',
     imagePath: '/characters/ssr_001.webp',
+    // 男性キャラの3Dモデル。差し替えたい場合は下の エイエン と入れ替える。
+    modelPath: '/characters/Yusha.glb',
     defaultMessage: 'ここまで積み上げてきたのは、紛れもない事実だよ。',
     sortOrder: 14,
     isActive: true,
@@ -145,6 +149,8 @@ export const CHARACTER_SEED_DATA: readonly CharacterSeedEntry[] = [
     rarity: 'SSR',
     description: '継続そのものを象徴する、伝説の精霊。',
     imagePath: '/characters/ssr_002.webp',
+    // 女性キャラの3Dモデル。
+    modelPath: '/characters/whi.glb',
     defaultMessage: '続けてきた時間は、誰にも奪えない。',
     sortOrder: 15,
     isActive: true,

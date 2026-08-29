@@ -13,10 +13,10 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       // 業務データ(Convexへのquery/mutation通信)はキャッシュ対象にしない。
-      // 静的アセット(HTML/CSS/JS/icons/character images)のみをprecacheする。
+      // 静的アセット(HTML/CSS/JS/icons/character images/3Dモデル)のみをprecacheする。
       // docs/technical-design.md #59-61 (PWA Policy / Service Worker)
       workbox: {
-        globPatterns: ['**/*.{js,css,html,png,svg,webp,woff2}'],
+        globPatterns: ['**/*.{js,css,html,png,svg,webp,woff2,glb}'],
       },
       manifest: {
         name: 'PDCA GACHA',
