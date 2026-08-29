@@ -115,6 +115,51 @@ describe('getHistorySummary', () => {
   })
 })
 
+describe('getCompletionHeatmap', () => {
+  it('buckets completed cycles by local date, newest day last, and excludes non-completed cycles', async () => {
+    const t = convexTest(schema, modules)
+    const userId = await seedUser(t, 'user_a')
+    const goalId = await seedGoal(t, userId)
+    const asUser = t.withIdentity({ subject: 'user_a' })
+
+    const now = Date.now()
+    await seedCompletedCycle(t, userId, goalId, now) // today: 1
+    await seedCompletedCycle(t, userId, goalId, now - 5 * 60 * 1000) // today: 2 (same day, different time)
+    await seedCompletedCycle(t, userId, goalId, now - 3 * DAY_MS) // 3 days ago: 1
+
+    await t.run(async (ctx) => {
+      await ctx.db.insert('pdcaCycles', {
+        userId,
+        goalId,
+        planText: '進行中',
+        status: 'doing',
+        isRecovery: false,
+        startedAt: now,
+        createdAt: now,
+        updatedAt: now,
+      })
+    })
+
+    const days = await asUser.query(api.history.getCompletionHeatmap, {})
+
+    expect(days[days.length - 1].count).toBe(2) // today is the last entry
+    expect(days[days.length - 4].count).toBe(1) // 3 days ago
+    expect(days.reduce((sum, day) => sum + day.count, 0)).toBe(3)
+    // consecutive, ascending dates with no gaps or duplicates
+    const dates = new Set(days.map((day) => day.date))
+    expect(dates.size).toBe(days.length)
+  })
+
+  it('returns all zero counts when there is no history yet', async () => {
+    const t = convexTest(schema, modules)
+    await seedUser(t, 'user_a')
+    const days = await t.withIdentity({ subject: 'user_a' }).query(api.history.getCompletionHeatmap, {})
+
+    expect(days.every((day) => day.count === 0)).toBe(true)
+    expect(days.length).toBeGreaterThan(0)
+  })
+})
+
 describe('listRecentCycles', () => {
   it('AC-HISTORY-001: returns completed cycles newest first, across all goals', async () => {
     const t = convexTest(schema, modules)

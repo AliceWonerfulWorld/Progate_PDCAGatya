@@ -2,11 +2,14 @@ import { v } from 'convex/values'
 import type { Doc, Id } from './_generated/dataModel'
 import { query } from './_generated/server'
 import { requireCurrentUser, requireOwnedGoal } from './lib/auth'
-import { daysBetweenLocalDates, getLocalDateString } from './lib/date'
+import { addDaysToLocalDate, daysBetweenLocalDates, getLocalDateString } from './lib/date'
 
 const RECENT_CYCLES_LIMIT = 30
 // Today / Week集計の対象を絞るための安全な上限（timezoneのズレを吸収するため8日分）。
 const SUMMARY_WINDOW_MS = 8 * 24 * 60 * 60 * 1000
+// GitHubの草のようなヒートマップの表示日数。モバイル幅で横スクロール無しに近い量として20週間分。
+const HEATMAP_DAYS = 140
+const HEATMAP_WINDOW_MS = HEATMAP_DAYS * 24 * 60 * 60 * 1000
 
 // docs/ui-spec.md #24.2, AC-HISTORY-004: Current Streak / Today / Week / Total。
 export const getHistorySummary = query({
@@ -41,6 +44,45 @@ export const getHistorySummary = query({
       weekCycles,
       totalCycles: currentUser.totalCycles,
     }
+  },
+})
+
+export interface HeatmapDay {
+  date: string
+  count: number
+}
+
+// GitHubのContribution Graphのように、直近の完了日を可視化するためのデータ。
+// 「達成率」等の割合ではなく完了「回数」の加算のみを扱うため、
+// docs/ui-spec.md #24.5が禁止する失敗強調表現には該当しない。
+export const getCompletionHeatmap = query({
+  args: {},
+  handler: async (ctx): Promise<HeatmapDay[]> => {
+    const currentUser = await requireCurrentUser(ctx)
+    const now = Date.now()
+    const today = getLocalDateString(now, currentUser.timezone)
+
+    const completions = await ctx.db
+      .query('pdcaCycles')
+      .withIndex('by_user_completed_at', (q) =>
+        q.eq('userId', currentUser._id).gte('completedAt', now - HEATMAP_WINDOW_MS),
+      )
+      .filter((q) => q.eq(q.field('status'), 'completed'))
+      .collect()
+
+    const countByDate = new Map<string, number>()
+    for (const cycle of completions) {
+      if (cycle.completedAt === undefined) continue
+      const date = getLocalDateString(cycle.completedAt, currentUser.timezone)
+      countByDate.set(date, (countByDate.get(date) ?? 0) + 1)
+    }
+
+    const days: HeatmapDay[] = []
+    for (let daysAgo = HEATMAP_DAYS - 1; daysAgo >= 0; daysAgo -= 1) {
+      const date = addDaysToLocalDate(today, -daysAgo)
+      days.push({ date, count: countByDate.get(date) ?? 0 })
+    }
+    return days
   },
 })
 
