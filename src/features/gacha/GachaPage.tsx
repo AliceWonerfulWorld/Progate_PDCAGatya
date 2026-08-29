@@ -34,6 +34,22 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+// convex/lib/gacha.ts の selectCharacterForRarity と同じ重み付き抽選。
+// Guestの初回ガチャはInventoryへ書き込まずクライアント側だけで完結するため、
+// (isActive確認済みの)候補配列に対してここで直接抽選する。
+function pickWeighted<T extends { weight?: number }>(items: readonly T[], randomValue: number): T {
+  const weights = items.map((item) => item.weight ?? 1)
+  const totalWeight = weights.reduce((sum, weight) => sum + weight, 0)
+  const target = randomValue * totalWeight
+
+  let cumulative = 0
+  for (let i = 0; i < items.length; i += 1) {
+    cumulative += weights[i]
+    if (target < cumulative) return items[i]
+  }
+  return items[items.length - 1]
+}
+
 // docs/ui-spec.md #18.2: 演出は1〜2秒程度。ここでは実処理と体感演出時間の
 // 両方が終わってから結果を表示する（AC-UI-009: DB更新成功前に確定結果を出さない）。
 const MIN_DRAWING_MS = 1200
@@ -205,6 +221,7 @@ function SignedInGacha() {
 function GuestGacha() {
   const { state, setGacha } = useGuestState()
   const activeCharacters = useQuery(api.characters.listActiveForGuestGacha, {})
+  const gachaRates = useQuery(api.gachas.getActiveGachaRates, { key: 'standard' })
   const [isDrawing, setIsDrawing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<GachaDrawResult | null>(
@@ -237,7 +254,7 @@ function GuestGacha() {
   }
 
   async function handleDraw() {
-    if (!activeCharacters || activeCharacters.length === 0) {
+    if (!activeCharacters || activeCharacters.length === 0 || !gachaRates) {
       setError('ガチャを回せませんでした。もう一度試してください。')
       return
     }
@@ -245,10 +262,10 @@ function GuestGacha() {
     setIsDrawing(true)
     await sleep(MIN_DRAWING_MS)
 
-    const rarity = rollRarity(Math.random())
+    const rarity = rollRarity(Math.random(), gachaRates)
     const candidates = activeCharacters.filter((character) => character.rarity === rarity)
     const pool = candidates.length > 0 ? candidates : activeCharacters
-    const picked = pool[Math.floor(Math.random() * pool.length)]
+    const picked = pickWeighted(pool, Math.random())
 
     setGacha({
       availableDraws: 0,
@@ -303,11 +320,11 @@ function GuestGacha() {
 
       <button
         className="flex min-h-12 w-full items-center justify-center bg-emerald-700 px-4 text-base font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
-        disabled={activeCharacters === undefined}
+        disabled={activeCharacters === undefined || gachaRates === undefined}
         onClick={() => void handleDraw()}
         type="button"
       >
-        {activeCharacters === undefined ? '準備しています…' : '1回回す'}
+        {activeCharacters === undefined || gachaRates === undefined ? '準備しています…' : '1回回す'}
       </button>
     </div>
   )

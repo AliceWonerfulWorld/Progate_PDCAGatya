@@ -104,12 +104,31 @@ export default defineSchema({
     .index('by_user_completed_at', ['userId', 'completedAt'])
     .index('by_goal_completed_at', ['goalId', 'completedAt']),
 
+  // convex/lib/gachaSeed.tsのGACHA_SEED_DATAで定義し、seedGachas(internalMutation)で
+  // 同期する(charactersテーブルと同じ運用方式)。排出率はここが正であり、
+  // convex/gacha.tsのdrawGachaは常にこのテーブルを読む。
+  gachas: defineTable({
+    key: v.string(),
+    name: v.string(),
+    description: v.optional(v.string()),
+    rates: v.object({ R: v.number(), SR: v.number(), SSR: v.number() }),
+    isActive: v.boolean(),
+    sortOrder: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_key', ['key'])
+    .index('by_active_sort_order', ['isActive', 'sortOrder']),
+
   characters: defineTable({
     name: v.string(),
     rarity: characterRarity,
     description: v.string(),
     imagePath: v.string(),
     defaultMessage: v.optional(v.string()),
+    // 同じrarity内での抽選重み。未指定は1として扱う(=全キャラ均等、従来と同じ挙動)。
+    // 一般的なソシャゲのピックアップ演出のように、キャラごとに出やすさを変えたい場合に使う。
+    weight: v.optional(v.number()),
     sortOrder: v.number(),
     isActive: v.boolean(),
     createdAt: v.number(),

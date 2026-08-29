@@ -1,21 +1,32 @@
 import { ConvexError } from 'convex/values'
-import { DUPLICATE_FRAGMENT_REWARDS, GACHA_RATES, type CharacterRarity } from './constants'
+import { DUPLICATE_FRAGMENT_REWARDS, type CharacterRarity } from './constants'
 import { ERROR_CODES } from './errors'
 
+export interface GachaRates {
+  R: number
+  SR: number
+  SSR: number
+}
+
 // randomValue must be a uniform value in [0, 1), e.g. Math.random().
-// 0.00 <= x < 0.70 -> R, 0.70 <= x < 0.95 -> SR, 0.95 <= x < 1.00 -> SSR
-export function rollRarity(randomValue: number): CharacterRarity {
-  if (randomValue < GACHA_RATES.R) return 'R'
-  if (randomValue < GACHA_RATES.R + GACHA_RATES.SR) return 'SR'
+// rates is read from the gachas table (convex/gachas.ts) at call time, not a
+// module-level constant, so that排出率 can change without a code deploy.
+// 0.00 <= x < rates.R -> R, rates.R <= x < rates.R+rates.SR -> SR, else -> SSR
+export function rollRarity(randomValue: number, rates: GachaRates): CharacterRarity {
+  if (randomValue < rates.R) return 'R'
+  if (randomValue < rates.R + rates.SR) return 'SR'
   return 'SSR'
 }
 
 export interface CharacterCandidate {
   rarity: CharacterRarity
   isActive: boolean
+  // 同じrarity内での抽選重み。省略/undefinedは1として扱う(=均等)。
+  weight?: number
 }
 
-// Even selection within the given rarity, no per-character weight in MVP.
+// 同じrarity内は重み付き抽選(一般的なソシャゲのピックアップと同様)。
+// 全キャラのweightが省略/1のときは、旧来の均等抽選と完全に同じ結果になる。
 export function selectCharacterForRarity<T extends CharacterCandidate>(
   characters: readonly T[],
   rarity: CharacterRarity,
@@ -32,8 +43,17 @@ export function selectCharacterForRarity<T extends CharacterCandidate>(
     })
   }
 
-  const index = Math.min(Math.floor(randomValue * candidates.length), candidates.length - 1)
-  return candidates[index]
+  const weights = candidates.map((character) => character.weight ?? 1)
+  const totalWeight = weights.reduce((sum, weight) => sum + weight, 0)
+  const target = randomValue * totalWeight
+
+  let cumulative = 0
+  for (let i = 0; i < candidates.length; i += 1) {
+    cumulative += weights[i]
+    if (target < cumulative) return candidates[i]
+  }
+  // 浮動小数点誤差でtargetがtotalWeight以上になった場合の保険。
+  return candidates[candidates.length - 1]
 }
 
 export function getDuplicateFragmentReward(rarity: CharacterRarity): number {

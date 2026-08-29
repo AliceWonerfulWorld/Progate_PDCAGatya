@@ -3,12 +3,8 @@ export const BASE_PDCA_XP = 100
 // docs/data-model.md #25 (Mission Data): DAILY_MISSIONS.COMPLETE_ONE_PDCA.
 export const DAILY_MISSION_XP = 50
 
-export const GACHA_RATES = {
-  R: 0.7,
-  SR: 0.25,
-  SSR: 0.05,
-} as const
-
+// 排出率はgachasテーブル側で管理する(convex/lib/gachaSeed.ts)。
+// ここではrarityの値そのものの定義だけを持つ。
 export const DUPLICATE_FRAGMENT_REWARDS = {
   R: 10,
   SR: 20,
@@ -23,4 +19,4 @@ export const INPUT_LIMITS = {
   displayName: 50,
 } as const
 
-export type CharacterRarity = keyof typeof GACHA_RATES
+export type CharacterRarity = 'R' | 'SR' | 'SSR'

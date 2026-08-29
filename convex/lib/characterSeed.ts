@@ -6,6 +6,8 @@ export interface CharacterSeedEntry {
   description: string
   imagePath: string
   defaultMessage?: string
+  // 同じrarity内での抽選重み。省略時は1(均等)。
+  weight?: number
   sortOrder: number
   isActive: boolean
 }
