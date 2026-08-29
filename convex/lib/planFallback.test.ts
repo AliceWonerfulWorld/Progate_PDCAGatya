@@ -114,12 +114,26 @@ describe('resolveNextPlan', () => {
       JSON.stringify({ nextPlan: '英単語を5個復習する', message: '軽めにしました' }),
       fallbackInput,
     )
-    expect(result).toEqual({ nextPlan: '英単語を5個復習する', usedFallback: false })
+    expect(result).toEqual({
+      nextPlan: '英単語を5個復習する',
+      message: '軽めにしました',
+      usedFallback: false,
+    })
+  })
+
+  it('uses a default message when the AI omits message', () => {
+    const result = resolveNextPlan(JSON.stringify({ nextPlan: '英単語を5個復習する' }), fallbackInput)
+    expect(result).toEqual({
+      nextPlan: '英単語を5個復習する',
+      message: '次の一周を始めやすい形にしました',
+      usedFallback: false,
+    })
   })
 
   it('AC-AI-003: falls back on broken JSON, core loop continues', () => {
     const result = resolveNextPlan('{not valid json', fallbackInput)
     expect(result.usedFallback).toBe(true)
+    expect(result.message.length).toBeGreaterThan(0)
     expect(result.nextPlan.length).toBeGreaterThan(0)
   })
 
