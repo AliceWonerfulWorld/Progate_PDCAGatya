@@ -10,6 +10,10 @@ const convexUrl = import.meta.env.VITE_CONVEX_URL
 
 export const isClerkConfigured = Boolean(clerkPublishableKey && convexUrl)
 
+// ConvexReactClient は WebSocket 接続を保持するため、レンダーごとに作り直すと
+// 送信中のミューテーションが破棄される。モジュールスコープで一度だけ生成する。
+const convexClient = isClerkConfigured ? new ConvexReactClient(convexUrl!) : null
+
 function getBrowserTimezone(): string {
   return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
 }
@@ -28,11 +32,9 @@ function CurrentUserInitializer() {
 }
 
 function ClerkConvexProvider({ children }: PropsWithChildren) {
-  const convex = new ConvexReactClient(convexUrl!)
-
   return (
     <ClerkProvider publishableKey={clerkPublishableKey!}>
-      <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+      <ConvexProviderWithClerk client={convexClient!} useAuth={useAuth}>
         <CurrentUserInitializer />
         {children}
       </ConvexProviderWithClerk>
