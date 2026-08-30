@@ -151,6 +151,9 @@
   --duration-normal: 250ms;
   --duration-slow: 400ms;
   --duration-reward: 700ms;
+  --app-shell-width: 32.5rem;
+  --app-page-padding: 1rem;
+  --app-section-gap: 2rem;
   /* --ease-standard は utility(ease-standard) 経由で参照されるため
    * tree-shake されない。ここで重複定義すると desync するので置かない。
    * 未参照の3つだけをスケールとして残す。 */
@@ -224,9 +227,88 @@ body {
   min-height: 100dvh;
   margin: 0;
   overflow-x: hidden;
+  background:
+    radial-gradient(circle at 50% -12rem, color-mix(in oklab, var(--color-primary-subtle) 88%, transparent), transparent 34rem),
+    var(--color-surface-muted);
 }
 
 button,
 a {
   -webkit-tap-highlight-color: transparent;
+}
+
+/* App frame: mobile is edge-to-edge; wide screens keep the experience as one focused app. */
+.app-canvas {
+  min-height: 100dvh;
+}
+
+.app-shell {
+  position: relative;
+  min-height: 100dvh;
+  width: 100%;
+  max-width: var(--app-shell-width);
+  margin-inline: auto;
+  background: color-mix(in oklab, var(--color-background) 96%, var(--color-primary-subtle));
+}
+
+.app-page {
+  width: 100%;
+  padding: 1.5rem var(--app-page-padding) max(2rem, env(safe-area-inset-bottom));
+}
+
+.app-page-with-navigation {
+  padding-bottom: max(7.5rem, calc(env(safe-area-inset-bottom) + 6.5rem));
+}
+
+.app-bottom-navigation {
+  position: fixed;
+  z-index: 40;
+  right: 0.5rem;
+  bottom: max(0.5rem, env(safe-area-inset-bottom));
+  left: 0.5rem;
+  width: auto;
+  max-width: calc(var(--app-shell-width) - 1rem);
+  margin-inline: auto;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 1.5rem;
+  background: color-mix(in oklab, var(--color-surface) 94%, transparent);
+  box-shadow: 0 12px 30px color-mix(in oklab, var(--color-text) 14%, transparent);
+  backdrop-filter: blur(20px);
+}
+
+.mission-shortcut {
+  position: fixed;
+  z-index: 30;
+  right: max(1rem, calc(50% - 15.25rem));
+  bottom: max(6.75rem, calc(env(safe-area-inset-bottom) + 6rem));
+}
+
+/* Shared surface vocabulary for feature screens that need a consistent app-level card. */
+.app-card-large,
+.app-card-small {
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface);
+  box-shadow: 0 4px 14px color-mix(in oklab, var(--color-text) 7%, transparent);
+}
+
+.app-card-large {
+  border-radius: 1.5rem;
+}
+
+.app-card-small {
+  border-radius: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .app-canvas {
+    padding-block: 1.5rem;
+  }
+
+  .app-shell {
+    min-height: calc(100dvh - 3rem);
+    overflow: clip;
+    border: 1px solid var(--color-border-subtle);
+    border-radius: 2rem;
+    box-shadow: 0 22px 60px color-mix(in oklab, var(--color-text) 12%, transparent);
+  }
 }
