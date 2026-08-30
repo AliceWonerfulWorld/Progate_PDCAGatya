@@ -182,6 +182,20 @@ describe('listCycles', () => {
     expect(result.page[1].goalName).toBe('英語学習')
   })
 
+  it('keeps the paginated endpoint compatible with an older client that does not send asOf', async () => {
+    const t = convexTest(schema, modules)
+    const userId = await seedUser(t, 'user_a')
+    const goalId = await seedGoal(t, userId)
+    await seedCompletedCycle(t, userId, goalId, Date.now())
+
+    const result = await t.withIdentity({ subject: 'user_a' }).query(api.history.listCycles, {
+      period: '30d',
+      paginationOpts: FIRST_PAGE,
+    })
+
+    expect(result.page).toHaveLength(1)
+  })
+
   it('AC-HISTORY-003: filters to a single Goal when goalId is given', async () => {
     const t = convexTest(schema, modules)
     const userId = await seedUser(t, 'user_a')

@@ -80,11 +80,12 @@ function AuthenticatedHistory() {
   const [period, setPeriod] = useState<HistoryPeriod>('30d')
   const [selectedGoalId, setSelectedGoalId] = useState<Id<'goals'> | null>(null)
   const [historyAsOf, setHistoryAsOf] = useState(() => Date.now())
-  const summary = useQuery(api.history.getHistorySummary, isReady ? {} : 'skip')
-  const heatmap = useQuery(api.history.getCompletionHeatmap, isReady ? {} : 'skip')
-  const goals = useQuery(api.goals.listAllGoals, isReady ? {} : 'skip')
-  const currentUser = useQuery(api.users.currentUser, isReady ? {} : 'skip')
-  const { results, status, loadMore } = usePaginatedQuery(api.history.listCycles, isReady ? { goalId: selectedGoalId ?? undefined, period, asOf: historyAsOf } : 'skip', { initialNumItems: 20 })
+  const enabled = isReady && isSignedIn
+  const summary = useQuery(api.history.getHistorySummary, enabled ? {} : 'skip')
+  const heatmap = useQuery(api.history.getCompletionHeatmap, enabled ? {} : 'skip')
+  const goals = useQuery(api.goals.listAllGoals, enabled ? {} : 'skip')
+  const currentUser = useQuery(api.users.currentUser, enabled ? {} : 'skip')
+  const { results, status, loadMore } = usePaginatedQuery(api.history.listCycles, enabled ? { goalId: selectedGoalId ?? undefined, period, asOf: historyAsOf } : 'skip', { initialNumItems: 20 })
   const timezone = currentUser?.timezone ?? 'UTC'
   if (!isSignedIn) return <SignInPrompt message="ログインすると、これまでのPDCAを振り返れます。" />
   if (hasError) return <LoadFailure message="履歴を読み込めませんでした。" onRetry={retry} />

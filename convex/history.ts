@@ -116,15 +116,17 @@ export const listCycles = query({
   args: {
     goalId: v.optional(v.id('goals')),
     period: historyPeriodValidator,
-    // ページネーションのカーソルは同一クエリでのみ有効。サーバー側のDate.now()を
-    // 毎回使うと購読の再評価ごとに範囲が変わるため、一覧を開いた時点の時刻を固定する。
-    asOf: v.number(),
+    // ページネーションのカーソルは同一クエリでのみ有効。新UIは一覧を開いた時点の
+    // 時刻を固定して渡す。optionalにして、PWAに残った旧UIの呼び出しも壊さない。
+    asOf: v.optional(v.number()),
     paginationOpts: paginationOptsValidator,
   },
   returns: v.any(),
   handler: async (ctx, args) => {
     const currentUser = await requireCurrentUser(ctx)
-    const completedAfter = getPeriodStart(args.period, args.asOf)
+    // 旧UIにはasOfが無いため、Date.now()で期間を毎回変えず全履歴を返す。
+    // これにより旧Cursorとの不整合で画面全体が落ちることを防ぐ。
+    const completedAfter = args.asOf === undefined ? 0 : getPeriodStart(args.period, args.asOf)
 
     if (args.goalId !== undefined) {
       const goal = await requireOwnedGoal(ctx, args.goalId, currentUser)
