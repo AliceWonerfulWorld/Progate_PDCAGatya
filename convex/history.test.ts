@@ -160,8 +160,10 @@ describe('getCompletionHeatmap', () => {
   })
 })
 
-describe('listRecentCycles', () => {
-  it('AC-HISTORY-001: returns completed cycles newest first, across all goals', async () => {
+const FIRST_PAGE = { cursor: null, numItems: 20 }
+
+describe('listCycles', () => {
+  it('AC-HISTORY-001: returns completed cycle summaries newest first, across all goals', async () => {
     const t = convexTest(schema, modules)
     const userId = await seedUser(t, 'user_a')
     const goalA = await seedGoal(t, userId, '英語学習')
@@ -172,11 +174,12 @@ describe('listRecentCycles', () => {
     const older = await seedCompletedCycle(t, userId, goalA, now - DAY_MS, { planText: '古い方' })
     const newer = await seedCompletedCycle(t, userId, goalB, now, { planText: '新しい方' })
 
-    const result = await asUser.query(api.history.listRecentCycles, {})
+    const result = await asUser.query(api.history.listCycles, { period: 'all', paginationOpts: FIRST_PAGE })
 
-    expect(result.map((item) => item.cycle._id)).toEqual([newer, older])
-    expect(result[0].goalName).toBe('筋トレ')
-    expect(result[1].goalName).toBe('英語学習')
+    expect(result.page.map((item) => item.cycleId)).toEqual([newer, older])
+    expect(result.page[0].planText).toBe('新しい方')
+    expect(result.page[0].goalName).toBe('筋トレ')
+    expect(result.page[1].goalName).toBe('英語学習')
   })
 
   it('AC-HISTORY-003: filters to a single Goal when goalId is given', async () => {
@@ -190,10 +193,14 @@ describe('listRecentCycles', () => {
     await seedCompletedCycle(t, userId, goalA, now)
     await seedCompletedCycle(t, userId, goalB, now)
 
-    const result = await asUser.query(api.history.listRecentCycles, { goalId: goalA })
+    const result = await asUser.query(api.history.listCycles, {
+      goalId: goalA,
+      period: 'all',
+      paginationOpts: FIRST_PAGE,
+    })
 
-    expect(result).toHaveLength(1)
-    expect(result[0].goalName).toBe('英語学習')
+    expect(result.page).toHaveLength(1)
+    expect(result.page[0].goalName).toBe('英語学習')
   })
 
   it('excludes cycles that are not yet completed', async () => {
@@ -216,8 +223,8 @@ describe('listRecentCycles', () => {
       })
     })
 
-    const result = await asUser.query(api.history.listRecentCycles, {})
-    expect(result).toHaveLength(0)
+    const result = await asUser.query(api.history.listCycles, { period: 'all', paginationOpts: FIRST_PAGE })
+    expect(result.page).toHaveLength(0)
   })
 
   it("rejects filtering by another user's Goal (AC-AUTH-003)", async () => {
@@ -227,11 +234,45 @@ describe('listRecentCycles', () => {
     const goalId = await seedGoal(t, ownerId)
 
     try {
-      await t.withIdentity({ subject: 'user_b' }).query(api.history.listRecentCycles, { goalId })
+      await t.withIdentity({ subject: 'user_b' }).query(api.history.listCycles, {
+        goalId,
+        period: 'all',
+        paginationOpts: FIRST_PAGE,
+      })
       throw new Error('expected listRecentCycles to throw')
     } catch (error) {
       expect(error).toBeInstanceOf(ConvexError)
       expect((error as ConvexError<{ code: string }>).data.code).toBe(ERROR_CODES.GOAL_FORBIDDEN)
     }
+  })
+
+  it('returns history in pages and resets the period at the server boundary', async () => {
+    const t = convexTest(schema, modules)
+    const userId = await seedUser(t, 'user_a')
+    const goalId = await seedGoal(t, userId)
+    const asUser = t.withIdentity({ subject: 'user_a' })
+    const now = Date.now()
+
+    for (let index = 0; index < 3; index += 1) {
+      await seedCompletedCycle(t, userId, goalId, now - index * 1_000, { planText: `PLAN ${index}` })
+    }
+    await seedCompletedCycle(t, userId, goalId, now - 40 * DAY_MS, { planText: '古いPLAN' })
+
+    const first = await asUser.query(api.history.listCycles, {
+      period: 'all',
+      paginationOpts: { cursor: null, numItems: 2 },
+    })
+    const second = await asUser.query(api.history.listCycles, {
+      period: 'all',
+      paginationOpts: { cursor: first.continueCursor, numItems: 2 },
+    })
+    const recentOnly = await asUser.query(api.history.listCycles, {
+      period: '30d',
+      paginationOpts: FIRST_PAGE,
+    })
+
+    expect(first.page).toHaveLength(2)
+    expect(second.page).toHaveLength(2)
+    expect(recentOnly.page.map((item) => item.planText)).not.toContain('古いPLAN')
   })
 })
