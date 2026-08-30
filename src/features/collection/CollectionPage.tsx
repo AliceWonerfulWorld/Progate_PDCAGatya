@@ -196,15 +196,11 @@ function AuthenticatedCollection() {
               key={entry.character._id}
               to={`/collection/${entry.character._id}`}
             >
-              <div className="relative flex aspect-square items-center justify-center bg-surface-muted text-2xl">
+              <div className="relative flex aspect-square items-center justify-center overflow-hidden bg-surface-muted text-2xl">
                 {entry.owned ? (
-                  <img
-                    alt={entry.character.name}
-                    className="size-full object-cover"
-                    src={entry.character.imagePath}
-                  />
+                  <img alt={entry.character.name} className="size-full object-contain p-2" src={entry.character.imagePath} />
                 ) : (
-                  <div className="size-full bg-border" />
+                  <div aria-label="未入手" className="size-full bg-border" role="img" />
                 )}
                 {entry.isPartner ? (
                   <Star aria-hidden="true" className="absolute right-1 top-1 size-4 fill-rarity-ssr-border text-rarity-ssr-icon" />

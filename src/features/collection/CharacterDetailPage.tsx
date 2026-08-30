@@ -37,7 +37,7 @@ function AuthenticatedCharacterDetail({ characterId }: { characterId: string }) 
   if (!owned) {
     return (
       <div className="space-y-4 text-center">
-        <div className="mx-auto aspect-square w-40 bg-border" />
+        <div aria-label="未入手" className="mx-auto aspect-square w-40 bg-border" role="img" />
         <SectionHeading>???</SectionHeading>
         <p className="text-sm text-text-subtle">まだ出会っていないキャラクターです。</p>
       </div>
