@@ -1,118 +1,152 @@
-import { Flame, RotateCcw } from 'lucide-react'
-import { useQuery } from 'convex/react'
-import { api } from '../../../convex/_generated/api'
-import { RiveAnimation } from '../../components/ui/RiveAnimation'
-import { SectionHeading } from '../../components/ui/SectionHeading'
-import { getRiveAsset } from '../../lib/riveAssets'
-import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
+import { Flame, RotateCcw, Sparkles } from "lucide-react";
+import { useQuery } from "convex/react";
+import { Link } from "react-router-dom";
+import { api } from "../../../convex/_generated/api";
+import { RiveAnimation } from "../../components/ui/RiveAnimation";
+import { getRiveAsset } from "../../lib/riveAssets";
+import { useCurrentUserInitialization } from "../goals/useCurrentUserInitialization";
 
-// 相棒キャラ(ui-spec #6.3)とマスコットは同じ「絵」の役割なので1枠に統合する。
-// 相棒が未設定(初回ガチャ前)の間だけ、にんじゃわんこがその席に座る。
-function HomeAvatar({ name, imagePath }: { name: string; imagePath?: string }) {
-  const asset = getRiveAsset(name)
-  if (asset) {
+function Mascot({ name, imagePath }: { name: string; imagePath?: string }) {
+  const asset = getRiveAsset(name);
+  if (asset)
     return (
       <RiveAnimation
         alt={name}
         artboard={asset.artboard}
-        className="size-16 shrink-0"
+        className="size-24 shrink-0"
         fallbackSrc={asset.fallbackSrc}
         src={asset.src}
         stateMachine={asset.stateMachine}
         tapTrigger={asset.tapTrigger}
       />
-    )
-  }
-  if (!imagePath) return null
-  return <img alt={name} className="size-16 shrink-0 bg-surface-muted object-cover" src={imagePath} />
+    );
+  if (!imagePath) return null;
+  return (
+    <img
+      alt={name}
+      className="size-24 shrink-0 object-contain"
+      src={imagePath}
+    />
+  );
 }
 
-function HeaderFrame({
-  greeting,
-  stats,
-  message,
-  avatar,
+function Stat({
+  icon: Icon,
+  label,
+  value,
 }: {
-  greeting: React.ReactNode
-  stats?: React.ReactNode
-  message?: React.ReactNode
-  avatar: React.ReactNode
+  icon: typeof Flame;
+  label: string;
+  value: string;
 }) {
   return (
-    <section className="flex items-start justify-between gap-3">
-      <div className="space-y-3">
-        {greeting}
-        {stats}
-        {message}
-      </div>
-      {avatar}
-    </section>
-  )
+    <div className="rounded-2xl bg-surface px-3 py-3 shadow-sm">
+      <Icon aria-hidden="true" className="size-4 text-primary" />
+      <p className="mt-1 text-base font-black tracking-tight text-text-strong">
+        {value}
+      </p>
+      <p className="mt-0.5 text-[10px] font-black tracking-[0.1em] text-text-subtle">
+        {label}
+      </p>
+    </div>
+  );
 }
 
-// Convexを一切叩かない版。Clerk未設定のローカル環境ではProvider自体が無く、
-// useQueryを呼ぶとクラッシュするため、フックを持たない別コンポーネントに分ける。
+function HeroFrame({ children }: { children: React.ReactNode }) {
+  return (
+    <section className="overflow-hidden rounded-3xl border border-primary-border bg-primary-subtle p-5 shadow-sm">
+      {children}
+    </section>
+  );
+}
+
 export function GuestHomeHeader() {
   return (
-    <HeaderFrame
-      avatar={<HomeAvatar name="にんじゃわんこ" />}
-      greeting={
-        <>
-          <p className="text-sm font-medium text-primary">今日の一歩</p>
-          <SectionHeading>今日も1周だけ回そう。</SectionHeading>
-        </>
-      }
-    />
-  )
+    <HeroFrame>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-black tracking-[0.14em] text-primary">
+            TODAY'S STEP
+          </p>
+          <h1 className="mt-2 text-2xl font-black tracking-tight text-text-strong">
+            今日も1周だけ
+            <br />
+            回してみよう。
+          </h1>
+          <p className="mt-3 text-sm font-semibold leading-6 text-text-muted">
+            小さな一歩から、続けたいことを始めよう。
+          </p>
+        </div>
+        <Mascot name="にんじゃわんこ" />
+      </div>
+    </HeroFrame>
+  );
 }
 
 export function HomeHeader() {
-  const { isReady, isSignedIn } = useCurrentUserInitialization()
-  const enabled = isSignedIn && isReady
-  const summary = useQuery(api.history.getHistorySummary, enabled ? {} : 'skip')
-  const collection = useQuery(api.characters.listCollection, enabled ? {} : 'skip')
-  const partner = collection?.find((entry) => entry.isPartner)
-  const done = (summary?.todayCycles ?? 0) > 0
+  const { isReady, isSignedIn } = useCurrentUserInitialization();
+  const enabled = isSignedIn && isReady;
+  const summary = useQuery(
+    api.history.getHistorySummary,
+    enabled ? {} : "skip",
+  );
+  const collection = useQuery(
+    api.characters.listCollection,
+    enabled ? {} : "skip",
+  );
+  const currentUser = useQuery(api.users.currentUser, enabled ? {} : "skip");
+  const partner = collection?.find((entry) => entry.isPartner);
+  const done = (summary?.todayCycles ?? 0) > 0;
 
   return (
-    <HeaderFrame
-      avatar={
-        partner ? (
-          <HomeAvatar imagePath={partner.character.imagePath} name={partner.character.name} />
-        ) : (
-          <HomeAvatar name="にんじゃわんこ" />
-        )
-      }
-      greeting={
-        <>
-          <p className="text-sm font-medium text-primary">今日の一歩</p>
-          {/* ui-spec #6.4 / #6.5: 今日0周かどうかで見出しを変える。複数周回は強制しない。 */}
-          <SectionHeading>{done ? '今日の1周、達成済み！' : '今日も1周だけ回そう。'}</SectionHeading>
-          {done ? <p className="text-sm text-text-muted">余裕があればもう1周。</p> : null}
-        </>
-      }
-      message={
-        partner ? (
-          <p className="text-sm leading-5 text-text-muted">
-            「{partner.character.defaultMessage ?? '今日も1周だけやろう'}」
+    <HeroFrame>
+      <div className="flex items-start gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-black tracking-[0.14em] text-primary">
+            TODAY'S STEP
           </p>
-        ) : null
-      }
-      // Streak / 今日の周回数は ui-spec #6.2 の優先度5。カードにせず1行で置く。
-      stats={
-        isSignedIn ? (
-          <div className="flex gap-6 text-sm text-text-muted">
-            <span className="inline-flex items-center gap-1">
-              <Flame aria-hidden="true" className="size-4 text-attention-subtle" />
-              {summary?.currentStreak ?? 0}日
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <RotateCcw aria-hidden="true" className="size-4 text-choice-info" />
-              今日 {summary?.todayCycles ?? 0}周
-            </span>
+          <h1 className="mt-2 text-2xl font-black tracking-tight text-text-strong">
+            {done ? "今日も積み上がったね。" : "今日も1周だけやろう！"}
+          </h1>
+          {partner ? (
+            <p className="mt-3 rounded-2xl bg-surface/80 px-3 py-2 text-sm font-semibold leading-5 text-text-muted">
+              「{partner.character.defaultMessage ?? "今日も1周だけやろう"}」
+            </p>
+          ) : (
+            <Link
+              className="mt-3 inline-flex text-sm font-bold text-primary"
+              to="/collection"
+            >
+              相棒を選ぶと、ここに応援に来てくれます
+            </Link>
+          )}
+        </div>
+        {partner ? (
+          <div className="grid size-28 shrink-0 place-items-center overflow-hidden rounded-3xl bg-surface shadow-sm">
+            <Mascot
+              imagePath={partner.character.imagePath}
+              name={partner.character.name}
+            />
           </div>
-        ) : null
-      }
-    />
-  )
+        ) : null}
+      </div>
+      <div className="mt-5 grid grid-cols-3 gap-2">
+        <Stat
+          icon={Flame}
+          label="STREAK"
+          value={`${summary?.currentStreak ?? 0}日`}
+        />
+        <Stat
+          icon={RotateCcw}
+          label="TODAY"
+          value={`${summary?.todayCycles ?? 0}周`}
+        />
+        <Stat
+          icon={Sparkles}
+          label="PLAYER"
+          value={`Lv.${currentUser?.playerLevel ?? 1}`}
+        />
+      </div>
+    </HeroFrame>
+  );
 }

@@ -1,65 +1,93 @@
 export interface FocusRect {
-  bottom: number
-  height: number
-  left: number
-  right: number
-  top: number
-  width: number
+  bottom: number;
+  height: number;
+  left: number;
+  right: number;
+  top: number;
+  width: number;
 }
 
-export function OnboardingFocusOverlay({ message, rect }: { message: string; rect: FocusRect }) {
-  const tooltipTop = rect.bottom + 12
+export function FirstLoopGuide({
+  step,
+  title,
+  message,
+}: {
+  step: number;
+  title: string;
+  message: string;
+}) {
+  const steps = ["Goal", "PLAN", "DO", "CHECK", "ACT"];
 
   return (
-    <>
-      <div aria-hidden="true" className="fixed inset-0 z-30">
-        <div className="fixed inset-x-0 top-0 bg-text/55" style={{ height: rect.top }} />
-        <div className="fixed bottom-0 left-0 bg-text/55" style={{ top: rect.top, width: rect.left }} />
-        <div className="fixed bottom-0 right-0 bg-text/55" style={{ left: rect.right, top: rect.top }} />
-        <div className="fixed inset-x-0 bottom-0 bg-text/55" style={{ top: rect.bottom }} />
+    <aside
+      aria-label="最初の一周ガイド"
+      className="rounded-3xl border border-primary-border bg-primary-subtle p-4 shadow-sm"
+    >
+      <div className="flex items-start gap-3">
+        <div className="grid size-9 shrink-0 place-items-center rounded-2xl bg-primary text-white">
+          <span className="text-xs font-black">{step}</span>
+        </div>
+        <div>
+          <p className="text-xs font-black tracking-[0.12em] text-primary">
+            FIRST LOOP · {step}/{steps.length}
+          </p>
+          <h2 className="mt-1 text-sm font-black text-text-strong">{title}</h2>
+          <p
+            aria-live="polite"
+            className="mt-1 text-sm leading-5 text-text-muted"
+          >
+            {message}
+          </p>
+        </div>
       </div>
-      <p
-        aria-live="polite"
-        className="fixed z-50 max-w-[calc(100vw-2rem)] bg-surface px-4 py-3 text-sm font-bold leading-6 text-text shadow-lg"
-        style={{ left: Math.max(16, rect.left), top: tooltipTop }}
-      >
-        {message}
-      </p>
-    </>
-  )
+      <ol aria-label="PDCAの進み具合" className="mt-4 grid grid-cols-5 gap-1.5">
+        {steps.map((label, index) => {
+          const current = index + 1 === step;
+          const complete = index + 1 < step;
+          return (
+            <li className="min-w-0" key={label}>
+              <div
+                className={`h-1.5 rounded-full ${complete || current ? "bg-primary" : "bg-primary-border"}`}
+              />
+              <p
+                className={`mt-1 truncate text-center text-[9px] font-black ${current ? "text-primary" : "text-text-subtle"}`}
+              >
+                {label}
+              </p>
+            </li>
+          );
+        })}
+      </ol>
+    </aside>
+  );
 }
 
-export function GuestOnboardingFocus({ message, targetId }: { message: string; targetId: string }) {
-  const [rect, setRect] = useState<FocusRect | null>(null)
-
-  useEffect(() => {
-    function updateRect() {
-      const target = document.getElementById(targetId)
-      if (!target) {
-        setRect(null)
-        return
-      }
-
-      const next = target.getBoundingClientRect()
-      setRect({
-        bottom: next.bottom,
-        height: next.height,
-        left: next.left,
-        right: next.right,
-        top: next.top,
-        width: next.width,
-      })
-    }
-
-    updateRect()
-    window.addEventListener('resize', updateRect)
-    window.addEventListener('scroll', updateRect, true)
-    return () => {
-      window.removeEventListener('resize', updateRect)
-      window.removeEventListener('scroll', updateRect, true)
-    }
-  }, [targetId])
-
-  return rect ? <OnboardingFocusOverlay message={message} rect={rect} /> : null
+// 以前の全面マスクUIを置き換える互換コンポーネント。
+// rectは既存の呼び出し元との互換性のため受け取るが、操作を遮らないカード型ガイドでは使用しない。
+export function OnboardingFocusOverlay({
+  message,
+}: {
+  message: string;
+  rect: FocusRect;
+}) {
+  return (
+    <FirstLoopGuide message={message} step={2} title="小さなPLANを選ぼう" />
+  );
 }
-import { useEffect, useState } from 'react'
+
+export function GuestOnboardingFocus({
+  message,
+  targetId,
+}: {
+  message: string;
+  targetId: string;
+}) {
+  const isPlan = targetId === "guest-onboarding-plan-confirm";
+  return (
+    <FirstLoopGuide
+      message={message}
+      step={isPlan ? 2 : 3}
+      title={isPlan ? "まずは小さく始めよう" : "できたことを記録しよう"}
+    />
+  );
+}
