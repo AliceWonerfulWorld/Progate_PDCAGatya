@@ -5,7 +5,7 @@ import { api } from '../../../convex/_generated/api'
 import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
 
 // docs/ui-spec.md #8 (Home - Streak At Risk)。責める表現は使わない。
-export function AtRiskBanner() {
+export function AtRiskBanner({ blockNewCycle = false }: { blockNewCycle?: boolean }) {
   const { isReady, isSignedIn } = useCurrentUserInitialization()
   const [dismissed, setDismissed] = useState(false)
   const streakStatus = useQuery(api.users.getStreakStatus, isSignedIn && isReady ? {} : 'skip')
@@ -28,7 +28,7 @@ export function AtRiskBanner() {
       <p className="text-sm leading-6 text-attention-body">
         昨日はPDCAを回せませんでした。でも、まだ戻せます。
       </p>
-      {streakStatus.recoveryAvailable ? (
+      {streakStatus.recoveryAvailable && !blockNewCycle ? (
         <div className="flex gap-3">
           {primaryGoal ? (
             <Link
@@ -54,7 +54,11 @@ export function AtRiskBanner() {
           </button>
         </div>
       ) : (
-        <p className="text-xs text-attention">今回のリカバリーは既に使用済みです。次回からまた続けましょう。</p>
+        <p className="text-xs text-attention">
+          {blockNewCycle
+            ? '進行中のPDCAを完了すると、リカバリーを始められます。'
+            : '今回のリカバリーは既に使用済みです。次回からまた続けましょう。'}
+        </p>
       )}
     </div>
   )

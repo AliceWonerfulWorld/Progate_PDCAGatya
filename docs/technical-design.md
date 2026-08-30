@@ -404,9 +404,10 @@ cancelPdcaCycle
 2. Goal取得
 3. 所有権確認
 4. archivedAtがないことを確認
-5. planText validation
-6. pdcaCycles作成
-7. status = doing
+5. 進行中Cycle（doing / checking / acting）がないことを確認
+6. planText validation
+7. pdcaCycles作成
+8. status = doing
 ```
 
 戻り値：
@@ -1524,6 +1525,7 @@ GOAL_FORBIDDEN
 
 PDCA_NOT_FOUND
 PDCA_INVALID_STATUS
+PDCA_ACTIVE_CYCLE_EXISTS
 PDCA_ALREADY_COMPLETED
 PDCA_FORBIDDEN
 

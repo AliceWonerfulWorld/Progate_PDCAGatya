@@ -482,6 +482,29 @@ PDCA_INVALID_STATUS
 
 # 12. PDCA Cancel
 
+## AC-PDCA-011A — 進行中PDCAは1件
+
+**Priority:** P1
+
+### Given
+
+```text
+doing / checking / acting のPDCAが1件存在する
+```
+
+### When
+
+別のGoalまたは同じGoalで `startPdcaCycle` を呼ぶ。
+
+### Then
+
+```text
+PDCA_ACTIVE_CYCLE_EXISTS
+新しいCycleは作成されない
+```
+
+Homeでは進行中PDCAの再開導線を最優先で表示し、新規開始CTAは表示しない。
+
 ## AC-PDCA-012 — Cycle Cancel
 
 **Priority:** P1

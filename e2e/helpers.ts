@@ -24,7 +24,7 @@ export async function createGuestGoalAndStartCycle(page: Page, goalName: string,
 }
 
 export async function completeGuestCycle(page: Page): Promise<void> {
-  await page.getByRole('button', { name: '振り返る' }).click()
+  await page.getByRole('button', { name: 'CHECKへ進む' }).click()
   await page.getByRole('button', { name: 'できなかった' }).click()
   await expect(page).toHaveURL(/\/pdca\/check\/guest$/)
 

@@ -34,7 +34,7 @@ function DoBody({
   error: string | null
   onSubmit: (doResult: (typeof DO_RESULTS)[number]['value']) => void
 }) {
-  // ui-spec 11.2: 実行中はアプリが邪魔をせず、「振り返る」で結果選択へ進む。
+  // ui-spec 11.2: 実行中はアプリが邪魔をせず、CHECKへ進む操作で結果選択へ進む。
   const [isReflecting, setIsReflecting] = useState(false)
   // タップした結果をボタンの選択状態として一瞬見せてから次へ進む。
   // 即座に画面が切り替わると「選んだ実感がないまま進んだ」と感じやすいため。
@@ -93,7 +93,7 @@ function DoBody({
             onClick={() => setIsReflecting(true)}
             type="button"
           >
-            振り返る
+            CHECKへ進む
           </button>
         )}
       </div>
