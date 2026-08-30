@@ -1111,19 +1111,24 @@ Goal数が増えた場合はPillを横スクロール可能にする。期間ま
 ## 25.2 UI
 
 ```text
-Player Lv.7
+Player Status Card
+  相棒のビジュアルと、表示名 / Player Lv / 称号 / XP進捗を
+  ひとつの大きなカードにまとめる。
+  表示名は通常テキストで表示し、編集操作時のみ入力欄に切り替える。
 
-1,420 / 1,800 XP
+あなたの記録
+  累計PDCA / 現在Streak / 最長Streak / 累計ガチャを2列の小カードで表示する。
 
-称号
-習慣のたまご
+Your Partner
+  設定済みならキャラクター画像・名前・メッセージ・変更導線を表示する。
+  未設定ならシルエットとCollectionへの選択導線を表示する。
 
-現在の相棒
-○○の精霊
-
-累計PDCA
-128周
+プロフィール設定
+  表示名とタイムゾーンなどの補助情報は画面下部に置く。
 ```
+
+情報の優先順位は Player Status、記録、相棒、設定の順とする。
+区切り線主体の設定画面にはせず、角丸カードと余白で情報のまとまりを表現する。
 
 ---
 
@@ -1429,14 +1434,14 @@ UI：
 
 ## 色の役割
 
-| 役割 | トークン接頭辞 | 用途 |
-| --- | --- | --- |
-| Primary | `primary` | CTA・アクティブ状態・フォーカスリング |
-| Surface / Text / Border | `surface` / `text` / `border` | 日常画面の面・文字・境界 |
-| Rarity | `rarity-r` / `rarity-sr` / `rarity-ssr` | ガチャのレアリティ。SSRのみ `rarity-ssr-glow` で光彩 |
-| At Risk | `attention` | Streak At Risk の注意喚起 |
-| Gacha / Reward | `reward` | ガチャ・チケットなど報酬系の差し色 |
-| Choice | `choice-info` / `choice-warn` | 選択トグル。レアリティ色とは別系統 |
+| 役割                    | トークン接頭辞                          | 用途                                                 |
+| ----------------------- | --------------------------------------- | ---------------------------------------------------- |
+| Primary                 | `primary`                               | CTA・アクティブ状態・フォーカスリング                |
+| Surface / Text / Border | `surface` / `text` / `border`           | 日常画面の面・文字・境界                             |
+| Rarity                  | `rarity-r` / `rarity-sr` / `rarity-ssr` | ガチャのレアリティ。SSRのみ `rarity-ssr-glow` で光彩 |
+| At Risk                 | `attention`                             | Streak At Risk の注意喚起                            |
+| Gacha / Reward          | `reward`                                | ガチャ・チケットなど報酬系の差し色                   |
+| Choice                  | `choice-info` / `choice-warn`           | 選択トグル。レアリティ色とは別系統                   |
 
 Rarity と Choice は現状いくつか同系色だが、**意図的に別トークン**にしている。
 片方の色を変えたときにもう片方が巻き添えで変わるのを防ぐため。
