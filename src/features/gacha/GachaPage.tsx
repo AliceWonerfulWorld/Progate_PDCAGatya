@@ -1,8 +1,9 @@
-import { Clock, Loader2, Sparkles, Ticket } from "lucide-react";
+import { Clock, Sparkles, Ticket } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { api } from "../../../convex/_generated/api";
+import "./gachaAnimations.css";
 import type { CharacterRarity } from "../../../convex/lib/constants";
 import { rollRarity } from "../../../convex/lib/gacha";
 import type { GachaBannerInfo } from "../../../convex/gachas";
@@ -37,6 +38,27 @@ const RARITY_STYLES: Record<CharacterRarity, string> = {
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// 抽選中の「溜め」演出。レアリティは未確定なので rarity 非依存で reward(violet) を使う。
+// アニメーションの実体と reduced-motion 対応は gachaAnimations.css 側。
+function GachaDrawingView() {
+  return (
+    <div className="flex flex-col items-center justify-center gap-6 py-24">
+      <div className="relative grid size-24 place-items-center">
+        <span aria-hidden="true" className="gacha-ring absolute inset-0 rounded-full bg-reward/25" />
+        <span
+          aria-hidden="true"
+          className="gacha-ring gacha-ring--delayed absolute inset-0 rounded-full bg-reward/15"
+        />
+        <span
+          aria-hidden="true"
+          className="gacha-orb size-14 rounded-full bg-reward shadow-[0_0_28px_var(--color-reward)]"
+        />
+      </div>
+      <p className="text-sm font-semibold text-text-muted">ガチャを回しています…</p>
+    </div>
+  )
 }
 
 // convex/lib/gacha.ts の selectCharacterForRarity と同じ重み付き抽選。
@@ -75,40 +97,67 @@ function GachaResultView({
   secondaryLinks: { label: string; to: string }[];
   footer: ReactNode;
 }) {
+  const isSsr = result.rarity === 'SSR'
+
   return (
     <div className="space-y-6 text-center">
-      <section
-        className={`space-y-3 border px-4 py-8 ${RARITY_STYLES[result.rarity]}`}
-      >
-        <p className="text-sm font-bold tracking-widest">{result.rarity}</p>
-        {result.wasDuplicate ? null : (
-          <p className="flex items-center justify-center gap-1 text-lg font-bold">
-            <Sparkles aria-hidden="true" className="size-5" /> NEW!
-          </p>
-        )}
-        <p className="text-xl font-bold text-text">{result.characterName}</p>
-        {result.imagePath ? (
-          <img
-            alt={result.characterName}
-            className="mx-auto aspect-square w-40 border border-white/70 object-cover shadow-sm"
-            src={result.imagePath}
-          />
-        ) : null}
-        {result.wasDuplicate ? (
+      <div className="relative isolate overflow-hidden">
+        {/* 出現に合わせた背後のフラッシュ (全レア共通) */}
+        <span
+          aria-hidden="true"
+          className="gacha-reveal-flash pointer-events-none absolute left-1/2 top-1/2 -z-10 size-48 rounded-full bg-reward/30 blur-2xl"
+        />
+        {isSsr ? (
           <>
-            <p className="text-sm font-semibold text-text-subtle">
-              Already Owned
-            </p>
-            <p className="text-base font-bold text-text-body">
-              欠片 +{result.fragmentReward}
-            </p>
+            {/* SSR: 回転する光のレイ + 明滅する光彩 (§18.3) */}
+            <span
+              aria-hidden="true"
+              className="gacha-ssr-rays pointer-events-none absolute left-1/2 top-1/2 -z-10 size-[22rem] rounded-full opacity-70"
+              style={{
+                background:
+                  "conic-gradient(from 0deg, transparent 0 15deg, var(--color-rarity-ssr-glow) 15deg 25deg, transparent 25deg 90deg, var(--color-rarity-ssr-glow) 90deg 100deg, transparent 100deg 180deg, var(--color-rarity-ssr-glow) 180deg 190deg, transparent 190deg 270deg, var(--color-rarity-ssr-glow) 270deg 280deg, transparent 280deg 360deg)",
+              }}
+            />
+            <span
+              aria-hidden="true"
+              className="gacha-ssr-glow pointer-events-none absolute left-1/2 top-1/2 -z-10 size-56 -translate-x-1/2 -translate-y-1/2 rounded-full bg-rarity-ssr-border blur-3xl"
+            />
           </>
-        ) : result.defaultMessage ? (
-          <p className="text-sm leading-6 text-text-muted">
-            「{result.defaultMessage}」
-          </p>
         ) : null}
-      </section>
+
+        <section
+          className={`gacha-reveal-card relative space-y-3 border px-4 py-8 ${RARITY_STYLES[result.rarity]}`}
+        >
+          <p className="text-sm font-bold tracking-widest">{result.rarity}</p>
+          {result.wasDuplicate ? null : (
+            <p className="gacha-reveal-pop flex items-center justify-center gap-1 text-lg font-bold">
+              <Sparkles aria-hidden="true" className="size-5" /> NEW!
+            </p>
+          )}
+          <p className="text-xl font-bold text-text">{result.characterName}</p>
+          {result.imagePath ? (
+            <img
+              alt={result.characterName}
+              className="gacha-reveal-pop mx-auto aspect-square w-40 border border-white/70 object-cover shadow-sm"
+              src={result.imagePath}
+            />
+          ) : null}
+          {result.wasDuplicate ? (
+            <>
+              <p className="text-sm font-semibold text-text-subtle">
+                Already Owned
+              </p>
+              <p className="text-base font-bold text-text-body">
+                欠片 +{result.fragmentReward}
+              </p>
+            </>
+          ) : result.defaultMessage ? (
+            <p className="text-sm leading-6 text-text-muted">
+              「{result.defaultMessage}」
+            </p>
+          ) : null}
+        </section>
+      </div>
 
       {error ? <p className="text-sm text-attention-body">{error}</p> : null}
 
@@ -250,17 +299,7 @@ function SignedInGacha() {
   }
 
   if (isDrawing) {
-    return (
-      <div className="flex flex-col items-center justify-center gap-4 py-24">
-        <Loader2
-          aria-hidden="true"
-          className="size-12 animate-spin text-primary"
-        />
-        <p className="text-sm font-semibold text-text-muted">
-          ガチャを回しています…
-        </p>
-      </div>
-    );
+    return <GachaDrawingView />;
   }
 
   if (result) {
@@ -429,17 +468,7 @@ function GuestGacha() {
   }
 
   if (isDrawing) {
-    return (
-      <div className="flex flex-col items-center justify-center gap-4 py-24">
-        <Loader2
-          aria-hidden="true"
-          className="size-12 animate-spin text-primary"
-        />
-        <p className="text-sm font-semibold text-text-muted">
-          ガチャを回しています…
-        </p>
-      </div>
-    );
+    return <GachaDrawingView />;
   }
 
   if (result) {

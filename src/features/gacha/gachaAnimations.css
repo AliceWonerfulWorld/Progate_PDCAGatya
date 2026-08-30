@@ -1,0 +1,155 @@
+/*
+ * ガチャ演出 (docs/ui-spec.md §18)。src/features/gacha 内でのみ使う。
+ *
+ * CSS animation は duration をトークン化できない (@keyframes 側に焼き込まれる)
+ * ため、ここで名前付きクラスとして定義する。easing は src/index.css の @theme
+ * が :root に出している --ease-* をそのまま参照する。
+ *
+ * prefers-reduced-motion はこのファイル末尾でまとめて吸収する
+ * (src/index.css の .animate-pulse / .animate-spin 対応と同じ流儀 = 個別対応漏れを防ぐ)。
+ */
+
+/* --- Drawing: 溜め ------------------------------------------------------ */
+.gacha-orb {
+  animation: gacha-orb 1.1s var(--ease-standard) infinite;
+}
+
+.gacha-ring {
+  animation: gacha-ring 1.1s var(--ease-decelerate) infinite;
+}
+
+.gacha-ring--delayed {
+  animation-delay: 0.55s;
+}
+
+@keyframes gacha-orb {
+  0%,
+  100% {
+    transform: scale(0.9);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+}
+
+@keyframes gacha-ring {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.7;
+  }
+  70% {
+    opacity: 0.1;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+/* --- Result: 出現 ---------------------------------------------------- */
+.gacha-reveal-card {
+  animation: gacha-reveal-card 0.5s var(--ease-spring) both;
+}
+
+.gacha-reveal-flash {
+  animation: gacha-reveal-flash 0.6s var(--ease-decelerate) both;
+}
+
+.gacha-reveal-pop {
+  animation: gacha-reveal-pop 0.45s var(--ease-spring) 0.12s both;
+}
+
+@keyframes gacha-reveal-card {
+  0% {
+    transform: scale(0.82);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.03);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes gacha-reveal-flash {
+  0% {
+    transform: translate(-50%, -50%) scale(0.2);
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2.6);
+    opacity: 0;
+  }
+}
+
+@keyframes gacha-reveal-pop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* --- Result: SSR だけの追加演出 (§18.3 「明確に特別」) --------------- */
+.gacha-ssr-rays {
+  animation: gacha-ssr-rays 9s linear infinite;
+}
+
+.gacha-ssr-glow {
+  animation: gacha-ssr-glow 2s var(--ease-standard) infinite;
+}
+
+@keyframes gacha-ssr-rays {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes gacha-ssr-glow {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/*
+ * prefers-reduced-motion: 溜め中の脈動だけは「処理中」を伝える役割なので
+ * 完全停止せず速度を落とす (src/index.css の .animate-spin と同じ判断)。
+ * 回転・明滅・フラッシュは停止、出現系は一瞬で完了させる。
+ */
+@media (prefers-reduced-motion: reduce) {
+  .gacha-orb {
+    animation-duration: 2.4s !important;
+  }
+
+  .gacha-ring,
+  .gacha-reveal-flash,
+  .gacha-ssr-rays,
+  .gacha-ssr-glow {
+    animation: none !important;
+  }
+
+  .gacha-reveal-card,
+  .gacha-reveal-pop {
+    animation-duration: 1ms !important;
+  }
+}
