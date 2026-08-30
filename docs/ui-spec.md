@@ -32,6 +32,22 @@ PDCA GACHA のUIは以下を最優先とする。
 
 ---
 
+## 1.1 App Shell
+
+アプリ全体はモバイルを基準にした一つのApp Shellに載せる。
+
+- Mobileでは画面幅いっぱいに自然に表示する
+- Desktopでは最大520px程度の中央App Shellとして表示し、角丸・控えめな影でアプリ本体を区別する
+- Bodyはオフホワイトを基調に、Primaryのごく淡いニュアンスを背景に持たせる
+- 共通Headerはstickyで、ロゴ・アプリ名・認証操作を整理する
+- Pageの標準余白は横16px、各画面は下部ナビゲーションと干渉しない下余白を確保する
+- Large Cardは24px、Small CardとButtonは16〜20px、Pillは完全な角丸を基準にする
+
+Bottom NavigationやFABなどの固定要素は、常にApp Shellの幅とsafe areaに揃える。
+デスクトップでブラウザ全幅の端に寄せない。
+
+---
+
 # 2. Navigation
 
 ## 2.1 Bottom Navigation

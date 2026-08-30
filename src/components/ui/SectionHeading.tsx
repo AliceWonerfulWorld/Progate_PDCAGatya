@@ -1,5 +1,9 @@
-import type { PropsWithChildren } from 'react'
+import type { PropsWithChildren } from "react";
 
 export function SectionHeading({ children }: PropsWithChildren) {
-  return <h1 className="text-2xl font-bold tracking-normal text-text">{children}</h1>
+  return (
+    <h1 className="px-1 text-2xl font-black tracking-tight text-text-strong">
+      {children}
+    </h1>
+  );
 }

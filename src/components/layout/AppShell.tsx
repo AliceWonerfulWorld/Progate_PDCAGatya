@@ -1,21 +1,29 @@
-import type { PropsWithChildren } from 'react'
-import { OfflineBanner } from '../ui/OfflineBanner'
-import { BottomNavigation } from './BottomNavigation'
-import { Header } from './Header'
+import type { PropsWithChildren } from "react";
+import { OfflineBanner } from "../ui/OfflineBanner";
+import { BottomNavigation } from "./BottomNavigation";
+import { Header } from "./Header";
 
 type AppShellProps = PropsWithChildren<{
-  showBottomNavigation: boolean
-}>
+  showBottomNavigation: boolean;
+}>;
 
 export function AppShell({ children, showBottomNavigation }: AppShellProps) {
   return (
-    <div className="min-h-dvh bg-background text-text">
-      <Header />
-      <OfflineBanner />
-      <main className={showBottomNavigation ? 'mx-auto w-full max-w-2xl px-4 pb-24 pt-6' : 'mx-auto w-full max-w-2xl px-4 py-6'}>
-        {children}
-      </main>
-      {showBottomNavigation ? <BottomNavigation /> : null}
+    <div className="app-canvas text-text">
+      <div className="app-shell">
+        <Header />
+        <OfflineBanner />
+        <main
+          className={
+            showBottomNavigation
+              ? "app-page app-page-with-navigation"
+              : "app-page"
+          }
+        >
+          {children}
+        </main>
+        {showBottomNavigation ? <BottomNavigation /> : null}
+      </div>
     </div>
-  )
+  );
 }
