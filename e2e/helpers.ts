@@ -12,14 +12,13 @@ export async function resetGuestState(page: Page): Promise<void> {
   await page.reload()
 }
 
-export async function createGuestGoalAndStartCycle(page: Page, goalName: string, planText: string): Promise<void> {
-  await page.getByRole('link', { name: 'Goalを作る' }).click()
+export async function createGuestGoalAndStartCycle(page: Page, goalName: string): Promise<void> {
+  await page.getByRole('link', { name: 'はじめる' }).click()
   await page.locator('#goal-name').fill(goalName)
   await page.getByRole('button', { name: '作成する' }).click()
   await expect(page).toHaveURL(/\/pdca\/plan\/guest$/)
 
-  await page.locator('#plan-text').fill(planText)
-  await page.getByRole('button', { name: 'このPLANで進む' }).click()
+  await page.getByRole('button', { name: 'これでやる' }).click()
   await expect(page).toHaveURL(/\/pdca\/do\/guest$/)
 }
 

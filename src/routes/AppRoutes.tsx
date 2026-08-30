@@ -16,12 +16,14 @@ const CompletePage = lazy(() => import('../features/pdca/CompletePage').then((mo
 const DoPage = lazy(() => import('../features/pdca/DoPage').then((module) => ({ default: module.DoPage })))
 const PlanPage = lazy(() => import('../features/pdca/PlanPage').then((module) => ({ default: module.PlanPage })))
 const ProfilePage = lazy(() => import('../features/profile/ProfilePage').then((module) => ({ default: module.ProfilePage })))
+const WelcomePage = lazy(() => import('../features/onboarding/WelcomePage').then((module) => ({ default: module.WelcomePage })))
 
 export function AppRoutes() {
   return (
     <Suspense fallback={<LoadingState label="画面を読み込んでいます。" />}>
       <Routes>
       <Route path="/" element={<HomePage />} />
+      <Route path="/welcome" element={<WelcomePage />} />
       <Route path="/collection" element={<CollectionPage />} />
       <Route path="/collection/:characterId" element={<CharacterDetailPage />} />
       <Route path="/history" element={<HistoryPage />} />
