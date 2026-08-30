@@ -7,6 +7,7 @@ import "./gachaAnimations.css";
 import type { CharacterRarity } from "../../../convex/lib/constants";
 import { rollRarity } from "../../../convex/lib/gacha";
 import type { GachaBannerInfo } from "../../../convex/gachas";
+import { GachaRateButton } from "./GachaRateSheet";
 import { isClerkConfigured } from "../../app/AppProviders";
 import { LoadFailure } from "../../components/ui/LoadFailure";
 import { LoadingState } from "../../components/ui/LoadingState";
@@ -263,6 +264,10 @@ function SignedInGacha() {
   const [isDrawing, setIsDrawing] = useState(false);
   const [result, setResult] = useState<GachaDrawResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const gachaRates = useQuery(
+    api.gachas.getActiveGachaRates,
+    selectedGacha ? { key: selectedGacha.key } : "skip",
+  );
 
   if (hasError)
     return (
@@ -350,6 +355,7 @@ function SignedInGacha() {
           <Ticket aria-hidden="true" className="size-5 text-reward" /> 残り{" "}
           {currentUser.availableGachaDraws}回
         </p>
+        <GachaRateButton rates={gachaRates ?? undefined} />
         {currentUser.availableGachaDraws <= 0 ? (
           <p className="text-sm leading-6 text-text-subtle">
             ガチャは0回です。PDCAを1周すると、ガチャを1回回せます。
@@ -494,6 +500,7 @@ function GuestGacha() {
           <Ticket aria-hidden="true" className="size-5 text-reward" /> 残り{" "}
           {state.gacha.availableDraws}回
         </p>
+        <GachaRateButton rates={gachaRates ?? undefined} />
       </section>
 
       {error ? <p className="text-sm text-attention-body">{error}</p> : null}
