@@ -15,6 +15,13 @@ interface Character3DViewerProps {
   name: string
   // 後ろに敷く「それっぽい」背景画像。無ければ単色にフォールバックする。
   backgroundSrc?: string
+  // "<theta> <phi> <radius>" 形式の初期カメラ位置。theta は左右±45deg
+  // クランプで上書きされるため、実質 phi(上下角) と radius(距離) を指定する。
+  // radius を小さく(例 "35%")すると寄る。モデルごとにスケール/原点が違うため
+  // 呼び出し側で個別指定できるようにしている。
+  cameraOrbit?: string
+  // 画角。小さいほど望遠(=大きく見える)。未指定なら model-viewer 既定(30deg)。
+  fieldOfView?: string
 }
 
 // backgroundSrc が無い / 読めないときの下地。SSR らしい淡いステージ風グラデーション。
@@ -28,7 +35,10 @@ export default function Character3DViewer({
   posterSrc,
   name,
   backgroundSrc = '/characters/ssr-bg.webp',
+  cameraOrbit = '0deg 80deg auto',
+  fieldOfView,
 }: Character3DViewerProps) {
+  const [, phi = '80deg', radius = 'auto'] = cameraOrbit.trim().split(/\s+/)
   const viewerRef = useRef<HTMLElement | null>(null)
   const [modelFailed, setModelFailed] = useState(false)
   const [backgroundFailed, setBackgroundFailed] = useState(false)
@@ -79,9 +89,10 @@ export default function Character3DViewer({
         'disable-zoom': true,
         'disable-pan': true,
         'interaction-prompt': 'none',
-        'camera-orbit': '0deg 80deg auto',
-        'min-camera-orbit': '-45deg 80deg auto',
-        'max-camera-orbit': '45deg 80deg auto',
+        'camera-orbit': cameraOrbit,
+        'min-camera-orbit': `-45deg ${phi} ${radius}`,
+        'max-camera-orbit': `45deg ${phi} ${radius}`,
+        ...(fieldOfView ? { 'field-of-view': fieldOfView } : {}),
         // モデルが暗くならないよう内蔵の中立ライティングを使う。
         'environment-image': 'neutral',
         'shadow-intensity': '0.4',

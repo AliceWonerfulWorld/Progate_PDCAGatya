@@ -15,6 +15,22 @@ import { useCurrentUserInitialization } from '../goals/useCurrentUserInitializat
 // 詳細画面でだけ使う3Dビューア。重い依存(@google/model-viewer)を遅延ロードする。
 const Character3DViewer = lazy(() => import('./Character3DViewer'))
 
+// モデルごとの寄り具合と背景画像。SSR 2体でスケール/原点が違うため個別に指定する。
+// 未登録の modelPath は Character3DViewer 既定(auto framing / グラデ背景)にフォールバック。
+const MODEL_FRAMING: Record<
+  string,
+  { cameraOrbit?: string; fieldOfView?: string; backgroundSrc?: string }
+> = {
+  '/characters/Yusha.glb': {
+    cameraOrbit: '0deg 80deg 35%',
+    fieldOfView: '22deg',
+    backgroundSrc: '/characters/akatuki-bg.webp',
+  },
+  '/characters/whi.glb': {
+    backgroundSrc: '/characters/eien-bg.webp',
+  },
+}
+
 const CHARACTER_IMAGE_CLASS = 'mx-auto aspect-square w-40 bg-surface-muted object-cover'
 
 // docs/ui-spec.md #23 (Character Detail)。未所持は詳細を明かさずシルエットのみ。
@@ -67,6 +83,7 @@ function AuthenticatedCharacterDetail({ characterId }: { characterId: string }) 
             modelPath={character.modelPath}
             name={character.name}
             posterSrc={character.imagePath}
+            {...(MODEL_FRAMING[character.modelPath] ?? {})}
           />
         </Suspense>
       ) : (
