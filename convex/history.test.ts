@@ -174,7 +174,7 @@ describe('listCycles', () => {
     const older = await seedCompletedCycle(t, userId, goalA, now - DAY_MS, { planText: '古い方' })
     const newer = await seedCompletedCycle(t, userId, goalB, now, { planText: '新しい方' })
 
-    const result = await asUser.query(api.history.listCycles, { period: 'all', paginationOpts: FIRST_PAGE })
+    const result = await asUser.query(api.history.listCycles, { period: 'all', asOf: Date.now(), paginationOpts: FIRST_PAGE })
 
     expect(result.page.map((item) => item.cycleId)).toEqual([newer, older])
     expect(result.page[0].planText).toBe('新しい方')
@@ -196,6 +196,7 @@ describe('listCycles', () => {
     const result = await asUser.query(api.history.listCycles, {
       goalId: goalA,
       period: 'all',
+      asOf: Date.now(),
       paginationOpts: FIRST_PAGE,
     })
 
@@ -223,7 +224,7 @@ describe('listCycles', () => {
       })
     })
 
-    const result = await asUser.query(api.history.listCycles, { period: 'all', paginationOpts: FIRST_PAGE })
+    const result = await asUser.query(api.history.listCycles, { period: 'all', asOf: Date.now(), paginationOpts: FIRST_PAGE })
     expect(result.page).toHaveLength(0)
   })
 
@@ -237,6 +238,7 @@ describe('listCycles', () => {
       await t.withIdentity({ subject: 'user_b' }).query(api.history.listCycles, {
         goalId,
         period: 'all',
+        asOf: Date.now(),
         paginationOpts: FIRST_PAGE,
       })
       throw new Error('expected listRecentCycles to throw')
@@ -260,14 +262,17 @@ describe('listCycles', () => {
 
     const first = await asUser.query(api.history.listCycles, {
       period: 'all',
+      asOf: now,
       paginationOpts: { cursor: null, numItems: 2 },
     })
     const second = await asUser.query(api.history.listCycles, {
       period: 'all',
+      asOf: now,
       paginationOpts: { cursor: first.continueCursor, numItems: 2 },
     })
     const recentOnly = await asUser.query(api.history.listCycles, {
       period: '30d',
+      asOf: now,
       paginationOpts: FIRST_PAGE,
     })
 
