@@ -6,6 +6,7 @@ import type { Id } from '../../../convex/_generated/dataModel'
 import { INPUT_LIMITS } from '../../../convex/lib/constants'
 import { isClerkConfigured } from '../../app/AppProviders'
 import { BackButton } from '../../components/ui/BackButton'
+import { CheckAckAnimation, type CheckAckTone } from '../../components/ui/CheckAckAnimation'
 import { LoadFailure } from '../../components/ui/LoadFailure'
 import { LoadingState } from '../../components/ui/LoadingState'
 import { SectionHeading } from '../../components/ui/SectionHeading'
@@ -46,6 +47,15 @@ function needsReason(checkLoad: CheckLoad, doResult: string | undefined): boolea
   return checkLoad === 'slightlyHeavy' || checkLoad === 'tooHeavy' || doResult === 'notCompleted'
 }
 
+// 演出(check-ack.riv)の尺。これを待ってから送信・遷移する。
+const ACK_DURATION_MS = 150
+
+// ui-spec 13.4 / #57: 重かった・できなかった選択に肯定的な演出を返すと
+// 非難でなくとも温度がずれる。同じ「記録した」意味のまま、跳ねを消して静かに出す。
+export function ackTone(checkLoad: CheckLoad, doResult: string | undefined): CheckAckTone {
+  return needsReason(checkLoad, doResult) ? 'quiet' : 'light'
+}
+
 function CheckBody({
   goalName,
   planText,
@@ -68,13 +78,24 @@ function CheckBody({
   // 深掘り不要な選択は即送信されるが、押した瞬間に画面が切り替わると選んだ
   // 実感がないまま進んだように見える。選択状態を一瞬見せてから送信する。
   const [isAutoAdvancing, setIsAutoAdvancing] = useState(false)
+  // 送信のたびに増やして再生をトリガーする。トーンは選択内容から決める。
+  const [ackPlayKey, setAckPlayKey] = useState<number | null>(null)
+  const [ackToneState, setAckTone] = useState<CheckAckTone>('light')
 
   function submit(load: CheckLoad, reason: CheckReason | null) {
-    onSubmit({
-      checkLoad: load,
-      checkReason: reason ?? undefined,
-      checkMemo: checkMemo.trim() || undefined,
-    })
+    // 自動送信・「次へ」どちらの経路でも同じ位置で鳴らす。
+    // onSubmitは画面遷移を伴うため、同じ更新にまとめるとCheckBodyが
+    // 先にアンマウントされ、演出が1フレームも描かれない。
+    // 演出を先に確定させてから、次のtickで送信する。
+    setAckTone(ackTone(load, doResult))
+    setAckPlayKey((key) => (key ?? 0) + 1)
+    window.setTimeout(() => {
+      onSubmit({
+        checkLoad: load,
+        checkReason: reason ?? undefined,
+        checkMemo: checkMemo.trim() || undefined,
+      })
+    }, ACK_DURATION_MS)
   }
 
   function selectLoad(value: CheckLoad) {
@@ -86,7 +107,7 @@ function CheckBody({
       // 1タップでCHECKを完了できる。メモを書き始めている間は自動送信しない。
       if (!isMemoOpen) {
         setIsAutoAdvancing(true)
-        window.setTimeout(() => submit(value, null), 200)
+        window.setTimeout(() => submit(value, null), 60)
         return
       }
     }
@@ -104,16 +125,22 @@ function CheckBody({
 
       <div className="space-y-3">
         {CHECK_LOADS.map(({ value, label }) => (
-          <button
-            aria-pressed={checkLoad === value}
-            className={`min-h-12 w-full px-4 text-base font-semibold ${choiceButtonClass(checkLoad === value, 'primary')}`}
-            disabled={isSubmitting || isAutoAdvancing}
-            key={value}
-            onClick={() => selectLoad(value)}
-            type="button"
-          >
-            {label}
-          </button>
+          // 演出は「いま押したボタン」の上に重ねる。中央に固定すると
+          // 選んでいない選択肢を隠してしまい、押した実感につながらない。
+          <div className="relative" key={value}>
+            <button
+              aria-pressed={checkLoad === value}
+              className={`min-h-12 w-full px-4 text-base font-semibold ${choiceButtonClass(checkLoad === value, 'primary')}`}
+              disabled={isSubmitting || isAutoAdvancing}
+              onClick={() => selectLoad(value)}
+              type="button"
+            >
+              {label}
+            </button>
+            {checkLoad === value ? (
+              <CheckAckAnimation playKey={ackPlayKey} tone={ackToneState} />
+            ) : null}
+          </div>
         ))}
       </div>
 
