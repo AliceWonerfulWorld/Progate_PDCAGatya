@@ -7,10 +7,12 @@ import { isClerkConfigured } from '../../app/AppProviders'
 import { BackButton } from '../../components/ui/BackButton'
 import { LoadFailure } from '../../components/ui/LoadFailure'
 import { LoadingState } from '../../components/ui/LoadingState'
+import { GuestOnboardingFocus } from '../../components/ui/OnboardingFocusOverlay'
 import { SectionHeading } from '../../components/ui/SectionHeading'
 import { useGuestState } from '../../hooks/useGuestState'
 import { choiceButtonClass, PRIMARY_BUTTON_CLASS } from '../../lib/buttonStyles'
 import { userFacingError } from '../../lib/userFacingError'
+import { getGuestOnboardingFocus } from '../../lib/guestOnboarding'
 import type { GuestDoResult, GuestPdcaCycle } from '../../lib/guestStore'
 import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
 
@@ -27,18 +29,21 @@ function DoBody({
   isSubmitting,
   error,
   onSubmit,
+  focusCheckAction = false,
 }: {
   goalName: string | null
   planText: string
   isSubmitting: boolean
   error: string | null
   onSubmit: (doResult: (typeof DO_RESULTS)[number]['value']) => void
+  focusCheckAction?: boolean
 }) {
   // ui-spec 11.2: 実行中はアプリが邪魔をせず、CHECKへ進む操作で結果選択へ進む。
   const [isReflecting, setIsReflecting] = useState(false)
   // タップした結果をボタンの選択状態として一瞬見せてから次へ進む。
   // 即座に画面が切り替わると「選んだ実感がないまま進んだ」と感じやすいため。
   const [selected, setSelected] = useState<(typeof DO_RESULTS)[number]['value'] | null>(null)
+  const showFocus = focusCheckAction && !isReflecting
 
   function handleSelect(value: (typeof DO_RESULTS)[number]['value']) {
     setSelected(value)
@@ -89,7 +94,8 @@ function DoBody({
           </>
         ) : (
           <button
-            className={`min-h-12 w-full px-4 text-base font-bold text-white ${PRIMARY_BUTTON_CLASS}`}
+            className={`min-h-12 w-full px-4 text-base font-bold text-white ${PRIMARY_BUTTON_CLASS} ${showFocus ? 'relative z-40 ring-4 ring-primary-border' : ''}`}
+            id={showFocus ? 'guest-onboarding-do-check' : undefined}
             onClick={() => setIsReflecting(true)}
             type="button"
           >
@@ -97,6 +103,12 @@ function DoBody({
           </button>
         )}
       </div>
+      {showFocus ? (
+        <GuestOnboardingFocus
+          message="終わったら、ここから振り返りへ進もう"
+          targetId="guest-onboarding-do-check"
+        />
+      ) : null}
     </div>
   )
 }
@@ -177,6 +189,7 @@ function GuestDoPage() {
   // TSの制御フロー絞り込みは、この後のネストした関数(handleSubmit)まで
   // 保持されないことがあるため、絞り込み済みの型を明示した変数に置き直す。
   const activeCycle: GuestPdcaCycle = cycle
+  const focusCheckAction = getGuestOnboardingFocus(state) === 'do'
 
   function handleSubmit(doResult: GuestDoResult) {
     setCycle({ ...activeCycle, doResult, status: 'checking' })
@@ -190,6 +203,7 @@ function GuestDoPage() {
       isSubmitting={false}
       onSubmit={handleSubmit}
       planText={activeCycle.planText}
+      focusCheckAction={focusCheckAction}
     />
   )
 }

@@ -7,9 +7,10 @@ function App() {
   // ガチャはBottom Navigationの常設タブになったため、PDCAフロー扱いから外す
   // (以前はPDCA完了直後の演出専用画面だったため、ここでナビを隠していた)。
   const isPdcaFlow = pathname.startsWith('/pdca/')
+  const isOnboarding = pathname === '/welcome'
 
   return (
-    <AppShell showBottomNavigation={!isPdcaFlow}>
+    <AppShell showBottomNavigation={!isPdcaFlow && !isOnboarding}>
       <AppRoutes />
     </AppShell>
   )

@@ -1,8 +1,10 @@
 import { Plus } from 'lucide-react'
 import { useQuery } from 'convex/react'
-import { Link } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { api } from '../../../convex/_generated/api'
 import { isClerkConfigured } from '../../app/AppProviders'
+import { useGuestState } from '../../hooks/useGuestState'
+import { getGuestOnboardingRoute } from '../../lib/guestOnboarding'
 import { LoadFailure } from '../../components/ui/LoadFailure'
 import { LoadingState } from '../../components/ui/LoadingState'
 import { GoalList } from '../goals/GoalList'
@@ -90,8 +92,13 @@ function useActiveCycle() {
 
 function AuthenticatedHome() {
   const { active, isSignedIn } = useActiveCycle()
+
+  if (!isSignedIn) {
+    return <GuestHome />
+  }
+
   const hasActiveCycle = active !== undefined && active !== null
-  const isActiveCycleLoading = isSignedIn && active === undefined
+  const isActiveCycleLoading = active === undefined
 
   return (
     <div className="space-y-6">
@@ -121,16 +128,21 @@ function AuthenticatedHome() {
 
 
 function GuestHome() {
+  const { state } = useGuestState()
+
+  if (getGuestOnboardingRoute(state)) {
+    return <Navigate replace to="/welcome" />
+  }
+
   return (
     <div className="space-y-6">
       <GuestHomeHeader />
       <section aria-labelledby="home-goal-heading" className="border-t border-border-subtle pt-5">
         <p className="text-sm font-medium text-text-subtle">続けたいこと</p>
         <h2 id="home-goal-heading" className="mt-1 text-lg font-bold leading-snug">
-          Goalを作って、<span className="block sm:inline">最初の1周を始めよう</span>
+          今日の1周を始めよう
         </h2>
-        <p className="mt-2 text-sm leading-6 text-text-muted">小さな行動から始められます。</p>
-        <CreateGoalLink />
+        <GuestGoalSection />
       </section>
     </div>
   )
