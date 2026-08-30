@@ -1652,7 +1652,8 @@ advanced gacha animation
 PWA notification
 ```
 
-を削る。
+を削る。(このリストはMVP期間中の優先度判断。PWA notificationはMVP完了後、
+At-Riskトリガーに限定して実装済み — docs/technical-design.md §100.5)
 
 ---
 

@@ -61,7 +61,7 @@ External Services
 | Lint | ESLint | 採用 |
 | Format | Prettier | 採用 |
 | CI/CD | Vercel + GitHub連携 | 採用 |
-| Push Notification | TBD | MVP優先度低 |
+| Push Notification | web-push (VAPID) + Convex Cron | At-Riskトリガーのみ採用(MVP完了後) |
 
 ---
 
@@ -588,13 +588,13 @@ MVPで最低限、
 
 ---
 
-## 15.2 MVP方針
+## 15.2 MVP方針(2026-08時点更新)
 
-Push通知は、
+MVP期間中は、
 
 > **余裕があれば実装**
 
-とする。
+としていた。
 
 理由：
 
@@ -609,7 +609,12 @@ Push通知は、
 
 > PDCA → ガチャ
 
-のコアループ完成を優先する。
+のコアループ完成を優先していた。
+
+MVP完了後、上記のうち「ストリークAt-Risk」トリガー1種類のみに絞って実装済み
+(docs/technical-design.md §100.5)。iPhone/Android/PC全対応。
+ガチャ権利リマインド・日次無活動リマインド・マイルストーン祝福等の
+他トリガーは引き続きOut of Scope。
 
 ---
 

@@ -12,10 +12,14 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      // 業務データ(Convexへのquery/mutation通信)はキャッシュ対象にしない。
-      // 静的アセット(HTML/CSS/JS/icons/character images/3Dモデル)のみをprecacheする。
-      // docs/technical-design.md #59-61 (PWA Policy / Service Worker)
-      workbox: {
+      // push/notificationclickをハンドリングするため、自動生成SW(generateSW)から
+      // 自前SW(src/sw.ts)を使うinjectManifestへ切り替えた(docs/technical-design.md
+      // Push Notification参照)。globPatternsの方針(業務データはキャッシュせず、
+      // 静的アセットのみprecache)自体は変わらない。docs/technical-design.md #59-61。
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
+      injectManifest: {
         globPatterns: ['**/*.{js,css,html,png,svg,webp,woff2,glb,riv}'],
       },
       manifest: {

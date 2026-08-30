@@ -14,7 +14,7 @@ import { Link } from "react-router-dom";
 import { api } from "../../../convex/_generated/api";
 import type { Doc } from "../../../convex/_generated/dataModel";
 import type { CollectionEntry } from "../../../convex/characters";
-import { INPUT_LIMITS } from "../../../convex/lib/constants";
+import { INPUT_LIMITS, PUSH } from "../../../convex/lib/constants";
 import { requiredXpForLevel } from "../../../convex/lib/playerLevel";
 import { isClerkConfigured } from "../../app/AppProviders";
 import { LoadFailure } from "../../components/ui/LoadFailure";
@@ -22,10 +22,12 @@ import { LoadingState } from "../../components/ui/LoadingState";
 import { SectionHeading } from "../../components/ui/SectionHeading";
 import { SignInPrompt } from "../../components/ui/SignInPrompt";
 import {
+  choiceButtonClass,
   PRIMARY_BUTTON_CLASS,
   SECONDARY_BUTTON_CLASS,
 } from "../../lib/buttonStyles";
 import { useCurrentUserInitialization } from "../goals/useCurrentUserInitialization";
+import { usePushSubscription } from "./usePushSubscription";
 
 function DisplayNameEditor({ currentUser }: { currentUser: Doc<"users"> }) {
   const setDisplayName = useMutation(api.users.setDisplayName);
@@ -335,6 +337,122 @@ function ProfileSettings({ currentUser }: { currentUser: Doc<"users"> }) {
   );
 }
 
+const NOTIFY_HOUR_LABELS: Record<number, string> = {
+  7: "7:00",
+  10: "10:00",
+  19: "19:00",
+  21: "21:00",
+};
+
+// docs/ui-spec.md #25.2 / Push Notification (At-Riskトリガー)。初回ロード時に
+// 通知許可を求めることは絶対にしない(docs/ui-spec.md #3.3) — 許可のリクエストは
+// 「有効」ボタン押下(enable())からしか発火しない。
+function NotificationSettings() {
+  const {
+    supportStatus,
+    isSubscribed,
+    notifyHours,
+    isBusy,
+    error,
+    isConfigured,
+    enable,
+    disable,
+    setNotifyHours,
+  } = usePushSubscription();
+
+  if (!isConfigured) return null;
+
+  return (
+    <section className="space-y-3">
+      <div className="px-1">
+        <h2 className="text-lg font-black text-text-strong">ストリーク通知</h2>
+        <p className="mt-0.5 text-sm font-semibold text-text-muted">
+          ストリークが途切れそうなときだけ、選んだ時刻にお知らせします
+        </p>
+      </div>
+      <div className="space-y-4 rounded-2xl border border-border-subtle bg-surface p-4 shadow-sm">
+        {supportStatus === "checking" ? (
+          <p className="text-sm font-semibold text-text-muted">
+            確認しています…
+          </p>
+        ) : supportStatus === "unsupported" ? (
+          <p className="text-sm leading-6 text-text-muted">
+            お使いのブラウザは通知に対応していません。
+          </p>
+        ) : supportStatus === "ios-needs-install" ? (
+          <p className="text-sm leading-6 text-text-muted">
+            ホーム画面に追加すると、通知を受け取れるようになります。
+          </p>
+        ) : (
+          <>
+            <div aria-label="通知の有効/無効" className="flex gap-2" role="group">
+              <button
+                aria-pressed={isSubscribed}
+                className={`min-h-11 flex-1 rounded-2xl text-sm font-bold ${choiceButtonClass(isSubscribed)}`}
+                disabled={isBusy}
+                onClick={() =>
+                  void enable(
+                    notifyHours.length > 0
+                      ? notifyHours
+                      : [PUSH.notifyHourPresets[1]],
+                  )
+                }
+                type="button"
+              >
+                有効
+              </button>
+              <button
+                aria-pressed={!isSubscribed}
+                className={`min-h-11 flex-1 rounded-2xl text-sm font-bold ${choiceButtonClass(!isSubscribed)}`}
+                disabled={isBusy}
+                onClick={() => void disable()}
+                type="button"
+              >
+                無効
+              </button>
+            </div>
+            {isSubscribed ? (
+              <div className="space-y-2">
+                <p className="text-xs font-bold text-text-subtle">
+                  通知する時刻
+                </p>
+                <div aria-label="通知時刻" className="flex flex-wrap gap-2" role="group">
+                  {PUSH.notifyHourPresets.map((hour) => {
+                    const selected = notifyHours.includes(hour);
+                    return (
+                      <button
+                        aria-pressed={selected}
+                        className={`min-h-10 rounded-2xl px-4 text-sm font-bold ${choiceButtonClass(selected, "info")}`}
+                        disabled={isBusy}
+                        key={hour}
+                        onClick={() => {
+                          const next = selected
+                            ? notifyHours.filter((h) => h !== hour)
+                            : [...notifyHours, hour];
+                          if (next.length === 0) return;
+                          void setNotifyHours(next);
+                        }}
+                        type="button"
+                      >
+                        {NOTIFY_HOUR_LABELS[hour] ?? `${hour}:00`}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+            {error ? (
+              <p className="text-sm font-semibold text-attention-body">
+                {error}
+              </p>
+            ) : null}
+          </>
+        )}
+      </div>
+    </section>
+  );
+}
+
 // docs/ui-spec.md #25 / AC-PROFILE-001。既存の users と Collection Query を表示専用で利用する。
 function AuthenticatedProfile() {
   const { hasError, isReady, isSignedIn, retry } =
@@ -367,6 +485,7 @@ function AuthenticatedProfile() {
       <Records currentUser={currentUser} />
       <PartnerCard partner={collection.find((entry) => entry.isPartner)} />
       <ProfileSettings currentUser={currentUser} />
+      <NotificationSettings />
     </div>
   );
 }

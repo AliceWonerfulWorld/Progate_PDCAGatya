@@ -20,3 +20,10 @@ export const INPUT_LIMITS = {
 } as const
 
 export type CharacterRarity = 'R' | 'SR' | 'SSR'
+
+// Web Push (docs/technical-design.md Push Notification / At-Risk trigger)。
+export const PUSH = {
+  endpointMaxLength: 2048,
+  // 通知時刻としてユーザーが選べるローカル時刻(24h)のプリセット。
+  notifyHourPresets: [7, 10, 19, 21],
+} as const
