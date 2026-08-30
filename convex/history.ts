@@ -116,12 +116,15 @@ export const listCycles = query({
   args: {
     goalId: v.optional(v.id('goals')),
     period: historyPeriodValidator,
+    // ページネーションのカーソルは同一クエリでのみ有効。サーバー側のDate.now()を
+    // 毎回使うと購読の再評価ごとに範囲が変わるため、一覧を開いた時点の時刻を固定する。
+    asOf: v.number(),
     paginationOpts: paginationOptsValidator,
   },
   returns: v.any(),
   handler: async (ctx, args) => {
     const currentUser = await requireCurrentUser(ctx)
-    const completedAfter = getPeriodStart(args.period, Date.now())
+    const completedAfter = getPeriodStart(args.period, args.asOf)
 
     if (args.goalId !== undefined) {
       const goal = await requireOwnedGoal(ctx, args.goalId, currentUser)
