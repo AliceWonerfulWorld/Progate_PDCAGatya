@@ -1,15 +1,24 @@
 import { v } from 'convex/values'
-import type { Doc, Id } from './_generated/dataModel'
+import { paginationOptsValidator } from 'convex/server'
+import type { Id } from './_generated/dataModel'
 import { query } from './_generated/server'
 import { requireCurrentUser, requireOwnedGoal } from './lib/auth'
 import { addDaysToLocalDate, daysBetweenLocalDates, getLocalDateString } from './lib/date'
 
-const RECENT_CYCLES_LIMIT = 30
 // Today / Week集計の対象を絞るための安全な上限（timezoneのズレを吸収するため8日分）。
 const SUMMARY_WINDOW_MS = 8 * 24 * 60 * 60 * 1000
-// GitHubの草のようなヒートマップの表示日数。モバイル幅で横スクロール無しに近い量として20週間分。
-const HEATMAP_DAYS = 140
+// 履歴画面は「直近の継続を眺める」ための12週間固定。全履歴を横に広げない。
+const HEATMAP_DAYS = 84
 const HEATMAP_WINDOW_MS = HEATMAP_DAYS * 24 * 60 * 60 * 1000
+const HISTORY_PERIODS = ['7d', '30d', 'all'] as const
+const HISTORY_PERIOD_MS = {
+  '7d': 7 * 24 * 60 * 60 * 1000,
+  '30d': 30 * 24 * 60 * 60 * 1000,
+  all: undefined,
+} as const
+
+const historyPeriodValidator = v.union(...HISTORY_PERIODS.map((period) => v.literal(period)))
+type HistoryPeriod = (typeof HISTORY_PERIODS)[number]
 
 // docs/ui-spec.md #24.2, AC-HISTORY-004: Current Streak / Today / Week / Total。
 export const getHistorySummary = query({
@@ -86,47 +95,94 @@ export const getCompletionHeatmap = query({
   },
 })
 
-export interface HistoryCycleItem {
-  cycle: Doc<'pdcaCycles'>
+export interface HistoryCycleSummary {
+  cycleId: Id<'pdcaCycles'>
+  completedAt: number
   goalName: string | null
+  planText: string
+  doResult: 'completed' | 'partial' | 'notCompleted' | null
+  checkLoad: 'easy' | 'justRight' | 'slightlyHeavy' | 'tooHeavy' | null
+  nextPlanCandidate: string | null
 }
 
-// docs/ui-spec.md #24.4, AC-HISTORY-001 / AC-HISTORY-003: 完了済みCycleを新しい順に、
-// goalIdを指定すればそのGoalだけに絞って返す。
-export const listRecentCycles = query({
-  args: { goalId: v.optional(v.id('goals')) },
-  handler: async (ctx, args): Promise<HistoryCycleItem[]> => {
-    const currentUser = await requireCurrentUser(ctx)
+function getPeriodStart(period: HistoryPeriod, now: number): number {
+  const duration = HISTORY_PERIOD_MS[period]
+  return duration === undefined ? 0 : now - duration
+}
 
-    let cycles: Doc<'pdcaCycles'>[]
+// 一覧には全PDCAを展開せず、カードに必要な要約だけを返す。完了日時のあるCycleだけを
+// completedAt indexからページングするので、件数が増えても全件取得・描画しない。
+export const listCycles = query({
+  args: {
+    goalId: v.optional(v.id('goals')),
+    period: historyPeriodValidator,
+    // ページネーションのカーソルは同一クエリでのみ有効。新UIは一覧を開いた時点の
+    // 時刻を固定して渡す。optionalにして、PWAに残った旧UIの呼び出しも壊さない。
+    asOf: v.optional(v.number()),
+    paginationOpts: paginationOptsValidator,
+  },
+  returns: v.any(),
+  handler: async (ctx, args) => {
+    const currentUser = await requireCurrentUser(ctx)
+    // 旧UIにはasOfが無いため、Date.now()で期間を毎回変えず全履歴を返す。
+    // これにより旧Cursorとの不整合で画面全体が落ちることを防ぐ。
+    const completedAfter = args.asOf === undefined ? 0 : getPeriodStart(args.period, args.asOf)
+
     if (args.goalId !== undefined) {
       const goal = await requireOwnedGoal(ctx, args.goalId, currentUser)
-      cycles = await ctx.db
+      const result = await ctx.db
         .query('pdcaCycles')
-        .withIndex('by_goal_completed_at', (q) => q.eq('goalId', goal._id))
-        .filter((q) => q.eq(q.field('status'), 'completed'))
+        .withIndex('by_goal_completed_at', (q) => q.eq('goalId', goal._id).gte('completedAt', completedAfter))
         .order('desc')
-        .take(RECENT_CYCLES_LIMIT)
-    } else {
-      cycles = await ctx.db
-        .query('pdcaCycles')
-        .withIndex('by_user_completed_at', (q) => q.eq('userId', currentUser._id))
-        .filter((q) => q.eq(q.field('status'), 'completed'))
-        .order('desc')
-        .take(RECENT_CYCLES_LIMIT)
+        .paginate(args.paginationOpts)
+      return {
+        ...result,
+        page: result.page.map((cycle) => toHistoryCycleSummary(cycle, goal.name)),
+      }
     }
 
+    const result = await ctx.db
+      .query('pdcaCycles')
+      .withIndex('by_user_completed_at', (q) => q.eq('userId', currentUser._id).gte('completedAt', completedAfter))
+      .order('desc')
+      .paginate(args.paginationOpts)
+
     const goalNameCache = new Map<Id<'goals'>, string | null>()
-    const items: HistoryCycleItem[] = []
-    for (const cycle of cycles) {
-      let goalName = goalNameCache.get(cycle.goalId)
-      if (goalName === undefined) {
-        const goal = await ctx.db.get(cycle.goalId)
-        goalName = goal?.name ?? null
-        goalNameCache.set(cycle.goalId, goalName)
-      }
-      items.push({ cycle, goalName })
-    }
-    return items
+    const page = await Promise.all(
+      result.page.map(async (cycle) => {
+        let goalName = goalNameCache.get(cycle.goalId)
+        if (goalName === undefined) {
+          const goal = await ctx.db.get(cycle.goalId)
+          goalName = goal?.name ?? null
+          goalNameCache.set(cycle.goalId, goalName)
+        }
+        return toHistoryCycleSummary(cycle, goalName)
+      }),
+    )
+    return { ...result, page }
   },
 })
+
+function toHistoryCycleSummary(
+  cycle: {
+    _id: Id<'pdcaCycles'>
+    completedAt?: number
+    planText: string
+    doResult?: 'completed' | 'partial' | 'notCompleted'
+    checkLoad?: 'easy' | 'justRight' | 'slightlyHeavy' | 'tooHeavy'
+    nextPlanCandidate?: string
+  },
+  goalName: string | null,
+): HistoryCycleSummary {
+  // completedAt indexの0以上の範囲だけを読むため、この値は必ずある。
+  if (cycle.completedAt === undefined) throw new Error('Completed history cycle is missing completedAt')
+  return {
+    cycleId: cycle._id,
+    completedAt: cycle.completedAt,
+    goalName,
+    planText: cycle.planText,
+    doResult: cycle.doResult ?? null,
+    checkLoad: cycle.checkLoad ?? null,
+    nextPlanCandidate: cycle.nextPlanCandidate ?? null,
+  }
+}

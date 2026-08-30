@@ -6,6 +6,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   GOAL_FORBIDDEN: 'このGoalを操作できません。',
   PDCA_NOT_FOUND: 'PDCAが見つかりませんでした。',
   PDCA_INVALID_STATUS: 'このPDCAは現在の手順では進められません。画面を更新して確認してください。',
+  PDCA_ACTIVE_CYCLE_EXISTS: '進行中のPDCAを完了してから、次のPDCAを始めましょう。',
   PDCA_ALREADY_COMPLETED: 'このPDCAはすでに完了しています。',
   PDCA_FORBIDDEN: 'このPDCAを操作できません。',
   GACHA_NO_DRAW_AVAILABLE: 'ガチャを引ける回数がありません。',

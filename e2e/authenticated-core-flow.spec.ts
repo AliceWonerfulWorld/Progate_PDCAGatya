@@ -26,7 +26,7 @@ async function completeSignedInCycle(page: Page): Promise<void> {
   await expect(page).toHaveURL(/\/pdca\/plan\//)
   await page.locator('#plan-text').fill('英単語を5個復習する')
   await page.getByRole('button', { name: 'このPLANで進む' }).click()
-  await page.getByRole('button', { name: '振り返る' }).click()
+  await page.getByRole('button', { name: 'CHECKへ進む' }).click()
   await page.getByRole('button', { name: '一部できた' }).click()
   await page.getByRole('button', { name: 'ちょうどよかった' }).click()
   await page.getByRole('button', { name: 'これでいく' }).click()

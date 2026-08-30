@@ -69,6 +69,16 @@ export const startPdcaCycle = mutation({
       throw new ConvexError({ code: ERROR_CODES.GOAL_ARCHIVED })
     }
 
+    for (const status of ACTIVE_PDCA_STATUSES) {
+      const activeCycle = await ctx.db
+        .query('pdcaCycles')
+        .withIndex('by_user_status', (q) => q.eq('userId', currentUser._id).eq('status', status))
+        .first()
+      if (activeCycle !== null) {
+        throw new ConvexError({ code: ERROR_CODES.PDCA_ACTIVE_CYCLE_EXISTS })
+      }
+    }
+
     const isRecovery = args.isRecovery ?? false
     if (isRecovery) {
       const today = getLocalDateString(Date.now(), currentUser.timezone)

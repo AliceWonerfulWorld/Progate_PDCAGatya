@@ -15,7 +15,7 @@ test.describe('Guest core flow', () => {
 
   test('AC-E2E-001: Guest can complete Goal -> PDCA -> Gacha', async ({ page }) => {
     const goalName = uniqueName('Guest Goal')
-    await createGuestGoalAndStartCycle(page, goalName, '英単語を5個復習する')
+    await createGuestGoalAndStartCycle(page, goalName)
     await completeGuestCycle(page)
     await drawGuestGacha(page)
 
@@ -26,13 +26,25 @@ test.describe('Guest core flow', () => {
   })
 
   test('AC-E2E-003: Guest reload resumes the saved DO step', async ({ page }) => {
-    const planText = uniqueName('Reload PLAN')
-    await createGuestGoalAndStartCycle(page, uniqueName('Reload Goal'), planText)
+    const goalName = uniqueName('Reload Goal')
+    const planText = `${goalName}のために5分だけ取り組む`
+    await createGuestGoalAndStartCycle(page, goalName)
 
     await page.reload()
 
     await expect(page).toHaveURL(/\/pdca\/do\/guest$/)
     await expect(page.getByText(planText)).toBeVisible()
-    await expect(page.getByRole('button', { name: '振り返る' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'CHECKへ進む' })).toBeVisible()
+  })
+
+  test('AC-E2E-004: Guest focus guide advances from DO through the highlighted CHECK action', async ({ page }) => {
+    const goalName = uniqueName('Resume Goal')
+    const planText = `${goalName}のために5分だけ取り組む`
+    await createGuestGoalAndStartCycle(page, goalName)
+    expect(await page.evaluate((key) => window.localStorage.getItem(key), GUEST_STORAGE_KEY)).toContain(planText)
+
+    await expect(page.getByText('終わったら、ここから振り返りへ進もう')).toBeVisible()
+    await page.getByRole('button', { name: 'CHECKへ進む' }).click()
+    await expect(page.getByRole('button', { name: 'できなかった' })).toBeVisible()
   })
 })

@@ -6,17 +6,18 @@ import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
 import { INPUT_LIMITS } from '../../../convex/lib/constants'
 import { adjustPlanText, type PlanAdjustDirection } from '../../../convex/lib/planAdjust'
+import { resolveNextPlanFallback } from '../../../convex/lib/planFallback'
 import { isClerkConfigured } from '../../app/AppProviders'
 import { BackButton } from '../../components/ui/BackButton'
 import { LoadFailure } from '../../components/ui/LoadFailure'
 import { LoadingState } from '../../components/ui/LoadingState'
+import { GuestOnboardingFocus } from '../../components/ui/OnboardingFocusOverlay'
 import { SectionHeading } from '../../components/ui/SectionHeading'
 import { useGuestState } from '../../hooks/useGuestState'
 import { PRIMARY_BUTTON_CLASS, SECONDARY_BUTTON_CLASS } from '../../lib/buttonStyles'
 import { userFacingError } from '../../lib/userFacingError'
+import { getGuestOnboardingFocus } from '../../lib/guestOnboarding'
 import { useCurrentUserInitialization } from '../goals/useCurrentUserInitialization'
-
-const GUEST_RESUME_PATHS = { doing: 'do', checking: 'check', acting: 'act' } as const
 
 // PLAN本体のUI。「もっと軽く」「もう少しやる」はテキストをその場で相対調整するだけで、
 // ユーザーに書き直しを要求しない（ui-spec #9.4）。手で書きたい場合のみ「自分で変更」で
@@ -30,6 +31,7 @@ function PlanEditor({
   isSubmitting,
   error,
   onSubmit,
+  focusNextAction = false,
 }: {
   title: string
   goalName: string
@@ -39,6 +41,7 @@ function PlanEditor({
   isSubmitting: boolean
   error: string | null
   onSubmit: (text: string) => void
+  focusNextAction?: boolean
 }) {
   const [text, setText] = useState(initialText)
   const [isEditing, setIsEditing] = useState(!hasCandidate)
@@ -86,8 +89,9 @@ function PlanEditor({
 
       <div className="space-y-3">
         <button
-          className={`min-h-12 w-full px-4 text-base font-bold text-white ${PRIMARY_BUTTON_CLASS}`}
+          className={`min-h-12 w-full px-4 text-base font-bold text-white ${PRIMARY_BUTTON_CLASS} ${focusNextAction ? 'relative z-40 ring-4 ring-primary-border' : ''}`}
           disabled={isSubmitting}
+          id={focusNextAction ? 'guest-onboarding-plan-confirm' : undefined}
           onClick={() => onSubmit(text)}
           type="button"
         >
@@ -119,6 +123,12 @@ function PlanEditor({
           </>
         )}
       </div>
+      {focusNextAction ? (
+        <GuestOnboardingFocus
+          message="まずはこの小さなPLANで始めてみよう"
+          targetId="guest-onboarding-plan-confirm"
+        />
+      ) : null}
     </div>
   )
 }
@@ -132,12 +142,14 @@ function SignedInPlanPage({ goalId }: { goalId: string }) {
     api.goals.getGoalDetail,
     isReady ? { goalId: goalId as Id<'goals'> } : 'skip',
   )
+  const activeCycle = useQuery(api.pdca.getActiveCycle, isReady ? {} : 'skip')
   const startPdcaCycle = useMutation(api.pdca.startPdcaCycle)
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   if (hasError) return <LoadFailure message="PLANを読み込めませんでした。" onRetry={retry} />
-  if (!isReady || detail === undefined) return <LoadingState label="PLANを読み込んでいます。" />
+  if (!isReady || detail === undefined || activeCycle === undefined) return <LoadingState label="PLANを読み込んでいます。" />
+  if (activeCycle !== null) return <Navigate replace to="/" />
 
   const { goal } = detail
   if (goal.archivedAt !== undefined) {
@@ -194,9 +206,19 @@ function GuestPlanPage() {
   if (!state.goal) return <Navigate replace to="/goals/new" />
 
   const cycle = state.cycle
-  if (cycle && cycle.status !== 'completed' && cycle.status !== 'cancelled') {
-    return <Navigate replace to={`/pdca/${GUEST_RESUME_PATHS[cycle.status]}/guest`} />
+  if (cycle && cycle.status !== 'completed' && cycle.status !== 'cancelled' && !isSubmitting) {
+    // DOから戻った場合は、同じ画面へ押し戻さずHomeの再開カードへ誘導する。
+    // ログイン済みのPLAN画面と同じく、進行中Cycleを1か所で再開できる。
+    return <Navigate replace to="/" />
   }
+
+  // 初回はAI待ちで止めず、既存の共有フォールバックで小さな候補を出す。
+  // 完了済みCycleがある場合はACTで決めた次回候補を優先する。
+  const initialText = cycle?.nextPlanCandidate ?? resolveNextPlanFallback({
+    mode: 'initial',
+    goalName: state.goal.name,
+  })
+  const focusNextAction = getGuestOnboardingFocus(state) === 'plan'
 
   function handleStart(planText: string) {
     if (!planText.trim()) {
@@ -213,12 +235,13 @@ function GuestPlanPage() {
     <PlanEditor
       error={error}
       goalName={state.goal.name}
-      hasCandidate={false}
-      initialText=""
+      hasCandidate={true}
+      initialText={initialText}
       isRecovery={false}
       isSubmitting={isSubmitting}
       onSubmit={handleStart}
-      title="今日これやる？"
+      title={cycle ? '今日これやる？' : '最初の一周を回してみよう'}
+      focusNextAction={focusNextAction}
     />
   )
 }

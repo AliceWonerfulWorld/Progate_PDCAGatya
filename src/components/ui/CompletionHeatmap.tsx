@@ -44,25 +44,23 @@ export function CompletionHeatmap({ days }: { days: HeatmapDay[] }) {
   const cells = buildCells(days)
 
   return (
-    <div className="space-y-2">
-      <div className="overflow-x-auto pb-1">
-        <div
-          className="grid w-max grid-flow-col gap-[3px]"
-          style={{ gridTemplateRows: 'repeat(7, 0.75rem)' }}
-        >
-          {cells.map((cell, index) =>
-            cell === null ? (
-              <div className="size-3" key={`empty-${index}`} />
-            ) : (
-              <div
-                aria-label={`${formatDateLabel(cell.date)}: ${cell.count}回`}
-                className={`size-3 ${levelClassFor(cell.count)}`}
-                key={cell.date}
-                title={`${cell.date} ${cell.count}回`}
-              />
-            ),
-          )}
-        </div>
+    <div className="space-y-3">
+      <div
+        className="grid w-max max-w-full grid-flow-col gap-[3px]"
+        style={{ gridTemplateRows: 'repeat(7, 0.75rem)' }}
+      >
+        {cells.map((cell, index) =>
+          cell === null ? (
+            <div className="size-3" key={`empty-${index}`} />
+          ) : (
+            <div
+              aria-label={`${formatDateLabel(cell.date)}: ${cell.count}回`}
+              className={`size-3 rounded-[3px] ${levelClassFor(cell.count)}`}
+              key={cell.date}
+              title={`${cell.date} ${cell.count}回`}
+            />
+          ),
+        )}
       </div>
       <div className="flex items-center gap-1 text-xs text-text-subtle">
         少ない

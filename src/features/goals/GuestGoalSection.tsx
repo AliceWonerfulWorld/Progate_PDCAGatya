@@ -2,11 +2,19 @@ import { Plus, Ticket } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useGuestState } from '../../hooks/useGuestState'
 import { SignInPrompt } from '../../components/ui/SignInPrompt'
+import { PdcaPhaseIndicator, PHASE_LABEL } from '../pdca/PdcaPhaseIndicator'
 
 const GUEST_RESUME_PATHS = {
   doing: 'do',
   checking: 'check',
   acting: 'act',
+} as const
+
+// ログイン後(ActiveCycleCard)と同じ文言・現在地表示を使う（ui-spec #7.1 / #7.2）。
+const GUEST_RESUME_LABELS = {
+  doing: 'CHECKへ進む',
+  checking: '結果を記録する',
+  acting: '次のPLANを決める',
 } as const
 
 function CreateGoalLink() {
@@ -54,14 +62,20 @@ export function GuestGoalSection() {
     const resumePath = GUEST_RESUME_PATHS[cycle.status]
     return (
       <div className="mt-3 border-y border-border-subtle py-4">
-        <p className="text-sm font-medium text-primary">進行中</p>
-        <p className="mt-1 text-sm text-text-subtle">{goal.name}</p>
-        <p className="mt-1 text-base font-bold">{cycle.planText}</p>
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm font-medium text-primary">いま取り組んでいるGoal</p>
+          <PdcaPhaseIndicator status={cycle.status} />
+        </div>
+        <p className="mt-3 text-xl font-bold">{goal.name}</p>
+        <div className="mt-4 border border-border-subtle bg-surface p-3">
+          <p className="text-sm font-medium text-primary">{cycle.status === 'doing' ? 'DO：いまやること' : `いま ${PHASE_LABEL[cycle.status]}`}</p>
+          <p className="mt-2 text-base font-bold">{cycle.planText}</p>
+        </div>
         <Link
           className="mt-4 flex min-h-12 items-center justify-center bg-primary px-4 text-base font-bold text-white"
           to={`/pdca/${resumePath}/guest`}
         >
-          続きを開く
+          {GUEST_RESUME_LABELS[cycle.status]}
         </Link>
       </div>
     )
