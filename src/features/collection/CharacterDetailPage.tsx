@@ -15,6 +15,22 @@ import { useCurrentUserInitialization } from '../goals/useCurrentUserInitializat
 
 const Character3DViewer = lazy(() => import('./Character3DViewer'))
 
+// モデルごとの寄り具合と背景画像。SSR 2体でスケール/原点が違うため個別に指定する。
+// 未登録の modelPath は Character3DViewer 既定(auto framing / グラデ背景)にフォールバック。
+const MODEL_FRAMING: Record<
+  string,
+  { cameraOrbit?: string; fieldOfView?: string; backgroundSrc?: string }
+> = {
+  '/characters/Yusha.glb': {
+    cameraOrbit: '0deg 80deg 35%',
+    fieldOfView: '22deg',
+    backgroundSrc: '/characters/akatuki-bg.webp',
+  },
+  '/characters/whi.glb': {
+    backgroundSrc: '/characters/eien-bg.webp',
+  },
+}
+
 const RARITY_STYLES: Record<CharacterRarity, { badge: string; frame: string }> = {
   R: { badge: 'border-rarity-r-border bg-rarity-r-bg text-rarity-r', frame: 'border-rarity-r-border bg-rarity-r-bg' },
   SR: { badge: 'border-rarity-sr-border bg-rarity-sr-bg text-rarity-sr', frame: 'border-rarity-sr-border bg-rarity-sr-bg' },
@@ -48,7 +64,7 @@ function AuthenticatedCharacterDetail({ characterId }: { characterId: string }) 
   return (
     <section className={`overflow-hidden rounded-3xl border shadow-sm ${rarityStyle.frame}`}>
       <div className="relative mx-3 mt-3 aspect-[4/5] overflow-hidden rounded-2xl bg-surface">
-        {character.modelPath ? <Suspense fallback={<img alt={character.name} className="size-full object-contain p-4" src={character.imagePath} />}><Character3DViewer modelPath={character.modelPath} name={character.name} posterSrc={character.imagePath} /></Suspense> : <img alt={character.name} className="size-full object-contain p-4" src={character.imagePath} />}
+        {character.modelPath ? <Suspense fallback={<img alt={character.name} className="size-full object-contain p-4" src={character.imagePath} />}><Character3DViewer modelPath={character.modelPath} name={character.name} posterSrc={character.imagePath} {...(MODEL_FRAMING[character.modelPath] ?? {})} /></Suspense> : <img alt={character.name} className="size-full object-contain p-4" src={character.imagePath} />}
         <span className={`absolute left-3 top-3 rounded-full border px-3 py-1 text-xs font-black ${rarityStyle.badge}`}>{character.rarity}</span>
         {isPartner ? <span className="absolute right-3 top-3 grid size-9 place-items-center rounded-full bg-surface text-rarity-ssr-icon shadow-sm"><Star aria-hidden="true" className="size-5 fill-rarity-ssr-icon" /></span> : null}
       </div>
