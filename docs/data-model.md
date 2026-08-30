@@ -1846,3 +1846,51 @@ gachaHistory
 
 というコアループを、
 シンプルかつ安全に実装できるデータ構造を維持する。
+
+---
+
+# 51. pushSubscriptions (Push Notification)
+
+MVP完了後、ストリークAt-Riskトリガーに限定したWeb Push通知を追加した
+(docs/technical-design.md Push Notification参照)。`users`テーブルは変更せず、
+通知専用の新規テーブル1つに閉じている。
+
+## 51.1 役割
+
+ログイン中ユーザーのデバイス(ブラウザ)ごとのWeb Push購読を管理する。
+
+基本原則：
+
+> **User × Device(endpoint) = 1 Record**
+
+## 51.2 Schema
+
+| Field | Type | Required | Description |
+|---|---|---:|---|
+| `userId` | Id<users> | Yes | 所有ユーザー |
+| `endpoint` | string | Yes | Push Service購読URL。デバイス/ブラウザの自然な一意キー |
+| `keys.p256dh` | string | Yes | Push暗号化鍵 |
+| `keys.auth` | string | Yes | Push認証シークレット |
+| `userAgent` | string | No | 参考情報(表示等では未使用) |
+| `notifyHours` | number[] | Yes | 通知を送るローカル時刻(0-23)のプリセット。複数選択可、空配列は不可 |
+| `lastNotifiedDate` | string | No | この購読が最後に通知した(ユーザーの)ローカル日付。同日重複送信の冪等性ガード |
+| `createdAt` | number | Yes | 作成時刻 |
+| `updatedAt` | number | Yes | 最終更新時刻 |
+
+## 51.3 Index
+
+```text
+by_user
+by_endpoint
+```
+
+`by_user`: ユーザー単位の購読一覧・削除に使用。
+`by_endpoint`: 同一デバイスからの再subscribe時のupsertと、
+オーナーシップ確認付きunsubscribe/updateに使用。
+
+## 51.4 冪等性ガードをusersではなくここに置く理由
+
+`lastNotifiedDate`はユーザー単位ではなく購読(デバイス)単位で持つ。
+複数デバイスがそれぞれ異なる`notifyHours`を持てるため、
+「デバイスごとに1日1回」が正しい粒度であり、
+`users`テーブルへの変更を避けられる。

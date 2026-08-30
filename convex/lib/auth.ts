@@ -107,3 +107,22 @@ export async function requireOwnedCycle(
   }
   return cycle
 }
+
+export async function requireOwnedSubscriptionByEndpoint(
+  ctx: AuthContext,
+  endpoint: string,
+  currentUser: Doc<'users'>,
+): Promise<Doc<'pushSubscriptions'>> {
+  const subscription = await ctx.db
+    .query('pushSubscriptions')
+    .withIndex('by_endpoint', (q) => q.eq('endpoint', endpoint))
+    .unique()
+  if (subscription === null) {
+    throw new ConvexError({ code: ERROR_CODES.PUSH_SUBSCRIPTION_NOT_FOUND })
+  }
+  // oxlint-disable-next-line no-underscore-dangle -- Convex document IDs use `_id`.
+  if (subscription.userId !== currentUser._id) {
+    throw new ConvexError({ code: ERROR_CODES.PUSH_SUBSCRIPTION_FORBIDDEN })
+  }
+  return subscription
+}

@@ -34,6 +34,9 @@ type Env = {
   readonly LLM_API_KEY: string | undefined;
   readonly LLM_API_URL: string | undefined;
   readonly LLM_MODEL: string | undefined;
+  readonly VAPID_PRIVATE_KEY: string | undefined;
+  readonly VAPID_PUBLIC_KEY: string | undefined;
+  readonly VAPID_SUBJECT: string | undefined;
 };
 
 /**

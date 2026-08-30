@@ -172,4 +172,22 @@ export default defineSchema({
   })
     .index('by_user', ['userId'])
     .index('by_user_draw_sequence', ['userId', 'drawSequence']),
+
+  // Web Push購読(デバイス単位)。docs/data-model.md「pushSubscriptions」を参照。
+  // usersテーブルは変更しない方針のため、通知の冪等性ガード(lastNotifiedDate)も
+  // ここに持つ(ユーザー単位ではなく購読=デバイス単位で判定する)。
+  pushSubscriptions: defineTable({
+    userId: v.id('users'),
+    endpoint: v.string(),
+    keys: v.object({ p256dh: v.string(), auth: v.string() }),
+    userAgent: v.optional(v.string()),
+    // At-Risk通知を送るローカル時刻(0-23)。複数選択可、空配列は不可。
+    notifyHours: v.array(v.number()),
+    // この購読が最後に通知を送った(ユーザーの)ローカル日付。同日の重複送信を防ぐ。
+    lastNotifiedDate: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_user', ['userId'])
+    .index('by_endpoint', ['endpoint']),
 })

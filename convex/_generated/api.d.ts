@@ -10,6 +10,7 @@
 
 import type * as ai from "../ai.js";
 import type * as characters from "../characters.js";
+import type * as crons from "../crons.js";
 import type * as gacha from "../gacha.js";
 import type * as gachas from "../gachas.js";
 import type * as goals from "../goals.js";
@@ -27,9 +28,14 @@ import type * as lib_pdca from "../lib/pdca.js";
 import type * as lib_planAdjust from "../lib/planAdjust.js";
 import type * as lib_planFallback from "../lib/planFallback.js";
 import type * as lib_playerLevel from "../lib/playerLevel.js";
+import type * as lib_pushClassifyError from "../lib/pushClassifyError.js";
+import type * as lib_pushDecision from "../lib/pushDecision.js";
 import type * as lib_streak from "../lib/streak.js";
 import type * as missions from "../missions.js";
 import type * as pdca from "../pdca.js";
+import type * as push from "../push.js";
+import type * as pushCron from "../pushCron.js";
+import type * as pushSend from "../pushSend.js";
 import type * as users from "../users.js";
 
 import type {
@@ -41,6 +47,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   ai: typeof ai;
   characters: typeof characters;
+  crons: typeof crons;
   gacha: typeof gacha;
   gachas: typeof gachas;
   goals: typeof goals;
@@ -58,9 +65,14 @@ declare const fullApi: ApiFromModules<{
   "lib/planAdjust": typeof lib_planAdjust;
   "lib/planFallback": typeof lib_planFallback;
   "lib/playerLevel": typeof lib_playerLevel;
+  "lib/pushClassifyError": typeof lib_pushClassifyError;
+  "lib/pushDecision": typeof lib_pushDecision;
   "lib/streak": typeof lib_streak;
   missions: typeof missions;
   pdca: typeof pdca;
+  push: typeof push;
+  pushCron: typeof pushCron;
+  pushSend: typeof pushSend;
   users: typeof users;
 }>;
 

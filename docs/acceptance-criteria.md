@@ -2398,7 +2398,6 @@ Logged-in core flow pass
 ```text
 Weekly Mission
 7-day chart
-Push Notification
 Character Growth
 Base Growth
 10連Gacha
@@ -2406,6 +2405,8 @@ Soft Pity
 Dynamic Title system
 Advanced Animation
 ```
+
+Push NotificationはMVP完了後、At-Riskトリガーに限定して実装済み(§94)。
 
 ---
 
@@ -2495,3 +2496,125 @@ XP / Streak / Gacha
 
 このループを壊す変更は、
 見た目や追加機能よりも常に優先して修正する。
+
+---
+
+# 94. Push Notification — At Risk (MVP完了後追加)
+
+対象はログイン中ユーザーのみ、トリガーは§32 Streak — At Riskの
+`atRisk`状態1種類に限定する。
+
+## AC-PUSH-001 — 購読オーナーシップ
+
+**Priority:** P0
+
+### Given
+
+User AがPush通知を購読済み。
+
+### When
+
+User Bが同じ`endpoint`で`unsubscribe`または`updateNotifyHours`を呼ぶ。
+
+### Then
+
+```text
+PUSH_SUBSCRIPTION_FORBIDDEN で拒否される
+User Aの購読レコードは変化しない
+```
+
+---
+
+## AC-PUSH-002 — 同日重複送信の防止
+
+**Priority:** P0
+
+### Given
+
+あるデバイスの購読が、今日すでにAt-Risk通知を送信済み(`lastNotifiedDate` = today)。
+
+### When
+
+同日中に再度cronがそのデバイスを対象として走査する。
+
+### Then
+
+```text
+再送信しない(shouldNotifyAtRiskがfalseを返す)
+```
+
+---
+
+## AC-PUSH-003 — ローカル時刻に応じた送信
+
+**Priority:** P1
+
+### Given
+
+cronは1時間ごとに全世界で実行される。ユーザーのtimezoneはUTCと異なる。
+
+### When
+
+ユーザーのローカル時刻が、その購読の選択済み`notifyHours`のいずれとも一致しない。
+
+### Then
+
+```text
+送信しない
+```
+
+ユーザーのローカル時刻が選択済み`notifyHours`のいずれかと一致し、
+かつAt-Risk状態のときのみ送信する。
+
+---
+
+## AC-PUSH-004 — iOS未インストール時のグレースフルデグレード
+
+**Priority:** P1
+
+### Given
+
+iOS Safariでアプリをホーム画面に追加していない(タブで開いている)。
+
+### Then
+
+```text
+Push購読ボタンではなく、
+「ホーム画面に追加すると通知を受け取れるようになります」等の案内を表示する
+UAスニッフィングではなく PushManager の有無で判定する
+```
+
+---
+
+## AC-PUSH-005 — 初回自動プロンプト禁止
+
+**Priority:** P0
+
+### Given
+
+ユーザーが初めてアプリを開く、またはProfile画面を初めて開く。
+
+### Then
+
+```text
+Notification.requestPermission() は一切自動発火しない
+「有効」ボタンのonClickからのみ発火する(docs/ui-spec.md #3.3)
+```
+
+---
+
+## AC-PUSH-006 — 送信失敗はコアループを止めない
+
+**Priority:** P0
+
+### Given
+
+Push送信が失敗する(ネットワークエラー、購読失効など)。
+
+### Then
+
+```text
+例外を投げない
+'stale'(404/410)は購読を削除、それ以外の'failed'は次回cronで再試行
+PDCA/Gacha等のコア機能には一切影響しない
+```

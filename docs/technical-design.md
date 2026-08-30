@@ -2198,9 +2198,15 @@ Server side：
 
 ```text
 LLM_API_KEY
+VAPID_PUBLIC_KEY
+VAPID_PRIVATE_KEY
+VAPID_SUBJECT
 ```
 
-LLM secretを `VITE_` prefixで公開しない。
+LLM secret・VAPID secretを `VITE_` prefixで公開しない。
+`VAPID_PUBLIC_KEY`は秘密情報ではないが、フロントエンド再デプロイなしで
+ローテーションできるようConvex環境変数から`push.getVapidPublicKey`経由で配信する
+(§100.5 Push Notification参照)。
 
 ---
 
@@ -2244,7 +2250,6 @@ Pull Requestまたはmain push時に実行できる形を推奨。
 
 ```text
 完全Offline Sync
-Push通知の完全対応
 10連ガチャ
 課金
 Character育成
@@ -2257,6 +2262,76 @@ Dynamic Titles DB
 ```
 
 必要になった時点で再設計する。
+
+Push通知はMVP完了後、At-Riskトリガーに限定して実装済み(§100.5)。
+以下のPush通知トリガーは引き続きOut of Scope：
+
+```text
+未消化ガチャ権利リマインド
+日次無活動リマインド
+ストリークマイルストーン祝福
+中断PDCA再開リマインド
+通知履歴/ログテーブル
+```
+
+---
+
+## 100.5 Push Notification (At-Riskトリガー)
+
+MVP完了後に追加。ログイン中ユーザーのみ対象、トリガーは
+「ストリークAt-Risk」1種類に限定する(docs/tech-stack.md §15参照)。
+
+### トリガー
+
+`convex/lib/streak.ts`の`deriveStreakStatus`が`atRisk`を返し、かつ該当デバイスの
+選択時刻(ユーザーのlocal time)にまだ今日の通知を送っていない場合。
+ストリーク判定ロジック自体は再実装せず、既存の`deriveStreakStatus`をそのまま使う。
+
+### アーキテクチャ
+
+```text
+convex/crons.ts (1時間ごと)
+  ↓
+convex/pushCron.ts scanAtRiskUsers (internalAction)
+  ↓ pushSubscriptionsをページング走査
+convex/push.ts listEligibleAtRiskPage (internalQuery)
+  ↓ 対象ごとに送信
+convex/pushSend.ts sendOne ("use node", web-push)
+  ↓ 結果を反映
+convex/push.ts applySendResults (internalMutation)
+```
+
+cronは1時間ごとに実行し、各ユーザーの`timezone`でのローカル時刻が
+`pushSubscriptions.notifyHours`のいずれかと一致した回だけ送信する
+(ナイーブなUTC固定時刻cronでは、ユーザーのローカル深夜に届いてしまう問題を回避する)。
+
+冪等性ガード(`pushSubscriptions.lastNotifiedDate`)は`users`テーブルではなく
+新設の`pushSubscriptions`テーブル側に、購読(デバイス)単位で持つ
+(docs/data-model.md §51参照)。`users`テーブルへの変更は行っていない。
+
+Push送信の失敗は例外を投げず、`'sent' | 'stale' | 'failed'`のいずれかを返す
+(convex/ai.tsと同じ「外部API失敗はコアループを止めない」思想)。
+`404`/`410`(購読が既に無効)は`'stale'`として購読を削除し、
+それ以外の失敗は`'failed'`として何もせず次回cronでの再試行に委ねる。
+
+### Service Worker
+
+`push`/`notificationclick`イベントをハンドリングするため、
+vite-plugin-pwaの戦略を`generateSW`から`injectManifest`へ切り替え、
+`src/sw.ts`で自前のイベントリスナーを実装している。
+
+### フロントエンド
+
+Profile画面に「ストリーク通知」セクションを設け、以下を満たす：
+
+```text
+初回ロード時に通知許可を自動要求しない(docs/ui-spec.md #3.3)
+「有効」ボタン押下でのみ Notification.requestPermission() を呼ぶ
+iOS SafariでPush APIが無い場合(ホーム画面未追加)はグレースフルデグレード
+```
+
+購読状態はブラウザの`PushManager.getSubscription()`を正とし、
+「このデバイスは購読中か」を問い合わせるConvex Queryは持たない。
 
 ---
 
