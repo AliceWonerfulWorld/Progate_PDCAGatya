@@ -280,4 +280,5 @@ describe('listCycles', () => {
     expect(second.page).toHaveLength(2)
     expect(recentOnly.page.map((item) => item.planText)).not.toContain('古いPLAN')
   })
+
 })
