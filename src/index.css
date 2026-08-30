@@ -60,17 +60,17 @@
 
   /* --- Rarity ---------------------------------------------------------
    * レアリティは識別しやすく、SSRだけ特別感を強くする (§36)。
-   * choice-* とは意図的に別トークンにしている: 現状 SR と choice-info は
-   * 同じ sky 系だが、レアリティの色を後から変えたときに選択ボタンまで
-   * 巻き添えで変わるのを防ぐため。
+   * choice-* とは意図的に別トークンにしている。SRはコレクションの
+   * ご褒美感を表すラベンダー系、choice-infoは操作の中立性を表す青系であり、
+   * それぞれを独立して調整できるようにする。
    */
   --color-rarity-r: oklch(37.2% 0.044 257.287);
   --color-rarity-r-border: oklch(86.9% 0.022 252.894);
   --color-rarity-r-bg: oklch(98.4% 0.003 247.858);
 
-  --color-rarity-sr: oklch(50% 0.134 242.749);
-  --color-rarity-sr-border: oklch(82.8% 0.111 230.318);
-  --color-rarity-sr-bg: oklch(97.7% 0.013 236.62);
+  --color-rarity-sr: oklch(43.2% 0.232 292.759);
+  --color-rarity-sr-border: oklch(89.4% 0.057 293.283);
+  --color-rarity-sr-bg: oklch(96.9% 0.016 293.756);
 
   --color-rarity-ssr: oklch(55.5% 0.163 48.998);
   --color-rarity-ssr-border: oklch(82.8% 0.189 84.429);
